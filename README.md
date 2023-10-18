@@ -1,183 +1,250 @@
-<!-- ![](media/logo_med.png) -->
+## GANDALFF: Golang, ANother DAta Library For Fun
 
-# 🎭 Preludio
+Or, for short, GDL: Golang Data Library
 
-### A PRQL based data transformation language
+### What is it?
 
-Preludio is a data transformation language based on PRQL. It is a language that allows you to transform and
-manipulate data in a simple and intuitive way, batteries included.
-
-No libraries or external dependencies are required to run the language.
+Gandalff is a library for data manipulation in Go.
+It supports nullable types: null data is optimized for memory usage.
 
 ### Examples
 
-Read and clean up a CSV file, then store the result in a variable called `clean`:
+```go
+func Example01() {
+	data := `
+name,age,weight,junior,department,salary band
+Alice C,29,75.0,F,HR,4
+John Doe,30,80.5,true,IT,2
+Bob,31,85.0,T,IT,4
+Jane H,25,60.0,false,IT,4
+Mary,28,70.0,false,IT,3
+Oliver,32,90.0,true,HR,1
+Ursula,27,65.0,f,Business,4
+Charlie,33,60.0,t,Business,2
+`
 
-```
-clean := (
-  rcsv! p'test_files/Cars.csv' del:';' head:true
-  strRepl! [MPG, Displacement, Horsepower, Acceleration] old:',' new:'.'
-  asFlt! [MPG, Displacement, Horsepower, Acceleration]
-  sort! [-Origin, Cylinders, -MPG]
-)
-```
+	NewBaseDataFrame(NewContext()).
+		FromCSV().
+		SetReader(strings.NewReader(data1)).
+		SetDelimiter(',').
+		SetHeader(true).
+		Read().
+		Select("department", "age", "weight", "junior").
+		GroupBy("department").
+		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
+		PrettyPrint(NewPrettyPrintParams())
 
+	// Output:
+	// ╭────────────┬────────────┬────────────┬────────────┬────────────╮
+	// │ department │        age │     weight │     junior │          n │
+	// ├────────────┼────────────┼────────────┼────────────┼────────────┤
+	// │     String │    Float64 │    Float64 │    Float64 │      Int64 │
+	// ├────────────┼────────────┼────────────┼────────────┼────────────┤
+	// │         HR │         29 │         90 │        0.5 │          2 │
+	// │         IT │         25 │         85 │        0.5 │          4 │
+	// │   Business │         27 │         65 │        0.5 │          2 │
+	// ╰────────────┴────────────┴────────────┴────────────┴────────────╯
+}
 ```
-europe5Cylinders := (
-  from! clean
-  filter! Cylinders == 5 and Origin == 'Europe'
-)
-```
-
-Derive new columns and write the result to a CSV file:
-
-```
-from! clean
-derive! [
-  Stat = ((MPG * Cylinders * Displacement) / Horsepower * Acceleration) / Weight,
-  CarOrigin = Car + ' - ' + Origin
-]
-filter! Stat > 1.3
-select! [Car, Origin, Stat]
-wcsv! p'test_files/Cars1.csv' del: '\t'
-```
-
-Create a new table by joining two tables:
-
-```
-continents := (
-  new! [
-    Continent = ['Asia', 'America', 'Europe'],
-    Origin = ['Japan', 'US', 'Europe']
-  ]
-)
-
-joined := (
-  from! clean
-  leftj! continents on: [Origin]
-  select! [Car, Origin, Continent]
-  sort! [Continent, Origin]
-)
-```
-
-![](media/repl_example.gif)
 
 ### Community
 
-You can join the [Preludio community on Discord](https://discord.gg/FHJnhGyK).
+You can join the [Gandalff community on Discord](https://discord.gg/vPv5bhXY).
 
-### Data Types
+### Supported data types
 
-The language supports the following data types:
+The data types not checked are not yet supported, but might be in the future.
 
-- `boolean` ie: `true`/`false`
-- `integer` ie: `1`, `2`, `3`
-- `range` ie: `1..10`, `1..10:2`
-- `float` ie: `1.0`, `2e-3`, `4.5E+6`
-- `string` which has some variants:
-  - plain `'hello world'`, `"foo bar"`
-  - raw `r'\d'`, `r"\a"`
-  - path `p'c:\temp'`, `p"/home/user"`
-- `regex` ie: `x'he(l){2}o'`, `x"f(o){2} bar"`
-- `date` ie: `d'2021-08-20'`, `d"2021-08-20"`
-- `duration` ie: `1:h`, `2:milliseconds`, `3:us`
+- [x] Bool
+- [ ] Bool (memory optimized, not fully implemented yet)
+- [ ] Int16
+- [x] Int
+- [x] Int64
+- [ ] Float32
+- [x] Float64
+- [ ] Complex64
+- [ ] Complex128
+- [x] String
+- [x] Time
+- [x] Duration
 
-In addition, the language supports the following data structures:
+### Supported operations for Series
 
-- `list` ie: `a := [1, 2, 3]`, `b := [i = [1, 2], f = [3.0, 4.0]]`
+- [x] Filter
 
-### Operators
+  - [x] filter by bool slice
+  - [x] filter by int slice
+  - [x] filter by bool series
+  - [x] filter by int series
 
-The language supports the following operators:
+- [x] Group
 
-- `+` (addition)
-- `-` (subtraction)
-- `*` (multiplication)
-- `/` (division)
-- `%` (modulo)
-- `^` (exponentiation)
-- `and` (logical and)
-- `or` (logical or)
-- `not` (logical not)
-- `==` (equality)
-- `!=` (inequality)
-- `>` (greater than)
-- `>=` (greater than or equal to)
-- `<` (less than)
-- `<=` (less than or equal to)
+  - [x] Group (with nulls)
+  - [x] SubGroup (with nulls)
 
-- string interpolation `f'I have {1 + 2} apples'`
+- [x] Map
+- [x] Sort
 
-### Built-in Functions
+  - [x] Sort (with nulls)
+  - [x] SortRev (with nulls)
 
-The language supports the following built-in functions:
+- [x] Take
 
-- `from` initializes a pipeline, ie: `from table`
-- `new` creates a new dataframe, ie: `new [a = [1, 2], b = [3, 4]]`
-- `rcsv` reads a CSV file, ie: `rcsv p'c:\temp\file.csv' del:',' head:true`
-- `wcsv` writes a CSV file ie: `wcsv p'c:\temp\file.csv' del:','`
-- `filter` filters rows, ie: `filter a > 1`
-- `select` selects columns, ie: `select [a, b]`
-- `sort` sorts rows, ie: `sort [a, -b]`
-- `derive` adds new columns from the existing ones, ie: `derive [c = a + b]`
+### Supported operations for DataFrame
 
-### Features
+- [x] Agg
+- [x] Filter
+- [x] GroupBy
+- [ ] Join
 
-- [x] Arithmetic and logical operators
-- [x] Read and write CSV files
-- [x] Derive new columns
-- [x] Select columns
-- [x] Filter rows
-- [x] Sort rows
-- [x] Join tables
-- [ ] Group by and aggregate
+  - [x] Inner
+  - [x] Left
+  - [x] Right
+  - [x] Outer
+  - [ ] Inner with nulls
+  - [ ] Left with nulls
+  - [ ] Right with nulls
+  - [ ] Outer with nulls
 
-### Installation
+- [ ] Map
+- [x] OrderBy
+- [x] Select
+- [x] Take
 
-To run it, you need to have [Go](https://golang.org/doc/install) installed.
-Once you have Go, you can clone this repository.
+### Supported stats functions
 
-To run the program, you can use the following command:
+- [x] Count
+- [x] Sum
+- [x] Mean
+- [ ] Median
+- [x] Min
+- [x] Max
+- [x] StdDev
+- [ ] Variance
+- [ ] Quantile
 
-```bash
-go mod tidy
-go run .
+### Implementation details
+
+This is how the interface for the Series type currently looks like:
+
+```go
+// Basic accessors.
+
+// Return the context of the series.
+GetContext() *Context
+// Return the number of elements in the series.
+Len() int
+// Return the type of the series.
+Type() typesys.BaseType
+// Return the type and cardinality of the series.
+TypeCard() typesys.BaseTypeCard
+// Return if the series is grouped.
+IsGrouped() bool
+// Return if the series admits null values.
+IsNullable() bool
+// Return if the series is sorted.
+IsSorted() SeriesSortOrder
+// Return if the series is error.
+IsError() bool
+// Return the error message of the series.
+GetError() string
+
+// Nullability operations.
+
+// Return if the series has null values.
+HasNull() bool
+// Return the number of null values in the series.
+NullCount() int
+// Return if the element at index i is null.
+IsNull(i int) bool
+// Return the null mask of the series.
+GetNullMask() []bool
+// Set the null mask of the series.
+SetNullMask(mask []bool) Series
+// Make the series nullable.
+MakeNullable() Series
+// Make the series non-nullable.
+MakeNonNullable() Series
+
+// Get the element at index i.
+Get(i int) any
+// Get the element at index i as a string.
+GetAsString(i int) string
+// Set the element at index i.
+Set(i int, v any) Series
+// Take the elements according to the given interval.
+Take(params ...int) Series
+
+// Append elements to the series.
+// Value can be a single value, slice of values,
+// a nullable value, a slice of nullable values or a series.
+Append(v any) Series
+
+// All-data accessors.
+
+// Return the actual data of the series.
+Data() any
+// Return the nullable data of the series.
+DataAsNullable() any
+// Return the data of the series as a slice of strings.
+DataAsString() []string
+
+// Cast the series to a given type.
+Cast(t typesys.BaseType) Series
+// Copie the series.
+Copy() Series
+
+// Series operations.
+
+// Filter out the elements by the given mask.
+// Mask can be a bool series, a slice of bools or a slice of ints.
+Filter(mask any) Series
+
+// Apply the given function to each element of the series.
+Map(f MapFunc) Series
+MapNull(f MapFuncNull) Series
+
+// Group the elements in the series.
+GroupBy(gp SeriesPartition) Series
+UnGroup() Series
+
+// Get the partition of the series.
+GetPartition() SeriesPartition
+
+// Sort Interface.
+Less(i, j int) bool
+Swap(i, j int)
+
+// Sort the elements of the series.
+Sort() Series
+SortRev() Series
+
+// Arithmetic operations.
+Mul(other Series) Series
+Div(other Series) Series
+Mod(other Series) Series
+Exp(other Series) Series
+Add(other Series) Series
+Sub(other Series) Series
+
+// Logical operations.
+Eq(other Series) Series
+Ne(other Series) Series
+Gt(other Series) Series
+Ge(other Series) Series
+Lt(other Series) Series
+Le(other Series) Series
 ```
 
-### Future Features
+### TODO
 
-- [ ] Add statistical functions
-- [ ] Add support for Excel files
-- [ ] Add support for XPT files
-- [ ] VS Code extension
-- [ ] Add support for SAS7BDAT files
-- [ ] Add support for SPSS files
-- [ ] Database connections (SQL, MongoDB, etc.)
-
-### Contributing
-
-If you want to contribute to this project, you can do so by forking the repository and submitting a pull request.
-
-### Developers
-
-If the grammar is changed, the parser must be regenerated. To do this, run the following command:
-
-(on Windows)
-
-```
-make.ps1
-```
-
-### New Ideas
-
-- List can be indexed with integers, ranges, strings and regex
-- Get help on functions or identifiers with `?`
-
-### Log
-
-- **14 / 10 / 2023** Gandalff now supports datetime and duration data types.
-- **20 / 08 / 2023** After exactly one year from the first commit, Preludio is fairly stable and usable. The language is still missing a few core features (like `join` and aggregators, already supported by Gandalff), but it is already possible to perform many operations with it.
-- **02 / 08 / 2023** Preludio is now using the Gandalff library for managing data.
-- **21 / 03 / 2023** First publishing of the repository. Many things are still not working.
-- **18 / 03 / 2023** Gandalff library: fist commit.
-- **20 / 08 / 2022** Preludio: fist commit.
+- [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
+- [ ] Implement string factors.
+- [ ] SeriesTime: set time format.
+- [ ] Implement `Set(i []int, v []any) Series`.
+- [ ] Add `Slice(i []int) Series` (using filter?).
+- [ ] Implement memory optimized Bool series with uint64.
+- [ ] Use uint64 for null mask.
+- [ ] Implement chunked series.
+- [ ] Implement Excel reader and writer (https://github.com/tealeg/xlsx).
+- [ ] Implement JSON reader and writer.
