@@ -1,10 +1,10 @@
-## GANDALFF: Golang, ANother DAta Library For Fun
+## GANDALFF: Golang, ANother DAta Library For Fun 🧙‍♂️
 
 Or, for short, GDL: Golang Data Library
 
 ### What is it?
 
-Gandalff is a library for data manipulation in Go.
+Gandalff is a library for data wrangling in Go.
 It supports nullable types: null data is optimized for memory usage.
 
 ### Examples
