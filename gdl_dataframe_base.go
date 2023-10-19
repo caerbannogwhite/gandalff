@@ -3,10 +3,11 @@ package gandalff
 import (
 	"fmt"
 	"math"
-	"preludiometa"
 	"sort"
 	"sync"
 	"time"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 type BaseDataFramePartitionEntry struct {

@@ -1,6 +1,6 @@
 package gandalff
 
-import "preludiometa"
+import preludiometa "github.com/caerbannogwhite/preludiometa"
 
 // Dummy series for error handling.
 type SeriesError struct {

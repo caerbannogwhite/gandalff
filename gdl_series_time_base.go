@@ -3,7 +3,8 @@ package gandalff
 import (
 	"fmt"
 	"time"
-	"preludiometa"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func (s SeriesTime) printInfo() {

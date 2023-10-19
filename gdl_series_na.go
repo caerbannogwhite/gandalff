@@ -2,8 +2,9 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"time"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 // SeriesNA represents a series with no data.

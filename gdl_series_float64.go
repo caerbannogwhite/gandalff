@@ -2,10 +2,11 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
 	"time"
 	"unsafe"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 // SeriesFloat64 represents a series of floats.

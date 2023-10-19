@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"go/ast"
-	"preludiometa"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 type MakeOperationType func(res, resIndex, op1, op1Index, op2, op2Index string) ast.Expr

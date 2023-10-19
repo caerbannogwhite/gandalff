@@ -5,7 +5,8 @@ var TEMPLATE_BASIC_ACCESSORS = `package gandalff
 import (
 	"fmt"
 	"time"
-	"preludiometa"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func (s {{.SeriesName}}) printInfo() {

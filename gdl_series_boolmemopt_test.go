@@ -2,8 +2,9 @@ package gandalff
 
 import (
 	"math/rand"
-	"preludiometa"
 	"testing"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_SeriesBoolMemOpt_Base(t *testing.T) {

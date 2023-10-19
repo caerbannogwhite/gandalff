@@ -3,8 +3,9 @@ package gandalff
 import (
 	"math"
 	"math/rand"
-	"preludiometa"
 	"testing"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_SeriesFloat64_Base(t *testing.T) {

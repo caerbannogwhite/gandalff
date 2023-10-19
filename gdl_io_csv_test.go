@@ -2,9 +2,10 @@ package gandalff
 
 import (
 	"os"
-	"preludiometa"
 	"strings"
 	"testing"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_TypeGuesser(t *testing.T) {

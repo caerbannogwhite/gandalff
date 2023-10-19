@@ -2,9 +2,10 @@ package gandalff
 
 import (
 	"math/rand"
-	"preludiometa"
 	"testing"
 	"time"
+
+	preludiometa "github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_SeriesString_Base(t *testing.T) {
