@@ -14,14 +14,10 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 	case nil:
 		return NewSeriesNA(1, ctx)
 	case []bool:
-		// if memOpt {
-		// 	return NewSeriesBoolMemOpt(isNullable, makeCopy, data, ctx)
-		// } else {
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesBool(data, nullMask, makeCopy, ctx)
-		// }
 
 	case []int:
 		if nullMask != nil && len(nullMask) != len(data) {
@@ -112,39 +108,6 @@ func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *Context) Se
 	return SeriesBool{
 		isNullable: isNullable,
 		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
-	}
-}
-
-// Build a Bool Series, if nullMask is nil then the series is not nullable
-func newSeriesBoolMemOpt(data []bool, nullMask []bool, makeCopy bool, ctx *Context) SeriesBoolMemOpt {
-	if ctx == nil {
-		fmt.Println("WARNING: NewSeriesBoolMemOpt: context is nil")
-	}
-
-	var isNullable bool
-	var nullMask_ []uint8
-	if nullMask != nil {
-		isNullable = true
-		if len(nullMask) < len(data) {
-			nullMask = append(nullMask, make([]bool, len(data)-len(nullMask))...)
-		} else if len(nullMask) > len(data) {
-			nullMask = nullMask[:len(data)]
-		}
-		nullMask_ = __binVecFromBools(nullMask)
-	} else {
-		isNullable = false
-		nullMask_ = make([]uint8, 0)
-	}
-
-	size := len(data)
-	actualData := __binVecFromBools(data)
-
-	return SeriesBoolMemOpt{
-		isNullable: isNullable,
-		size:       size,
-		data:       actualData,
 		nullMask:   nullMask_,
 		ctx:        ctx,
 	}
