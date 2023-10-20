@@ -2,12 +2,13 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 	"unsafe"
+
+	"preludiometa"
 )
 
 // SeriesString represents a series of strings.

@@ -9,8 +9,9 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"preludiometa"
 	"text/template"
+
+	"preludiometa"
 )
 
 const (

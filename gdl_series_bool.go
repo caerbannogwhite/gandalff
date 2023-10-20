@@ -2,8 +2,9 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
+
+	"preludiometa"
 )
 
 // SeriesBool represents a series of bools.

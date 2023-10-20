@@ -3,8 +3,9 @@ package gandalff
 import (
 	"math"
 	"math/rand"
-	"preludiometa"
 	"testing"
+
+	"preludiometa"
 )
 
 func Test_SeriesBool_Base(t *testing.T) {

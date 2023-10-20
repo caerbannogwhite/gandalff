@@ -1,8 +1,9 @@
 package gandalff
 
 import (
-	"preludiometa"
 	"time"
+
+	"preludiometa"
 )
 
 type DataFrameJoinType int8

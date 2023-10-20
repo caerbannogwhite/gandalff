@@ -2,9 +2,10 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
 	"time"
+
+	"preludiometa"
 )
 
 // SeriesTime represents a datetime series.

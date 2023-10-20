@@ -2,9 +2,10 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
 	"time"
+
+	"preludiometa"
 )
 
 // SeriesInt represents a series of ints.

@@ -2,9 +2,10 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"sort"
 	"time"
+
+	"preludiometa"
 )
 
 // SeriesDuration represents a duration series.

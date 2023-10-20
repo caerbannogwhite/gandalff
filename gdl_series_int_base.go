@@ -3,6 +3,7 @@ package gandalff
 import (
 	"fmt"
 	"time"
+
 	"preludiometa"
 )
 
@@ -281,13 +282,11 @@ func (s SeriesInt) UnGroup() Series {
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
-// Mask can be SeriesBool, SeriesBoolMemOpt, SeriesInt, bool slice or a int slice.
+// Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
 func (s SeriesInt) Filter(mask any) Series {
 	switch mask := mask.(type) {
 	case SeriesBool:
 		return s.filterBoolSlice(mask.data)
-	case SeriesBoolMemOpt:
-		return s.filterBoolMemOpt(mask)
 	case SeriesInt:
 		return s.filterIntSlice(mask.data, true)
 	case []bool:
@@ -297,50 +296,6 @@ func (s SeriesInt) Filter(mask any) Series {
 	default:
 		return SeriesError{fmt.Sprintf("SeriesInt.Filter: invalid type %T", mask)}
 	}
-}
-
-func (s SeriesInt) filterBoolMemOpt(mask SeriesBoolMemOpt) Series {
-	if mask.size != s.Len() {
-		return SeriesError{fmt.Sprintf("SeriesInt.Filter: mask length (%d) does not match series length (%d)", mask.size, s.Len())}
-	}
-
-	if mask.isNullable {
-		return SeriesError{"SeriesInt.Filter: mask series cannot be nullable for this operation"}
-	}
-
-	elementCount := mask.__trueCount()
-	var nullMask []uint8
-
-	data := make([]int, elementCount)
-	if s.isNullable {
-		nullMask = __binVecInit(elementCount, false)
-		dstIdx := 0
-		for srcIdx := 0; srcIdx < s.Len(); srcIdx++ {
-			if mask.data[srcIdx>>3]&(1<<uint(srcIdx%8)) != 0 {
-				data[dstIdx] = s.data[srcIdx]
-				if srcIdx%8 > dstIdx%8 {
-					nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) >> uint(srcIdx%8-dstIdx%8))
-				} else {
-					nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) << uint(dstIdx%8-srcIdx%8))
-				}
-				dstIdx++
-			}
-		}
-	} else {
-		nullMask = make([]uint8, 0)
-		dstIdx := 0
-		for srcIdx := 0; srcIdx < s.Len(); srcIdx++ {
-			if mask.data[srcIdx>>3]&(1<<uint(srcIdx%8)) != 0 {
-				data[dstIdx] = s.data[srcIdx]
-				dstIdx++
-			}
-		}
-	}
-
-	s.data = data
-	s.nullMask = nullMask
-
-	return s
 }
 
 func (s SeriesInt) filterBoolSlice(mask []bool) Series {

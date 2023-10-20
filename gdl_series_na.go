@@ -2,8 +2,9 @@ package gandalff
 
 import (
 	"fmt"
-	"preludiometa"
 	"time"
+
+	"preludiometa"
 )
 
 // SeriesNA represents a series with no data.
@@ -497,8 +498,6 @@ func (s SeriesNA) Filter(mask any) Series {
 	switch mask := mask.(type) {
 	case SeriesBool:
 		return s.filterBool(mask)
-	case SeriesBoolMemOpt:
-		return s.filterBoolMemOpt(mask)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
@@ -517,11 +516,6 @@ func (s SeriesNA) filterBool(mask SeriesBool) Series {
 	}
 
 	s.size = elementCount
-	return s
-}
-
-func (s SeriesNA) filterBoolMemOpt(mask SeriesBoolMemOpt) Series {
-	s.size = mask.__trueCount()
 	return s
 }
 

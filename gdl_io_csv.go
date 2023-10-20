@@ -6,9 +6,10 @@ import (
 	"os"
 
 	"io"
-	"preludiometa"
 	"regexp"
 	"strconv"
+
+	"preludiometa"
 )
 
 const CSV_READER_DEFAULT_DELIMITER = ','

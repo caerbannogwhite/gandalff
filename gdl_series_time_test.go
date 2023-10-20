@@ -1,9 +1,10 @@
 package gandalff
 
 import (
-	"preludiometa"
 	"testing"
 	"time"
+
+	"preludiometa"
 )
 
 func Test_SeriesTime_Append(t *testing.T) {

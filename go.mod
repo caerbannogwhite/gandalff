@@ -1,6 +1,6 @@
-module gandalff
+module github.com/caerbannogwhite/gandalff
 
-go 1.20
+go 1.21.3
 
 replace preludiometa => ../preludiometa
 
