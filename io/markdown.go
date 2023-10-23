@@ -1,4 +1,4 @@
-package markdown
+package gandalffio
 
 import (
 	"io"
