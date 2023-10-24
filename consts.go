@@ -1,7 +1,6 @@
 package gandalff
 
 import (
-	"strconv"
 	"time"
 )
 
@@ -31,7 +30,7 @@ const (
 	BOOL_FALSE_STRING = "false"
 )
 
-////////////////////////////////			ENUMS
+////////////////////////////////			ENUMS AND INTERFACES
 
 type SeriesSortOrder int16
 
@@ -48,26 +47,6 @@ type any interface{}
 
 type MapFunc func(v any) any
 type MapFuncNull func(v any, isNull bool) (any, bool)
-
-////////////////////////////////			ERRORS
-
-////////////////////////////////			TO STRING
-
-func boolToString(b bool) string {
-	if b {
-		return BOOL_TRUE_STRING
-	} else {
-		return BOOL_FALSE_STRING
-	}
-}
-
-func intToString(i int64) string {
-	return strconv.FormatInt(i, 10)
-}
-
-func floatToString(f float64) string {
-	return strconv.FormatFloat(f, 'f', -1, 64)
-}
 
 ////////////////////////////////			NULLABLE TYPES
 

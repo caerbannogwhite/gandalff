@@ -2,10 +2,12 @@ package gandalff
 
 import (
 	"io"
+	"preludiometa"
 )
 
 type MarkDownWriter struct {
 	header     bool
+	index      bool
 	types      bool
 	path       string
 	nullString string
@@ -15,7 +17,8 @@ type MarkDownWriter struct {
 
 func NewMarkDownWriter() *MarkDownWriter {
 	return &MarkDownWriter{
-		header:     CSV_READER_DEFAULT_HEADER,
+		header:     true,
+		index:      false,
 		path:       "",
 		nullString: NULL_STRING,
 		writer:     nil,
@@ -25,6 +28,11 @@ func NewMarkDownWriter() *MarkDownWriter {
 
 func (w *MarkDownWriter) SetHeader(header bool) *MarkDownWriter {
 	w.header = header
+	return w
+}
+
+func (w *MarkDownWriter) SetIndex(index bool) *MarkDownWriter {
+	w.index = index
 	return w
 }
 
@@ -58,5 +66,47 @@ func (w *MarkDownWriter) Write() DataFrame {
 }
 
 func writeMarkDown(dataframe DataFrame, writer io.Writer, header bool, nullString string) error {
+
+	buff := ""
+
+	if header {
+		buff += "|"
+		for _, col := range dataframe.Names() {
+			buff += "**" + col + "**|"
+		}
+		buff += "\n"
+	}
+
+	buff += "|"
+	for i, _ := range dataframe.Names() {
+		switch preludiometa.GetDefaultJustification(dataframe.Types()[i]) {
+		case preludiometa.JUSTIFY_LEFT:
+			buff += ":---"
+		case preludiometa.JUSTIFY_RIGHT:
+			buff += "---:"
+		case preludiometa.JUSTIFY_CENTER:
+			buff += ":---:"
+		}
+		buff += "|"
+	}
+	buff += "\n"
+
+	for i := 0; i < dataframe.NRows(); i++ {
+		buff += "|"
+		for j := 0; j < dataframe.NCols(); j++ {
+			if dataframe.SeriesAt(j).IsNull(i) {
+				buff += nullString + "|"
+			} else {
+				buff += dataframe.SeriesAt(j).GetAsString(i) + "|"
+			}
+		}
+		buff += "\n"
+	}
+
+	_, err := writer.Write([]byte(buff))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -1,6 +1,25 @@
 package gandalff
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
+
+func boolToString(b bool) string {
+	if b {
+		return BOOL_TRUE_STRING
+	} else {
+		return BOOL_FALSE_STRING
+	}
+}
+
+func intToString(i int64) string {
+	return strconv.FormatInt(i, 10)
+}
+
+func floatToString(f float64) string {
+	return strconv.FormatFloat(f, 'f', -1, 64)
+}
 
 func seriesTakePreprocess(type_ string, size int, params ...int) ([]int, error) {
 	switch len(params) {

@@ -1412,3 +1412,7 @@ func (df BaseDataFrame) FromCSV() *CsvReader {
 func (df BaseDataFrame) ToCSV() *CsvWriter {
 	return NewCsvWriter().SetDataFrame(df)
 }
+
+func (df BaseDataFrame) ToMarkdown() *MarkDownWriter {
+	return NewMarkDownWriter().SetDataFrame(df)
+}
