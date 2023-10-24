@@ -1,9 +1,7 @@
-package gandalffio
+package gandalff
 
 import (
 	"io"
-
-	"github.com/caerbannogwhite/gandalff"
 )
 
 type MarkDownWriter struct {
@@ -12,14 +10,14 @@ type MarkDownWriter struct {
 	path       string
 	nullString string
 	writer     io.Writer
-	dataframe  gandalff.DataFrame
+	dataframe  DataFrame
 }
 
 func NewMarkDownWriter() *MarkDownWriter {
 	return &MarkDownWriter{
-		header:     gandalff.CSV_READER_DEFAULT_HEADER,
+		header:     CSV_READER_DEFAULT_HEADER,
 		path:       "",
-		nullString: gandalff.NULL_STRING,
+		nullString: NULL_STRING,
 		writer:     nil,
 		dataframe:  nil,
 	}
@@ -45,19 +43,20 @@ func (w *MarkDownWriter) SetWriter(writer io.Writer) *MarkDownWriter {
 	return w
 }
 
-func (w *MarkDownWriter) SetDataFrame(dataframe gandalff.DataFrame) *MarkDownWriter {
+func (w *MarkDownWriter) SetDataFrame(dataframe DataFrame) *MarkDownWriter {
 	w.dataframe = dataframe
 	return w
 }
 
-func (w *MarkDownWriter) Write() gandalff.DataFrame {
+func (w *MarkDownWriter) Write() DataFrame {
 	err := writeMarkDown(w.dataframe, w.writer, w.header, w.nullString)
 	if err != nil {
-		w.dataframe = gandalff.BaseDataFrame{err: err}
+		w.dataframe = BaseDataFrame{err: err}
 	}
 
 	return w.dataframe
 }
 
-func writeMarkDown(dataframe gandalff.DataFrame, writer io.Writer, header bool, nullString string) error {
+func writeMarkDown(dataframe DataFrame, writer io.Writer, header bool, nullString string) error {
+	return nil
 }
