@@ -1,6 +1,7 @@
 package gandalff
 
 import (
+	"fmt"
 	"io"
 	"preludiometa"
 )
@@ -57,7 +58,7 @@ func (w *MarkDownWriter) SetDataFrame(dataframe DataFrame) *MarkDownWriter {
 }
 
 func (w *MarkDownWriter) Write() DataFrame {
-	err := writeMarkDown(w.dataframe, w.writer, w.header, w.nullString)
+	err := writeMarkDown(w.dataframe, w.writer, w.header, w.index, w.nullString)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -65,12 +66,16 @@ func (w *MarkDownWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeMarkDown(dataframe DataFrame, writer io.Writer, header bool, nullString string) error {
+func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, nullString string) error {
 
 	buff := ""
 
 	if header {
 		buff += "|"
+		if index {
+			buff += " |"
+		}
+
 		for _, col := range dataframe.Names() {
 			buff += "**" + col + "**|"
 		}
@@ -78,21 +83,28 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header bool, nullStrin
 	}
 
 	buff += "|"
-	for i, _ := range dataframe.Names() {
-		switch preludiometa.GetDefaultJustification(dataframe.Types()[i]) {
+	if index {
+		buff += "----:|"
+	}
+
+	for i := range dataframe.Names() {
+		switch dataframe.Types()[i].GetDefaultJustification() {
 		case preludiometa.JUSTIFY_LEFT:
-			buff += ":---"
+			buff += ":----|"
 		case preludiometa.JUSTIFY_RIGHT:
-			buff += "---:"
+			buff += "----:|"
 		case preludiometa.JUSTIFY_CENTER:
-			buff += ":---:"
+			buff += ":---:|"
 		}
-		buff += "|"
 	}
 	buff += "\n"
 
 	for i := 0; i < dataframe.NRows(); i++ {
 		buff += "|"
+		if index {
+			buff += fmt.Sprintf("%d|", i)
+		}
+
 		for j := 0; j < dataframe.NCols(); j++ {
 			if dataframe.SeriesAt(j).IsNull(i) {
 				buff += nullString + "|"
