@@ -41,6 +41,14 @@ func Example01() {
 		GroupBy("department").
 		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
 		PrettyPrint(NewPrettyPrintParams())
+
+	// ToMarkdown().
+	// SetWriter(f).
+	// SetHeader(true).
+	// SetIndex(false).
+	// SetNullString("").
+	// Write()
+
 	// ToCSV().
 	// SetDelimiter('\t').
 	// SetWriter(f).
