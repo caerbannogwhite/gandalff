@@ -5,6 +5,8 @@ Or, for short, GDL: Golang Data Library
 ### What is it?
 
 Gandalff is a library for data wrangling in Go.
+The goal is to provide a simple and efficient API for data manipulation in Go,
+similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
 
 ### Examples
@@ -119,6 +121,8 @@ The data types not checked are not yet supported, but might be in the future.
 - [x] OrderBy
 - [x] Select
 - [x] Take
+- [ ] Pivot
+- [ ] Stack/Append
 
 ### Supported stats functions
 
