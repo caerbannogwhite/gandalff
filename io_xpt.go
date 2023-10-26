@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -91,6 +92,42 @@ func (r *XptReader) Read() DataFrame {
 	return df
 }
 
+type XptWriter struct {
+	version   XptVersionType
+	path      string
+	writer    io.Writer
+	dataframe DataFrame
+}
+
+func NewXptWriter() *XptWriter {
+	return &XptWriter{
+		version:   XPT_VERSION_5,
+		path:      "",
+		writer:    nil,
+		dataframe: nil,
+	}
+}
+
+func (w *XptWriter) SetVersion(version XptVersionType) *XptWriter {
+	w.version = version
+	return w
+}
+
+func (w *XptWriter) SetPath(path string) *XptWriter {
+	w.path = path
+	return w
+}
+
+func (w *XptWriter) SetWriter(writer io.Writer) *XptWriter {
+	w.writer = writer
+	return w
+}
+
+func (w *XptWriter) SetDataFrame(dataframe DataFrame) *XptWriter {
+	w.dataframe = dataframe
+	return w
+}
+
 ///////////////////////////////////////     SAS XPT v5/6     ///////////////////////////////////////
 
 // Technical documentation:
@@ -99,7 +136,6 @@ const FIRST_HEADER_V56 = "HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000
 
 // This functions writes a SAS XPT file (versions 5/6).
 func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
-
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readCSV: no context specified")
 	}
@@ -110,6 +146,10 @@ func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 	_, err = reader.Read(buff)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if string(buff[0:78]) != FIRST_HEADER_V56 {
+		return nil, nil, fmt.Errorf("readXPTv56: invalid header")
 	}
 
 	return nil, nil, nil
@@ -141,11 +181,51 @@ const FIRST_HEADER_V89 = "HEADER RECORD*******LIBV8 HEADER RECORD!!!!!!!00000000
 
 // This functions writes a SAS XPT file (versions 7/8).
 func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
+	if ctx == nil {
+		return nil, nil, fmt.Errorf("readXPTv89: no context specified")
+	}
+
+	var err error
+	var buff []byte
+
+	_, err = reader.Read(buff)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check header
+	if string(buff[0:76]) != FIRST_HEADER_V89 {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid header")
+	}
+
+	buff = buff[76:]
+
+	// check real header
+	if strings.Trim(string(buff[:8]), " ") != "SAS" || strings.Trim(string(buff[8:16]), " ") != "SAS" {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid header")
+	}
+	if strings.Trim(string(buff[16:24]), " ") != "SASLIB  9.4" {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid version")
+	}
+
+	buff = buff[80:]
+
 	return nil, nil, nil
 }
 
 // This functions writes a SAS XPT file (versions 7/8).
 func writeXPTv89(path string) error {
+	var osVersion string
+	switch runtime.GOOS {
+	case "darwin":
+		osVersion = "MacOS"
+	case "linux":
+		osVersion = "Linux"
+	case "windows":
+		osVersion = "X64_10HO"
+	default:
+		osVersion = runtime.GOOS
+	}
 
 	buff := make([]byte, 0)
 
@@ -155,7 +235,7 @@ func writeXPTv89(path string) error {
 		"SAS",                                 // 81-88 	SAS
 		"SAS",                                 // 89-96 	SAS
 		"SASLIB  9.4",                         // 97-104 	SASLIB
-		runtime.GOOS,                          // 105-128	OS Name
+		osVersion,                             // 105-128	OS Name
 		"",                                    // 129-152 	24 blanks
 		time.Now().Format("ddMMMyy:hh:mm:ss"), // 153-176   Date/time created
 		time.Now().Format("ddMMMyy:hh:mm:ss"), // 177-200 	Second header record, date/time modified

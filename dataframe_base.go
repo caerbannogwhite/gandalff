@@ -1416,3 +1416,11 @@ func (df BaseDataFrame) ToCSV() *CsvWriter {
 func (df BaseDataFrame) ToMarkdown() *MarkDownWriter {
 	return NewMarkDownWriter().SetDataFrame(df)
 }
+
+func (df BaseDataFrame) FromXPT() *XptReader {
+	return NewXptReader(df.ctx)
+}
+
+func (df BaseDataFrame) ToXPT() *XptWriter {
+	return NewXptWriter().SetDataFrame(df)
+}
