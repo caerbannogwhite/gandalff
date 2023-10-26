@@ -1,4 +1,4 @@
-package sasio
+package gandalff
 
 import (
 	"encoding/binary"
@@ -27,21 +27,21 @@ func Roundtrip(n float64) (float64, error) {
 	return ieee, nil
 }
 
-func TestOverflow(t *testing.T) {
+func Test_IOXpt_Overflow(t *testing.T) {
 	_, err := SasFloatFromIeee(math.Pow(16, 63))
 	if err == nil || err.Error() != "cannot store magnitude more than ~ 16 ** 63 as IBM-format" {
 		t.FailNow()
 	}
 }
 
-func TestUnderflow(t *testing.T) {
+func Test_IOXpt_Underflow(t *testing.T) {
 	_, err := SasFloatFromIeee(math.Pow(16, -66))
 	if err == nil || err.Error() != "cannot store magnitude less than ~ 16 ** -65 as IBM-format" {
 		t.FailNow()
 	}
 }
 
-func TestNan(t *testing.T) {
+func Test_IOXpt_Nan(t *testing.T) {
 	res, err := Roundtrip(math.NaN())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -54,7 +54,7 @@ func TestNan(t *testing.T) {
 	}
 }
 
-func TestSpecialMissingValues(t *testing.T) {
+func Test_IOXpt_SpecialMissingValues(t *testing.T) {
 
 	// From A to Z
 	for i := byte('A'); i <= byte('Z'); i++ {
@@ -83,7 +83,7 @@ func TestSpecialMissingValues(t *testing.T) {
 	}
 }
 
-func TestZero(t *testing.T) {
+func Test_IOXpt_Zero(t *testing.T) {
 	res, err := Roundtrip(0)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -96,7 +96,7 @@ func TestZero(t *testing.T) {
 	}
 }
 
-func TestSmallMagnitudeIntegers(t *testing.T) {
+func Test_IOXpt_SmallMagnitudeIntegers(t *testing.T) {
 	for i := -1000; i < 1000; i++ {
 		res, err := Roundtrip(float64(i))
 		if err != nil {
@@ -111,7 +111,7 @@ func TestSmallMagnitudeIntegers(t *testing.T) {
 	}
 }
 
-func TestLargeMagnitudeFloats(t *testing.T) {
+func Test_IOXpt_LargeMagnitudeFloats(t *testing.T) {
 	n := int(1e9)
 	for i := n; i < n+100; i++ {
 		res, err := Roundtrip(float64(i))
@@ -127,7 +127,7 @@ func TestLargeMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func TestLargeMagnitudeFloatsWithFraction(t *testing.T) {
+func Test_IOXpt_LargeMagnitudeFloatsWithFraction(t *testing.T) {
 	offset := 1e9
 	for i := 0; i < 100; i++ {
 		x := (float64(i) / 1e9) + offset
@@ -144,7 +144,7 @@ func TestLargeMagnitudeFloatsWithFraction(t *testing.T) {
 	}
 }
 
-func TestSmallMagnitudeFloats(t *testing.T) {
+func Test_IOXpt_SmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e3
 		res, err := Roundtrip(v)
@@ -160,7 +160,7 @@ func TestSmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func TestVerySmallMagnitudeFloats(t *testing.T) {
+func Test_IOXpt_VerySmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e6
 		res, err := Roundtrip(v)
@@ -176,7 +176,7 @@ func TestVerySmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func TestVeryVerySmallMagnitudeFloats(t *testing.T) {
+func Test_IOXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e9
 		fmt.Println(v)
@@ -193,6 +193,6 @@ func TestVeryVerySmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func TestGenericv56(t *testing.T) {
-	ReadXPTv56("Z:\\Intertek\\2794 2 outcomes at 2 measures and 2-1distance\\Analysis\\Results + Reports\\XPT_data\\sp.xpt")
-}
+// func Test_IOXpt_Genericv56(t *testing.T) {
+// 	ReadXPTv56("Z:\\Intertek\\2794 2 outcomes at 2 measures and 2-1distance\\Analysis\\Results + Reports\\XPT_data\\sp.xpt")
+// }
