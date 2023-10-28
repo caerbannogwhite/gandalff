@@ -1,6 +1,7 @@
 package gandalff
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -136,6 +137,70 @@ const (
 	valueSAS    = "SAS     "
 	valueLIB    = "SASLIB  "
 )
+
+type __NAMESTR struct {
+	ntype    int16    // VARIABLE TYPE: 1=NUMERIC, 2=CHAR	002
+	nhfun    int16    // HASH OF NNAME (always 0)			004
+	nlng     int16    // LENGTH OF VARIABLE IN OBSERVATION	006
+	nvar0    int16    // VARNUM								008
+	nname    [8]byte  // NAME OF VARIABLE					016
+	nlabel   [40]byte // LABEL OF VARIABLE					056
+	nform    [8]byte  // NAME OF FORMAT						064
+	nfl      int16    // FORMAT FIELD LENGTH OR 0			066
+	nfd      int16    // FORMAT NUMBER OF DECIMALS			068
+	nfj      int16    // 0=LEFT JUSTIFICATION, 1=RIGHT JUST	070
+	nfill    [2]byte  // (UNUSED, FOR ALIGNMENT AND FUTURE)	072
+	niform   [8]byte  // NAME OF INPUT FORMAT				080
+	nifl     int16    // INFORMAT LENGTH ATTRIBUTE			082
+	nifd     int16    // INFORMAT NUMBER OF DECIMALS		084
+	npos     int32    // POSITION OF VALUE IN OBSERVATION	088
+	longname [32]byte // long name for Version 8-style		120
+	lablen   int16    // length of label					122
+	rest     [18]byte // remaining fields are irrelevant	140
+}
+
+func (nms *__NAMESTR) ToString() string {
+	return fmt.Sprintf(
+		"NAMESTR[\n"+
+			"\tntype:    %d\n"+
+			"\tnhfun:    %d\n"+
+			"\tnlng:     %d\n"+
+			"\tnvar0:    %d\n"+
+			"\tnname:    %s\n"+
+			"\tnlabel:   %s\n"+
+			"\tnform:    %s\n"+
+			"\tnfl:      %d\n"+
+			"\tnfd:      %d\n"+
+			"\tnfj:      %d\n"+
+			"\tnfill:    %s\n"+
+			"\tniform:   %s\n"+
+			"\tnifl:     %d\n"+
+			"\tnifd:     %d\n"+
+			"\tnpos:     %d\n"+
+			"\tlongname: %s\n"+
+			"\tlablen:   %d\n"+
+			"\trest:     %s\n"+
+			"]\n",
+		nms.ntype,
+		nms.nhfun,
+		nms.nlng,
+		nms.nvar0,
+		string(nms.nname[:]),
+		string(nms.nlabel[:]),
+		string(nms.nform[:]),
+		nms.nfl,
+		nms.nfd,
+		nms.nfj,
+		string(nms.nfill[:]),
+		string(nms.niform[:]),
+		nms.nifl,
+		nms.nifd,
+		nms.npos,
+		string(nms.longname[:]),
+		nms.lablen,
+		string(nms.rest[:]),
+	)
+}
 
 // Technical documentation:
 // https://support.sas.com/content/dam/SAS/support/en/technical-papers/record-layout-of-a-sas-version-5-or-6-data-set-in-sas-transport-xport-format.pdf
@@ -286,11 +351,95 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 
 	///////////////////////////////////////
 	// 6	Namestr headerrecord
+	var varsNum int
+	if string(content[offset:offset+20]) != valueHeader {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid namestr header")
+	}
+
+	// get number of variables
+	n, err := strconv.ParseInt(string(content[offset+48:offset+58]), 10, 32)
+	if err != nil {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid number of variables '%s'", string(content[offset+24:offset+32]))
+	}
+	varsNum = int(n)
+	offset += 80
 
 	///////////////////////////////////////
 	// 7	Namestr records
 
-	return nil, nil, nil
+	names := make([]string, varsNum)
+	namestrs := make([]__NAMESTR, varsNum)
+
+	// read namestr
+	for i := 0; i < varsNum; i++ {
+		if offset+namestrSize > len(content) {
+			break
+		}
+
+		// ntype    int16    // VARIABLE TYPE: 1=NUMERIC, 2=CHAR	002
+		// nhfun    int16    // HASH OF NNAME (always 0)			004
+		// nlng     int16    // LENGTH OF VARIABLE IN OBSERVATION	006
+		// nvar0    int16    // VARNUM								008
+		// nname    [8]byte  // NAME OF VARIABLE					016
+		// nlabel   [40]byte // LABEL OF VARIABLE					056
+		// nform    [8]byte  // NAME OF FORMAT						064
+		// nfl      int16    // FORMAT FIELD LENGTH OR 0			066
+		// nfd      int16    // FORMAT NUMBER OF DECIMALS			068
+		// nfj      int16    // 0=LEFT JUSTIFICATION, 1=RIGHT JUST	070
+		// nfill    [2]byte  // (UNUSED, FOR ALIGNMENT AND FUTURE)	072
+		// niform   [8]byte  // NAME OF INPUT FORMAT				080
+		// nifl     int16    // INFORMAT LENGTH ATTRIBUTE			082
+		// nifd     int16    // INFORMAT NUMBER OF DECIMALS			084
+		// npos     int32    // POSITION OF VALUE IN OBSERVATION	088
+		// longname [32]byte // long name for Version 8-style		120
+		// lablen   int16    // length of label						122
+		// rest     [18]byte // remaining fields are irrelevant		140
+
+		namestrs[i].ntype = int16(binary.BigEndian.Uint16(content[offset : offset+2]))
+		// namestrs[i].nhfun = int16(binary.BigEndian.Uint16(content[offset+2 : offset+4]))
+		namestrs[i].nlng = int16(binary.BigEndian.Uint16(content[offset+4 : offset+6]))
+		namestrs[i].nvar0 = int16(binary.BigEndian.Uint16(content[offset+6 : offset+8]))
+		copy(namestrs[i].nname[:], content[offset+8:offset+16])
+		copy(namestrs[i].nlabel[:], content[offset+16:offset+56])
+		// copy(namestrs[i].nform[:], content[offset+56:offset+64])
+		namestrs[i].nfl = int16(binary.BigEndian.Uint16(content[offset+64 : offset+66]))
+		namestrs[i].nfd = int16(binary.BigEndian.Uint16(content[offset+66 : offset+68]))
+		// namestrs[i].nfj = int16(binary.BigEndian.Uint16(content[offset+68 : offset+70]))
+		// copy(namestrs[i].niform[:], content[offset+72:offset+80])
+		// namestrs[i].nifl = int16(binary.BigEndian.Uint16(content[offset+80 : offset+82]))
+		namestrs[i].nifd = int16(binary.BigEndian.Uint16(content[offset+82 : offset+84]))
+		namestrs[i].npos = int32(binary.BigEndian.Uint32(content[offset+84 : offset+88]))
+		copy(namestrs[i].longname[:], content[offset+88:offset+120])
+		namestrs[i].lablen = int16(binary.BigEndian.Uint16(content[offset+122 : offset+124]))
+
+		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
+
+		offset += namestrSize
+	}
+
+	// skip the padding
+	padLen := 80 - ((namestrSize * varsNum) % 80)
+	offset += padLen
+
+	///////////////////////////////////////
+	// 8	Descriptor header record
+
+	///////////////////////////////////////
+	// 9	Data records
+
+	series := make([]Series, varsNum)
+	for i := 0; i < varsNum; i++ {
+		switch namestrs[i].ntype {
+		case 1:
+			series[i] = NewSeriesFloat64([]float64{}, nil, false, ctx)
+		case 2:
+			series[i] = NewSeriesString([]string{}, nil, false, ctx)
+		default:
+			return nil, nil, fmt.Errorf("readXPTv89: invalid variable type '%d'", namestrs[i].ntype)
+		}
+	}
+
+	return names, series, nil
 }
 
 // This functions writes a SAS XPT file (versions 8/9).
@@ -299,10 +448,10 @@ func writeXPTv89(path string) error {
 
 	var osVersion string
 	switch runtime.GOOS {
-	case "darwin":
-		osVersion = "MacOS"
-	case "linux":
-		osVersion = "Linux"
+	// case "darwin":
+	// 	osVersion = "MacOS"
+	// case "linux":
+	// 	osVersion = "Linux"
 	case "windows":
 		osVersion = "X64_10HO"
 	default:
