@@ -157,9 +157,20 @@ a,b
 		PrettyPrint(ppp)
 }
 
+func Example05() {
+
+	NewBaseDataFrame(NewContext()).
+		FromXPT().
+		SetPath("../testdata/xpt_test_mixed.xpt").
+		SetVersion(XPT_VERSION_9).
+		Read().
+		PrettyPrint(NewPrettyPrintParams().SetWidth(400))
+
+}
+
 func main() {
-	fmt.Println("Example01:")
-	Example01()
+	// fmt.Println("Example01:")
+	// Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()
@@ -169,4 +180,7 @@ func main() {
 
 	// fmt.Println("Example04:")
 	// Example04()
+
+	fmt.Println("Example05:")
+	Example05()
 }
