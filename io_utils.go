@@ -41,6 +41,11 @@ func IsIbmSpecialMissingValue(ieee float64) bool {
 	return false
 }
 
+func NewSasFloat(b []byte) *SasFloat {
+	sf := SasFloat(b)
+	return &sf
+}
+
 // Convert IBM-format floating point (bytes) to IEEE 754 64-bit (float).
 func (sf *SasFloat) ToIeee() (float64, error) {
 
@@ -110,13 +115,13 @@ func (sf *SasFloat) ToIeee() (float64, error) {
 }
 
 // Convert Python floating point numbers to IBM-format (bytes).
-func SasFloatFromIeee(ieee float64) (*SasFloat, error) {
+func (sf *SasFloat) FromIeee(ieee float64) error {
 	// Python uses IEEE: sign * 1.mantissa * 2 ** (exponent - 1023)
 	// IBM mainframe:    sign * 0.mantissa * 16 ** (exponent - 64)
 
 	if ieee == 0.0 {
-		val := SasFloat([]byte{0, 0, 0, 0, 0, 0, 0, 0})
-		return &val, nil
+		*sf = SasFloat([]byte{0, 0, 0, 0, 0, 0, 0, 0})
+		return nil
 	}
 
 	// The IBM hexadecimal floating point (HFP) format represents the number
@@ -130,11 +135,11 @@ func SasFloatFromIeee(ieee float64) (*SasFloat, error) {
 	// value is encoded with an ASCII-encoded period (".") as the first byte.
 
 	if math.IsNaN(ieee) {
-		val := SasFloat([]byte{'.', 0, 0, 0, 0, 0, 0, 0})
-		return &val, nil
+		*sf = SasFloat([]byte{'.', 0, 0, 0, 0, 0, 0, 0})
+		return nil
 	}
 	if math.IsInf(ieee, 0) {
-		return nil, fmt.Errorf("cannot convert infinity")
+		return fmt.Errorf("cannot convert infinity")
 	}
 
 	ulong := math.Float64bits(ieee)
@@ -147,15 +152,15 @@ func SasFloatFromIeee(ieee float64) (*SasFloat, error) {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, ulong)
 	if ((buff[0] >= 'A' && buff[0] <= 'Z') || buff[0] == '_') && (ulong&0x00ffffffffffffff == 0) {
-		val := SasFloat([]byte{buff[0], 0, 0, 0, 0, 0, 0, 0})
-		return &val, nil
+		*sf = SasFloat([]byte{buff[0], 0, 0, 0, 0, 0, 0, 0})
+		return nil
 	}
 
 	if exponent > 248 {
-		return nil, fmt.Errorf("cannot store magnitude more than ~ 16 ** 63 as IBM-format")
+		return fmt.Errorf("cannot store magnitude more than ~ 16 ** 63 as IBM-format")
 	}
 	if exponent < -260 {
-		return nil, fmt.Errorf("cannot store magnitude less than ~ 16 ** -65 as IBM-format")
+		return fmt.Errorf("cannot store magnitude less than ~ 16 ** -65 as IBM-format")
 	}
 
 	// IEEE mantissa has an implicit 1 left of the radix:    1.significand
@@ -189,6 +194,7 @@ func SasFloatFromIeee(ieee float64) (*SasFloat, error) {
 	// We lose some precision, but who said floats were perfect?
 	buff = make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, uint64(sign|exponent|mantissa))
-	sf := SasFloat(buff)
-	return &sf, nil
+	*sf = SasFloat(buff)
+
+	return nil
 }

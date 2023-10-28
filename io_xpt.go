@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -372,9 +373,6 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 
 	// read namestr
 	for i := 0; i < varsNum; i++ {
-		if offset+namestrSize > len(content) {
-			break
-		}
 
 		// ntype    int16    // VARIABLE TYPE: 1=NUMERIC, 2=CHAR	002
 		// nhfun    int16    // HASH OF NNAME (always 0)			004
@@ -402,40 +400,106 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 		copy(namestrs[i].nname[:], content[offset+8:offset+16])
 		copy(namestrs[i].nlabel[:], content[offset+16:offset+56])
 		// copy(namestrs[i].nform[:], content[offset+56:offset+64])
-		namestrs[i].nfl = int16(binary.BigEndian.Uint16(content[offset+64 : offset+66]))
-		namestrs[i].nfd = int16(binary.BigEndian.Uint16(content[offset+66 : offset+68]))
+		// namestrs[i].nfl = int16(binary.BigEndian.Uint16(content[offset+64 : offset+66]))
+		// namestrs[i].nfd = int16(binary.BigEndian.Uint16(content[offset+66 : offset+68]))
 		// namestrs[i].nfj = int16(binary.BigEndian.Uint16(content[offset+68 : offset+70]))
 		// copy(namestrs[i].niform[:], content[offset+72:offset+80])
 		// namestrs[i].nifl = int16(binary.BigEndian.Uint16(content[offset+80 : offset+82]))
-		namestrs[i].nifd = int16(binary.BigEndian.Uint16(content[offset+82 : offset+84]))
+		// namestrs[i].nifd = int16(binary.BigEndian.Uint16(content[offset+82 : offset+84]))
 		namestrs[i].npos = int32(binary.BigEndian.Uint32(content[offset+84 : offset+88]))
 		copy(namestrs[i].longname[:], content[offset+88:offset+120])
 		namestrs[i].lablen = int16(binary.BigEndian.Uint16(content[offset+122 : offset+124]))
 
 		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
-
 		offset += namestrSize
 	}
 
 	// skip the padding
-	padLen := 80 - ((namestrSize * varsNum) % 80)
-	offset += padLen
+	if p := ((namestrSize * varsNum) % 80); p != 0 {
+		offset += 80 - p
+	}
 
 	///////////////////////////////////////
-	// 8	Descriptor header record
+	// 8	Observation header
+
+	if string(content[offset:offset+20]) != valueHeader {
+		return nil, nil, fmt.Errorf("readXPTv89: invalid observation header")
+	}
+
+	// skip the observation header
+	offset += 80
 
 	///////////////////////////////////////
 	// 9	Data records
 
-	series := make([]Series, varsNum)
+	nulls := make([][]bool, varsNum)
+	values := make([]interface{}, varsNum)
+
 	for i := 0; i < varsNum; i++ {
+		nulls[i] = make([]bool, 0)
+
 		switch namestrs[i].ntype {
 		case 1:
-			series[i] = NewSeriesFloat64([]float64{}, nil, false, ctx)
+			values[i] = make([]float64, 0)
 		case 2:
-			series[i] = NewSeriesString([]string{}, nil, false, ctx)
+			values[i] = make([]string, 0)
 		default:
 			return nil, nil, fmt.Errorf("readXPTv89: invalid variable type '%d'", namestrs[i].ntype)
+		}
+	}
+
+	// read observations by rows
+	for offset < len(content) {
+
+		allNulls := true
+		for i := offset; i < len(content); i++ {
+			if content[i] != '\x20' {
+				allNulls = false
+				break
+			}
+		}
+
+		if allNulls {
+			break
+		}
+
+		rowLen := 0
+		for i := 0; i < varsNum; i++ {
+			buffer := content[offset+int(namestrs[i].npos) : offset+int(namestrs[i].npos)+int(namestrs[i].nlng)]
+
+			switch namestrs[i].ntype {
+			case 1:
+				f, err := NewSasFloat(buffer).ToIeee()
+				if err != nil {
+					return nil, nil, err
+				}
+
+				if math.IsNaN(f) {
+					nulls[i] = append(nulls[i], true)
+				} else {
+					nulls[i] = append(nulls[i], false)
+				}
+				values[i] = append(values[i].([]float64), f)
+
+			case 2:
+				s := string(buffer)
+
+				nulls[i] = append(nulls[i], false)
+				values[i] = append(values[i].([]string), s)
+			}
+			rowLen += int(namestrs[i].nlng)
+		}
+
+		offset += rowLen
+	}
+
+	series := make([]Series, varsNum)
+	for i := 0; i < varsNum; i++ {
+		switch t := values[i].(type) {
+		case []float64:
+			series[i] = NewSeriesFloat64(t, nulls[i], false, ctx)
+		case []string:
+			series[i] = NewSeriesString(t, nulls[i], false, ctx)
 		}
 	}
 

@@ -9,7 +9,8 @@ import (
 const DELTA = 10e-16
 
 func Roundtrip(n float64) (float64, error) {
-	ibm, err := SasFloatFromIeee(n)
+	ibm := SasFloat{}
+	err := ibm.FromIeee(n)
 	if err != nil {
 		return 0, err
 	}
@@ -27,14 +28,16 @@ func Roundtrip(n float64) (float64, error) {
 }
 
 func Test_IOXpt_Overflow(t *testing.T) {
-	_, err := SasFloatFromIeee(math.Pow(16, 63))
+	ibm := SasFloat{}
+	err := ibm.FromIeee(math.Pow(16, 63))
 	if err == nil || err.Error() != "cannot store magnitude more than ~ 16 ** 63 as IBM-format" {
 		t.FailNow()
 	}
 }
 
 func Test_IOXpt_Underflow(t *testing.T) {
-	_, err := SasFloatFromIeee(math.Pow(16, -66))
+	ibm := SasFloat{}
+	err := ibm.FromIeee(math.Pow(16, -66))
 	if err == nil || err.Error() != "cannot store magnitude less than ~ 16 ** -65 as IBM-format" {
 		t.FailNow()
 	}
