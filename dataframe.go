@@ -103,7 +103,10 @@ type DataFrame interface {
 	FromCSV() *CsvReader
 	ToCSV() *CsvWriter
 
-	ToMarkdown() *MarkDownWriter
+	FromXPT() *XptReader
+	ToXPT() *XptWriter
+
+	ToMarkDown() *MarkDownWriter
 }
 
 ////////////////////////			AGGREGATORS

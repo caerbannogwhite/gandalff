@@ -1286,24 +1286,6 @@ func (df BaseDataFrame) Records(header bool) [][]string {
 	return out
 }
 
-type PrettyPrintParams struct {
-	minColWidth int
-	maxColWidth int
-	width       int
-	nrows       int
-	indent      string
-}
-
-func NewPrettyPrintParams() PrettyPrintParams {
-	return PrettyPrintParams{
-		minColWidth: 10,
-		maxColWidth: 20,
-		width:       80,
-		nrows:       10,
-		indent:      "",
-	}
-}
-
 func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	if df.err != nil {
 		fmt.Println(df.err)
@@ -1413,14 +1395,14 @@ func (df BaseDataFrame) ToCSV() *CsvWriter {
 	return NewCsvWriter().SetDataFrame(df)
 }
 
-func (df BaseDataFrame) ToMarkdown() *MarkDownWriter {
-	return NewMarkDownWriter().SetDataFrame(df)
-}
-
 func (df BaseDataFrame) FromXPT() *XptReader {
 	return NewXptReader(df.ctx)
 }
 
 func (df BaseDataFrame) ToXPT() *XptWriter {
 	return NewXptWriter().SetDataFrame(df)
+}
+
+func (df BaseDataFrame) ToMarkDown() *MarkDownWriter {
+	return NewMarkDownWriter().SetDataFrame(df)
 }
