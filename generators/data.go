@@ -34,7 +34,7 @@ type SeriesFile struct {
 }
 
 var DATA_BASE_METHODS = map[string]SeriesFile{
-	"gdl_series_bool_base.go": {
+	"series_bool_base.go": {
 		SeriesName:            "SeriesBool",
 		SeriesTypeStr:         "BoolType",
 		SeriesGoTypeStr:       "bool",
@@ -43,7 +43,7 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 		DefaultValue:          "false",
 	},
 
-	"gdl_series_int_base.go": {
+	"series_int_base.go": {
 		SeriesName:            "SeriesInt",
 		SeriesTypeStr:         "IntType",
 		SeriesGoTypeStr:       "int",
@@ -52,7 +52,7 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 		DefaultValue:          "0",
 	},
 
-	"gdl_series_int64_base.go": {
+	"series_int64_base.go": {
 		SeriesName:            "SeriesInt64",
 		SeriesTypeStr:         "Int64Type",
 		SeriesGoTypeStr:       "int64",
@@ -61,7 +61,7 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 		DefaultValue:          "0",
 	},
 
-	"gdl_series_float64_base.go": {
+	"series_float64_base.go": {
 		SeriesName:            "SeriesFloat64",
 		SeriesTypeStr:         "Float64Type",
 		SeriesGoTypeStr:       "float64",
@@ -70,17 +70,17 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 		DefaultValue:          "0",
 	},
 
-	"gdl_series_string_base.go": {
+	"series_string_base.go": {
 		SeriesName:            "SeriesString",
 		SeriesTypeStr:         "StringType",
 		SeriesGoTypeStr:       "*string",
 		SeriesGoOuterTypeStr:  "string",
 		SeriesNullableTypeStr: "NullableString",
-		DefaultValue:          "s.ctx.stringPool.nullStringPtr",
+		DefaultValue:          "s.ctx.stringPool.naTextPtr",
 		IsGoTypePtr:           true,
 	},
 
-	"gdl_series_time_base.go": {
+	"series_time_base.go": {
 		SeriesName:            "SeriesTime",
 		SeriesTypeStr:         "TimeType",
 		SeriesGoTypeStr:       "time.Time",
@@ -90,7 +90,7 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 		IsTimeType:            true,
 	},
 
-	"gdl_series_duration_base.go": {
+	"series_duration_base.go": {
 		SeriesName:            "SeriesDuration",
 		SeriesTypeStr:         "DurationType",
 		SeriesGoTypeStr:       "time.Duration",
@@ -102,13 +102,13 @@ var DATA_BASE_METHODS = map[string]SeriesFile{
 
 func GenerateOperationsData() map[string]SeriesFile {
 	var data = map[string]SeriesFile{
-		"gdl_series_na_ops.go": {
+		"series_na_ops.go": {
 			SeriesName: "SeriesNA",
 			SeriesType: preludiometa.NullType,
 			Operations: map[string]Operation{},
 		},
 
-		"gdl_series_bool_ops.go": {
+		"series_bool_ops.go": {
 			SeriesName: "SeriesBool",
 			SeriesType: preludiometa.BoolType,
 			Operations: map[string]Operation{
@@ -513,7 +513,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_int_ops.go": {
+		"series_int_ops.go": {
 			SeriesName: "SeriesInt",
 			SeriesType: preludiometa.IntType,
 			Operations: map[string]Operation{
@@ -920,7 +920,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_int64_ops.go": {
+		"series_int64_ops.go": {
 			SeriesName: "SeriesInt64",
 			SeriesType: preludiometa.Int64Type,
 			Operations: map[string]Operation{
@@ -1327,7 +1327,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_float64_ops.go": {
+		"series_float64_ops.go": {
 			SeriesName: "SeriesFloat64",
 			SeriesType: preludiometa.Float64Type,
 			Operations: map[string]Operation{
@@ -1734,7 +1734,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_string_ops.go": {
+		"series_string_ops.go": {
 			SeriesName: "SeriesString",
 			SeriesType: preludiometa.StringType,
 			Operations: map[string]Operation{
@@ -1873,7 +1873,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_time_ops.go": {
+		"series_time_ops.go": {
 			SeriesName: "SeriesTime",
 			SeriesType: preludiometa.TimeType,
 			Operations: map[string]Operation{
@@ -2004,7 +2004,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 			},
 		},
 
-		"gdl_series_duration_ops.go": {
+		"series_duration_ops.go": {
 			SeriesName: "SeriesDuration",
 			SeriesType: preludiometa.DurationType,
 			Operations: map[string]Operation{
@@ -2152,7 +2152,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 					SeriesName: seriesName,
 					SeriesType: seriesTypes[j],
 					MakeOperation: func(res, resIndex, op1, op1Index, op2, op2Index string) ast.Expr {
-						return &ast.Ident{Name: fmt.Sprintf("%s[%s] = %s.ctx.stringPool.Put(NULL_STRING + *%s.data[%s])", res, resIndex, op1, op2, op2Index)}
+						return &ast.Ident{Name: fmt.Sprintf("%s[%s] = %s.ctx.stringPool.Put(NA_TEXT + *%s.data[%s])", res, resIndex, op1, op2, op2Index)}
 					},
 				})
 			} else
@@ -2177,11 +2177,11 @@ func GenerateOperationsData() map[string]SeriesFile {
 			}
 		}
 
-		data["gdl_series_na_ops.go"].Operations[opName] = Operation{OpCode: opCodes[i], ApplyTo: applyTo}
+		data["series_na_ops.go"].Operations[opName] = Operation{OpCode: opCodes[i], ApplyTo: applyTo}
 	}
 
 	// Append SeriesNA to all other series
-	fileNames := []string{"gdl_series_bool_ops.go", "gdl_series_int_ops.go", "gdl_series_int64_ops.go", "gdl_series_float64_ops.go", "gdl_series_string_ops.go", "gdl_series_time_ops.go", "gdl_series_duration_ops.go"}
+	fileNames := []string{"series_bool_ops.go", "series_int_ops.go", "series_int64_ops.go", "series_float64_ops.go", "series_string_ops.go", "series_time_ops.go", "series_duration_ops.go"}
 	seriesTypes = []preludiometa.BaseType{preludiometa.BoolType, preludiometa.IntType, preludiometa.Int64Type, preludiometa.Float64Type, preludiometa.StringType, preludiometa.TimeType, preludiometa.DurationType}
 
 	for i, fileName := range fileNames {
@@ -2196,7 +2196,7 @@ func GenerateOperationsData() map[string]SeriesFile {
 						SeriesName: "SeriesNA",
 						SeriesType: preludiometa.NullType,
 						MakeOperation: func(res, resIndex, op1, op1Index, op2, op2Index string) ast.Expr {
-							return &ast.Ident{Name: fmt.Sprintf("%s[%s] = %s.ctx.stringPool.Put(*%s.data[%s] + NULL_STRING)", res, resIndex, op1, op1, op1Index)}
+							return &ast.Ident{Name: fmt.Sprintf("%s[%s] = %s.ctx.stringPool.Put(*%s.data[%s] + NA_TEXT)", res, resIndex, op1, op1, op1Index)}
 						},
 					}),
 				}
