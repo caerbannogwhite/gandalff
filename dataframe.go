@@ -106,6 +106,7 @@ type DataFrame interface {
 	FromXPT() *XptReader
 	ToXPT() *XptWriter
 
+	ToHtml() *HtmlWriter
 	ToMarkDown() *MarkDownWriter
 }
 

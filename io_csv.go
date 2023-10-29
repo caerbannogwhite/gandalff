@@ -98,7 +98,7 @@ func (r *CsvReader) Read() DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("CsvReader: no context specified")}
 	}
 
-	names, series, err := readCSV(r.reader, r.delimiter, r.header, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
+	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 	if err != nil {
 		return BaseDataFrame{err: err}
 	}
@@ -151,8 +151,8 @@ func (tg typeGuesser) atoBool(s string) (bool, error) {
 	return false, fmt.Errorf("cannot convert \"%s\" to bool", s)
 }
 
-// ReadCSV reads a CSV file and returns a GDLDataFrame.
-func readCSV(reader io.Reader, delimiter rune, header bool, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
+// ReadCsv reads a CSV file and returns a GDLDataFrame.
+func readCsv(reader io.Reader, delimiter rune, header bool, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
 
 	// TODO: Add support for Time and Duration types (defined in a schema)
 	// TODO: Optimize null masks (use bit vectors)?
@@ -160,7 +160,7 @@ func readCSV(reader io.Reader, delimiter rune, header bool, nullValues bool, gue
 	//		and guess the data types in parallel
 
 	if ctx == nil {
-		return nil, nil, fmt.Errorf("readCSV: no context specified")
+		return nil, nil, fmt.Errorf("readCsv: no context specified")
 	}
 
 	// Initialize TypeGuesser
@@ -506,7 +506,7 @@ func (w *CsvWriter) SetDataFrame(dataframe DataFrame) *CsvWriter {
 }
 
 func (w *CsvWriter) Write() DataFrame {
-	err := writeCSV(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
+	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -514,14 +514,14 @@ func (w *CsvWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeCSV(df DataFrame, writer io.Writer, delimiter rune, header bool, naText string) error {
+func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, naText string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
 		series[i] = df.SeriesAt(i)
 	}
 
 	if writer == nil {
-		return fmt.Errorf("writeCSV: no writer specified")
+		return fmt.Errorf("writeCsv: no writer specified")
 	}
 
 	if header {

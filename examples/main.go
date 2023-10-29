@@ -159,11 +159,18 @@ a,b
 
 func Example05() {
 
+	// f, _ := os.Create("test.html")
+
 	NewBaseDataFrame(NewContext()).
 		FromXPT().
 		SetPath("../testdata/xpt_test_mixed.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
+
+		// ToHtml().
+		// SetWriter(f).
+		// Write()
+
 		PrettyPrint(NewPrettyPrintParams().SetWidth(400))
 
 }

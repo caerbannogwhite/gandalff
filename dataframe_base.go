@@ -1415,6 +1415,12 @@ func (df BaseDataFrame) ToXPT() *XptWriter {
 	return NewXptWriter().SetDataFrame(df)
 }
 
+func (df BaseDataFrame) ToHtml() *HtmlWriter {
+	return NewHtmlWriter().
+		SetDataFrame(df).
+		SetNaText(df.ctx.naText)
+}
+
 func (df BaseDataFrame) ToMarkDown() *MarkDownWriter {
 	return NewMarkDownWriter().
 		SetDataFrame(df).
