@@ -3,6 +3,8 @@ package gandalff
 import (
 	"fmt"
 	"math"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -10,10 +12,10 @@ const (
 	defaultDecimalDigits       = 11
 	defaultThreshold           = -8
 	defaultScientificThreshold = 9
-	defaultMaxDigits           = 11
+	defaultMaxDigits           = 10
 	defaultMovingDigits        = 3
-	defaultNanText             = "NA"
-	defaultInfText             = "Inf"
+	defaultNaText              = NA_TEXT
+	defaultInfText             = INF_TEXT
 )
 
 type NumericFormatter struct {
@@ -21,11 +23,21 @@ type NumericFormatter struct {
 	threshold           int    // The number of digits to print before the decimal point.
 	scientificThreshold int    // The number of digits to print before switching to scientific notation.
 	maxDigits           int    // The maximum number of digits to print.
+	maxWidth            int    // Maximum width required to print the number.
 	movingDigits        int    // The number of digits to print before the decimal point for very small numbers.
-	nanText             string // The text to print for NaNs.
+	naText              string // The text to print for NaNs.
 	infText             string // The text to print for Infs.
-	exponentialFormat   bool   // Whether to use scientific notation.
+	useExpFormat        bool   // Whether to use scientific notation.
+	hasNegative         bool   // Whether negative numbers are present.
 	useLipGloss         bool   // Whether to use lipgloss.
+	justifyLeft         bool   // Whether to justify left.
+
+	styleBold   lipgloss.Style
+	styleItalic lipgloss.Style
+	styleNa     lipgloss.Style
+	styleNum    lipgloss.Style
+	styleNumNeg lipgloss.Style
+	styleNone   lipgloss.Style
 }
 
 func NewNumericFormatter() *NumericFormatter {
@@ -34,27 +46,89 @@ func NewNumericFormatter() *NumericFormatter {
 		threshold:           defaultThreshold,
 		scientificThreshold: defaultScientificThreshold,
 		maxDigits:           defaultMaxDigits,
+		maxWidth:            0,
 		movingDigits:        defaultMovingDigits,
-		nanText:             defaultNanText,
+		naText:              defaultNaText,
 		infText:             defaultInfText,
-		exponentialFormat:   false,
+		useExpFormat:        false,
+		hasNegative:         false,
 		useLipGloss:         false,
+		justifyLeft:         false,
+
+		styleBold:   lipgloss.NewStyle().Bold(true),
+		styleItalic: lipgloss.NewStyle().Italic(true),
+		styleNa:     lipgloss.NewStyle().Bold(true).Copy().Foreground(lipgloss.Color("#c00020")),
+		styleNum:    lipgloss.NewStyle().Foreground(lipgloss.Color("#0080c0")),
+		styleNumNeg: lipgloss.NewStyle().Foreground(lipgloss.Color("#c04000")),
+		styleNone:   lipgloss.NewStyle(),
 	}
 }
 
+func (f *NumericFormatter) SetDecimalDigits(decimalDigits int) *NumericFormatter {
+	f.decimalDigits = decimalDigits
+	return f
+}
+
+func (f *NumericFormatter) SetThreshold(threshold int) *NumericFormatter {
+	f.threshold = threshold
+	return f
+}
+
+func (f *NumericFormatter) SetScientificThreshold(scientificThreshold int) *NumericFormatter {
+	f.scientificThreshold = scientificThreshold
+	return f
+}
+
+func (f *NumericFormatter) SetMaxDigits(maxDigits int) *NumericFormatter {
+	f.maxDigits = maxDigits
+	return f
+}
+
+func (f *NumericFormatter) SetMovingDigits(movingDigits int) *NumericFormatter {
+	f.movingDigits = movingDigits
+	return f
+}
+
+func (f *NumericFormatter) SetNaText(naText string) *NumericFormatter {
+	f.naText = naText
+	return f
+}
+
+func (f *NumericFormatter) SetInfText(infText string) *NumericFormatter {
+	f.infText = infText
+	return f
+}
+
+func (f *NumericFormatter) SetUseLipGloss(useLipGloss bool) *NumericFormatter {
+	f.useLipGloss = useLipGloss
+	return f
+}
+
 func (f *NumericFormatter) Push(num float64) {
-	if math.IsNaN(num) || math.IsInf(num, 0) {
+	if math.IsNaN(num) {
+		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.naText))))
+		return
+	}
+
+	if math.IsInf(num, 1) {
+		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.infText))))
+		return
+	}
+
+	if math.IsInf(num, -1) {
+		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.infText)+1)))
+		f.hasNegative = true
 		return
 	}
 
 	absNum := math.Abs(num)
-	if f.exponentialFormat || absNum <= 1e-50 {
+	if f.useExpFormat || absNum <= 1e-50 {
 		return
 	}
 
 	// Set exponential format if very large.
 	if absNum >= math.Pow(10, float64(f.scientificThreshold))-0.5-0.1*cutoffDelta { // 999 999 999.4999...
-		f.exponentialFormat = true
+		f.useExpFormat = true
 		return
 	}
 
@@ -70,9 +144,10 @@ func (f *NumericFormatter) Push(num float64) {
 		signif = 1 // not used but will keep for consistency
 		exponent++
 	}
+
 	if exponent < 2-f.scientificThreshold { // -7
-		f.exponentialFormat = true
-		return
+		f.useExpFormat = true
+
 	} else if exponent > f.threshold && f.decimalDigits > 0 {
 		f.decimalDigits = int(math.Min(float64(f.maxDigits), math.Max(0, float64(f.movingDigits-exponent))))
 		f.threshold = exponent
@@ -80,20 +155,23 @@ func (f *NumericFormatter) Push(num float64) {
 }
 
 func (f *NumericFormatter) Format(num float64) string {
-	if math.IsInf(num, 0) {
-		return f.infText
+	if math.IsInf(num, -1) {
+		return f.render(fmt.Sprintf("-%s", f.infText), f.styleNumNeg)
+	}
+	if math.IsInf(num, 1) {
+		return f.render(f.infText, f.styleNum)
 	}
 	if math.IsNaN(num) {
-		return f.nanText
+		return f.render(f.naText, f.styleNa)
 	}
 
 	// Very small numbers, which are treated as zero, are formatted as 0.
 	if math.Abs(num) <= 1e-50 {
-		return "0"
+		return f.render("0", f.styleNum)
 	}
 
 	signif, exponent := sigAndExp(num)
-	if f.exponentialFormat {
+	if f.useExpFormat {
 		if math.Abs(signif) >= 9.9995-1e-4*cutoffDelta { // to avoid printing "10.000 x 10^exp" when signif rounded up, eg. 9.99999
 			if signif < 0 {
 				signif = -1.0
@@ -102,15 +180,35 @@ func (f *NumericFormatter) Format(num float64) string {
 			}
 			exponent++
 		}
-		return fmt.Sprintf("%se%d", fmt.Sprintf("%.*f", 3, signif), exponent)
-	} else if exponent < -f.decimalDigits && f.decimalDigits != f.maxDigits {
+
+		return f.render(fmt.Sprintf("%se%d", fmt.Sprintf("%.*f", 3, signif), exponent), f.styleNum)
+	}
+
+	if exponent < -f.decimalDigits && f.decimalDigits != f.maxDigits {
 		minNeededDigits := -exponent - 1
 		if math.Abs(signif) >= 9.5-cutoffDelta { // if the last digit would be 9, check if rounded up or down
 			minNeededDigits++
 		}
-		return fmt.Sprintf("%.*f", minNeededDigits, num)
+
+		return f.render(fmt.Sprintf("%.*f", minNeededDigits, num), f.styleNum)
+	}
+
+	return f.render(fmt.Sprintf("%.*f", f.decimalDigits, num), f.styleNum)
+}
+
+func (f *NumericFormatter) render(s string, style lipgloss.Style) string {
+	if f.useLipGloss {
+		if f.justifyLeft {
+			return style.Render(fmt.Sprintf("%-*s", f.maxDigits, s))
+		} else {
+			return style.Render(fmt.Sprintf("%*s", f.maxDigits, s))
+		}
+	}
+
+	if f.justifyLeft {
+		return fmt.Sprintf("%-*s", f.maxDigits, s)
 	} else {
-		return fmt.Sprintf("%.*f", f.decimalDigits, num)
+		return fmt.Sprintf("%*s", f.maxDigits, s)
 	}
 }
 
