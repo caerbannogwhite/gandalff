@@ -35,7 +35,7 @@ func (s SeriesString) Set(i int, v any) Series {
 	switch v := v.(type) {
 	case nil:
 		s = s.MakeNullable().(SeriesString)
-		s.data[i] = s.ctx.stringPool.nullStringPtr
+		s.data[i] = s.ctx.stringPool.naTextPtr
 		s.nullMask[i>>3] |= 1 << uint(i%8)
 
 	case string:
@@ -46,7 +46,7 @@ func (s SeriesString) Set(i int, v any) Series {
 		if v.Valid {
 			s.data[i] = s.ctx.stringPool.Put(v.Value)
 		} else {
-			s.data[i] = s.ctx.stringPool.nullStringPtr
+			s.data[i] = s.ctx.stringPool.naTextPtr
 			s.nullMask[i>>3] |= 1 << uint(i%8)
 		}
 
@@ -66,7 +66,7 @@ func (s SeriesString) Strings() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else {
 				data[i] = *v
 			}
@@ -94,7 +94,7 @@ func (s SeriesString) DataAsString() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else {
 				data[i] = *v
 			}

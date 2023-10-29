@@ -243,7 +243,7 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *Context
 	if nullMask != nil {
 		for i, v := range data {
 			if nullMask[i] {
-				actualData[i] = ctx.stringPool.nullStringPtr
+				actualData[i] = ctx.stringPool.naTextPtr
 				continue
 			}
 			actualData[i] = ctx.stringPool.Put(v)

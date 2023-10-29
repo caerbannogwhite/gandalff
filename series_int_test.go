@@ -431,7 +431,7 @@ func Test_SeriesInt_Cast(t *testing.T) {
 	result = s.Cast(preludiometa.StringType)
 
 	// Check the data.
-	expectedString := []string{"0", "1", NULL_STRING, "3", "4", NULL_STRING, "6", "7", NULL_STRING, "9"}
+	expectedString := []string{"0", "1", NA_TEXT, "3", "4", NA_TEXT, "6", "7", NA_TEXT, "9"}
 
 	for i, v := range result.Data().([]string) {
 		if v != expectedString[i] {

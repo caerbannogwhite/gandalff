@@ -7,23 +7,23 @@ import (
 )
 
 type MarkDownWriter struct {
-	header     bool
-	index      bool
-	types      bool
-	path       string
-	nullString string
-	writer     io.Writer
-	dataframe  DataFrame
+	header    bool
+	index     bool
+	types     bool
+	path      string
+	naText    string
+	writer    io.Writer
+	dataframe DataFrame
 }
 
 func NewMarkDownWriter() *MarkDownWriter {
 	return &MarkDownWriter{
-		header:     true,
-		index:      false,
-		path:       "",
-		nullString: NULL_STRING,
-		writer:     nil,
-		dataframe:  nil,
+		header:    true,
+		index:     false,
+		path:      "",
+		naText:    NA_TEXT,
+		writer:    nil,
+		dataframe: nil,
 	}
 }
 
@@ -42,8 +42,8 @@ func (w *MarkDownWriter) SetPath(path string) *MarkDownWriter {
 	return w
 }
 
-func (w *MarkDownWriter) SetNullString(nullString string) *MarkDownWriter {
-	w.nullString = nullString
+func (w *MarkDownWriter) SetNaText(naText string) *MarkDownWriter {
+	w.naText = naText
 	return w
 }
 
@@ -58,7 +58,7 @@ func (w *MarkDownWriter) SetDataFrame(dataframe DataFrame) *MarkDownWriter {
 }
 
 func (w *MarkDownWriter) Write() DataFrame {
-	err := writeMarkDown(w.dataframe, w.writer, w.header, w.index, w.nullString)
+	err := writeMarkDown(w.dataframe, w.writer, w.header, w.index, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -66,7 +66,7 @@ func (w *MarkDownWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, nullString string) error {
+func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, naText string) error {
 
 	buff := ""
 
@@ -107,7 +107,7 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, nu
 
 		for j := 0; j < dataframe.NCols(); j++ {
 			if dataframe.SeriesAt(j).IsNull(i) {
-				buff += nullString + "|"
+				buff += naText + "|"
 			} else {
 				buff += dataframe.SeriesAt(j).GetAsString(i) + "|"
 			}

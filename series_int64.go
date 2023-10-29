@@ -21,7 +21,7 @@ type SeriesInt64 struct {
 // Get the element at index i as a string.
 func (s SeriesInt64) GetAsString(i int) string {
 	if s.isNullable && s.IsNull(i) {
-		return NULL_STRING
+		return NA_TEXT
 	}
 	return intToString(s.data[i])
 }
@@ -119,7 +119,7 @@ func (s SeriesInt64) DataAsString() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else {
 				data[i] = intToString(v)
 			}
@@ -192,7 +192,7 @@ func (s SeriesInt64) Cast(t preludiometa.BaseType) Series {
 		if s.isNullable {
 			for i, v := range s.data {
 				if s.IsNull(i) {
-					data[i] = s.ctx.stringPool.Put(NULL_STRING)
+					data[i] = s.ctx.stringPool.Put(NA_TEXT)
 				} else {
 					data[i] = s.ctx.stringPool.Put(intToString(v))
 				}

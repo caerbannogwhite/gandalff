@@ -25,9 +25,10 @@ const (
 	HASH_MAGIC_NUMBER_NULL = int64(0x7fff4979b77e3f93)
 	HASH_NULL_KEY          = int64(0x7ff8000000000001)
 
-	NULL_STRING       = "NA"
-	BOOL_TRUE_STRING  = "true"
-	BOOL_FALSE_STRING = "false"
+	INF_TEXT        = "Inf"
+	NA_TEXT         = "Na"
+	BOOL_TRUE_TEXT  = "true"
+	BOOL_FALSE_TEXT = "false"
 )
 
 ////////////////////////////////			ENUMS AND INTERFACES

@@ -105,7 +105,7 @@ func (s SeriesNA) Get(i int) any {
 }
 
 func (s SeriesNA) GetAsString(i int) string {
-	return NULL_STRING
+	return NA_TEXT
 }
 
 // Set the element at index i.
@@ -325,7 +325,7 @@ func (s SeriesNA) Append(v any) Series {
 	case string, NullableString, []string, []NullableString, SeriesString:
 		data := make([]*string, s.size)
 		for i := 0; i < s.size; i++ {
-			data[i] = s.ctx.stringPool.nullStringPtr
+			data[i] = s.ctx.stringPool.naTextPtr
 		}
 
 		switch v := v.(type) {
@@ -340,7 +340,7 @@ func (s SeriesNA) Append(v any) Series {
 				data = append(data, s.ctx.stringPool.Put(v.Value))
 				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
 			} else {
-				data = append(data, s.ctx.stringPool.nullStringPtr)
+				data = append(data, s.ctx.stringPool.naTextPtr)
 			}
 
 		case []string:
@@ -358,7 +358,7 @@ func (s SeriesNA) Append(v any) Series {
 					data[s.size+i] = s.ctx.stringPool.Put(v.Value)
 				} else {
 					nullMask[i>>3] |= 1 << uint(i%8)
-					data[s.size+i] = s.ctx.stringPool.nullStringPtr
+					data[s.size+i] = s.ctx.stringPool.naTextPtr
 				}
 			}
 
@@ -399,7 +399,7 @@ func (s SeriesNA) DataAsNullable() any {
 func (s SeriesNA) DataAsString() []string {
 	data := make([]string, s.size)
 	for i := 0; i < s.size; i++ {
-		data[i] = NULL_STRING
+		data[i] = NA_TEXT
 	}
 	return data
 }

@@ -11,15 +11,15 @@ type Context struct {
 	stringPool *StringPool
 
 	threadsNumber int
-	nullString    string
+	naText        string
 	timeFormat    string
 }
 
 func NewContext() *Context {
 	return &Context{
-		stringPool:    NewStringPool(),
+		stringPool:    NewStringPool().SetNaText(NA_TEXT),
 		threadsNumber: THREADS_NUMBER,
-		nullString:    NULL_STRING,
+		naText:        NA_TEXT,
 		timeFormat:    "2006-01-02 15:04:05",
 	}
 }
@@ -28,37 +28,47 @@ func (ctx *Context) GetThreadsNumber() int {
 	return ctx.threadsNumber
 }
 
-func (ctx *Context) SetThreadsNumber(n int) {
+func (ctx *Context) SetThreadsNumber(n int) *Context {
 	ctx.threadsNumber = n
+	return ctx
 }
 
-func (ctx *Context) GetNullString() string {
-	return ctx.nullString
+func (ctx *Context) GetNaText() string {
+	return ctx.naText
 }
 
-func (ctx *Context) SetNullString(s string) {
-	ctx.nullString = s
+func (ctx *Context) SetNaText(s string) *Context {
+	ctx.stringPool.SetNaText(s)
+	ctx.naText = s
+	return ctx
 }
 
 func (ctx *Context) GetTimeFormat() string {
 	return ctx.timeFormat
 }
 
-func (ctx *Context) SetTimeFormat(s string) {
+func (ctx *Context) SetTimeFormat(s string) *Context {
 	ctx.timeFormat = s
+	return ctx
 }
 
 type StringPool struct {
 	sync.RWMutex
-	pool          map[string]*string
-	nullStringPtr *string
+	pool      map[string]*string
+	naTextPtr *string
 }
 
 func NewStringPool() *StringPool {
 	pool := &StringPool{pool: make(map[string]*string)}
-	pool.nullStringPtr = pool.Put(NULL_STRING)
-
 	return pool
+}
+
+func (sp *StringPool) SetNaText(s string) *StringPool {
+	sp.Lock()
+	defer sp.Unlock()
+	sp.naTextPtr = sp.Put(s)
+
+	return sp
 }
 
 // Get returns the address of the string if it exists in the pool, otherwise nil.

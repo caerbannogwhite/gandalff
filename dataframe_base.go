@@ -1308,6 +1308,16 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		buffer += "\n"
 	}
 
+	// check the data and collect records
+
+	for _, c := range df.series {
+		if c.Len() == 0 {
+			buffer += "Empty DataFrame\n"
+			fmt.Println(buffer)
+			return df
+		}
+	}
+
 	// header
 	buffer += params.indent + "╭"
 	for i := 1; i < df.NCols()*actualColSize; i++ {
@@ -1392,7 +1402,9 @@ func (df BaseDataFrame) FromCSV() *CsvReader {
 }
 
 func (df BaseDataFrame) ToCSV() *CsvWriter {
-	return NewCsvWriter().SetDataFrame(df)
+	return NewCsvWriter().
+		SetDataFrame(df).
+		SetNaText(df.ctx.naText)
 }
 
 func (df BaseDataFrame) FromXPT() *XptReader {
@@ -1404,5 +1416,7 @@ func (df BaseDataFrame) ToXPT() *XptWriter {
 }
 
 func (df BaseDataFrame) ToMarkDown() *MarkDownWriter {
-	return NewMarkDownWriter().SetDataFrame(df)
+	return NewMarkDownWriter().
+		SetDataFrame(df).
+		SetNaText(df.ctx.naText)
 }

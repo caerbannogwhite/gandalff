@@ -456,22 +456,22 @@ func readCSV(reader io.Reader, delimiter rune, header bool, nullValues bool, gue
 }
 
 type CsvWriter struct {
-	delimiter  rune
-	header     bool
-	path       string
-	nullString string
-	writer     io.Writer
-	dataframe  DataFrame
+	delimiter rune
+	header    bool
+	path      string
+	naText    string
+	writer    io.Writer
+	dataframe DataFrame
 }
 
 func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
-		delimiter:  CSV_READER_DEFAULT_DELIMITER,
-		header:     CSV_READER_DEFAULT_HEADER,
-		path:       "",
-		nullString: NULL_STRING,
-		writer:     nil,
-		dataframe:  nil,
+		delimiter: CSV_READER_DEFAULT_DELIMITER,
+		header:    CSV_READER_DEFAULT_HEADER,
+		path:      "",
+		naText:    NA_TEXT,
+		writer:    nil,
+		dataframe: nil,
 	}
 }
 
@@ -490,8 +490,8 @@ func (w *CsvWriter) SetPath(path string) *CsvWriter {
 	return w
 }
 
-func (w *CsvWriter) SetNullString(nullString string) *CsvWriter {
-	w.nullString = nullString
+func (w *CsvWriter) SetNaText(naText string) *CsvWriter {
+	w.naText = naText
 	return w
 }
 
@@ -506,7 +506,7 @@ func (w *CsvWriter) SetDataFrame(dataframe DataFrame) *CsvWriter {
 }
 
 func (w *CsvWriter) Write() DataFrame {
-	err := writeCSV(w.dataframe, w.writer, w.delimiter, w.header, w.nullString)
+	err := writeCSV(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -514,7 +514,7 @@ func (w *CsvWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeCSV(df DataFrame, writer io.Writer, delimiter rune, header bool, nullString string) error {
+func writeCSV(df DataFrame, writer io.Writer, delimiter rune, header bool, naText string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
 		series[i] = df.SeriesAt(i)
@@ -542,7 +542,7 @@ func writeCSV(df DataFrame, writer io.Writer, delimiter rune, header bool, nullS
 			}
 
 			if s.IsNull(i) {
-				fmt.Fprintf(writer, "%s", nullString)
+				fmt.Fprintf(writer, "%s", naText)
 			} else {
 				fmt.Fprintf(writer, "%s", s.GetAsString(i))
 			}

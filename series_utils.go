@@ -7,9 +7,9 @@ import (
 
 func boolToString(b bool) string {
 	if b {
-		return BOOL_TRUE_STRING
+		return BOOL_TRUE_TEXT
 	} else {
-		return BOOL_FALSE_STRING
+		return BOOL_FALSE_TEXT
 	}
 }
 

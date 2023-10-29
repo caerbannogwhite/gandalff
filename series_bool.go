@@ -21,11 +21,11 @@ type SeriesBool struct {
 // Get the element at index i as a string.
 func (s SeriesBool) GetAsString(i int) string {
 	if s.isNullable && s.nullMask[i>>3]&(1<<uint(i%8)) != 0 {
-		return NULL_STRING
+		return NA_TEXT
 	} else if s.data[i] {
-		return BOOL_TRUE_STRING
+		return BOOL_TRUE_TEXT
 	} else {
-		return BOOL_FALSE_STRING
+		return BOOL_FALSE_TEXT
 	}
 }
 
@@ -82,19 +82,19 @@ func (s SeriesBool) DataAsString() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else if v {
-				data[i] = BOOL_TRUE_STRING
+				data[i] = BOOL_TRUE_TEXT
 			} else {
-				data[i] = BOOL_FALSE_STRING
+				data[i] = BOOL_FALSE_TEXT
 			}
 		}
 	} else {
 		for i, v := range s.data {
 			if v {
-				data[i] = BOOL_TRUE_STRING
+				data[i] = BOOL_TRUE_TEXT
 			} else {
-				data[i] = BOOL_FALSE_STRING
+				data[i] = BOOL_FALSE_TEXT
 			}
 		}
 	}
@@ -160,22 +160,27 @@ func (s SeriesBool) Cast(t preludiometa.BaseType) Series {
 
 	case preludiometa.StringType:
 		data := make([]*string, len(s.data))
+
+		naTextPtr := s.ctx.stringPool.Put(NA_TEXT)
+		trueTextPtr := s.ctx.stringPool.Put(BOOL_TRUE_TEXT)
+		falseTextPtr := s.ctx.stringPool.Put(BOOL_FALSE_TEXT)
+
 		if s.isNullable {
 			for i, v := range s.data {
 				if s.IsNull(i) {
-					data[i] = s.ctx.stringPool.Put(NULL_STRING)
+					data[i] = naTextPtr
 				} else if v {
-					data[i] = s.ctx.stringPool.Put(BOOL_TRUE_STRING)
+					data[i] = trueTextPtr
 				} else {
-					data[i] = s.ctx.stringPool.Put(BOOL_FALSE_STRING)
+					data[i] = falseTextPtr
 				}
 			}
 		} else {
 			for i, v := range s.data {
 				if v {
-					data[i] = s.ctx.stringPool.Put(BOOL_TRUE_STRING)
+					data[i] = trueTextPtr
 				} else {
-					data[i] = s.ctx.stringPool.Put(BOOL_FALSE_STRING)
+					data[i] = falseTextPtr
 				}
 			}
 		}

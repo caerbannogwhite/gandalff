@@ -1177,7 +1177,7 @@ func (s SeriesString) Add(other Series) Series {
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
-				result[0] = s.ctx.stringPool.Put(*s.data[0] + NULL_STRING)
+				result[0] = s.ctx.stringPool.Put(*s.data[0] + NA_TEXT)
 				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else {
 				resultSize := o.Len()
@@ -1189,7 +1189,7 @@ func (s SeriesString) Add(other Series) Series {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.stringPool.Put(*s.data[0] + NULL_STRING)
+					result[i] = s.ctx.stringPool.Put(*s.data[0] + NA_TEXT)
 				}
 				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
@@ -1205,7 +1205,7 @@ func (s SeriesString) Add(other Series) Series {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.stringPool.Put(*s.data[i] + NULL_STRING)
+					result[i] = s.ctx.stringPool.Put(*s.data[i] + NA_TEXT)
 				}
 				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else if s.Len() == o.Len() {
@@ -1219,7 +1219,7 @@ func (s SeriesString) Add(other Series) Series {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.stringPool.Put(*s.data[i] + NULL_STRING)
+					result[i] = s.ctx.stringPool.Put(*s.data[i] + NA_TEXT)
 				}
 				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}

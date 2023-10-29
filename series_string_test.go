@@ -28,7 +28,7 @@ func Test_SeriesString_Base(t *testing.T) {
 	}
 
 	// Check the data.
-	expected = []string{"a", "b", NULL_STRING, "d", "e", NULL_STRING, "g", "h", NULL_STRING, "j"}
+	expected = []string{"a", "b", NA_TEXT, "d", "e", NA_TEXT, "g", "h", NA_TEXT, "j"}
 	if !checkEqSliceString(s.Data().([]string), expected, nil, "SeriesString.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, s.Data())
 	}
@@ -92,7 +92,7 @@ func Test_SeriesString_Base(t *testing.T) {
 	}
 
 	// Check the data.
-	expected = []string{"ax", "bx", NULL_STRING + "x", "dx", "ex", NULL_STRING + "x", "gx", "hx", NULL_STRING + "x", "jx"}
+	expected = []string{"ax", "bx", NA_TEXT + "x", "dx", "ex", NA_TEXT + "x", "gx", "hx", NA_TEXT + "x", "jx"}
 	if !checkEqSliceString(s.Data().([]string), expected, nil, "SeriesString.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, s.Data())
 	}
@@ -164,9 +164,9 @@ func Test_SeriesString_Append(t *testing.T) {
 
 	// Check the data.
 	expected = []string{
-		"a", "b", NULL_STRING, "d", "e", NULL_STRING, "g", "h", NULL_STRING, "j",
-		"k", "l", "m", "n", NULL_STRING, "p", NULL_STRING, "r", "s", NULL_STRING,
-		NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING,
+		"a", "b", NA_TEXT, "d", "e", NA_TEXT, "g", "h", NA_TEXT, "j",
+		"k", "l", "m", "n", NA_TEXT, "p", NA_TEXT, "r", "s", NA_TEXT,
+		NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT,
 	}
 	if !checkEqSliceString(result.Data().([]string), expected, nil, "SeriesString.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, result.Data())
@@ -318,7 +318,7 @@ func Test_SeriesString_Cast(t *testing.T) {
 
 	// Cast to string.
 	resString := s.Cast(preludiometa.StringType)
-	expectedString := []string{"true", "false", NULL_STRING, "3", "4", NULL_STRING, "hello", "7", NULL_STRING, "world"}
+	expectedString := []string{"true", "false", NA_TEXT, "3", "4", NA_TEXT, "hello", "7", NA_TEXT, "world"}
 
 	// Check the data.
 	if !checkEqSlice(resString.Data().([]string), expectedString, nil, "SeriesString.Data") {
@@ -368,7 +368,7 @@ func Test_SeriesString_Filter(t *testing.T) {
 	filterMask := []bool{true, false, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, false, true, true}
 	filterIndeces := []int{0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 19}
 
-	result := []string{"a", "c", "d", "f", "g", "i", "j", NULL_STRING, "m", NULL_STRING, "p", NULL_STRING, "s", NULL_STRING}
+	result := []string{"a", "c", "d", "f", "g", "i", "j", NA_TEXT, "m", NA_TEXT, "p", NA_TEXT, "s", NA_TEXT}
 	resultMask := []bool{false, false, false, false, false, false, false, true, false, true, false, true, false, true}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -448,7 +448,7 @@ func Test_SeriesString_Filter(t *testing.T) {
 	filterMask = []bool{true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, true}
 	filterIndeces = []int{0, 15, 22}
 
-	result = []string{NULL_STRING, NULL_STRING, NULL_STRING}
+	result = []string{NA_TEXT, NA_TEXT, NA_TEXT}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// 							Check the Filter() method.
@@ -651,7 +651,7 @@ func Test_SeriesString_Sort(t *testing.T) {
 	sorted = s.Sort()
 
 	// Check the data.
-	expected = []string{"a", "a", "b", "d", "e", "l", "t", "w", "w", "{", NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING}
+	expected = []string{"a", "a", "b", "d", "e", "l", "t", "w", "w", "{", NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT}
 	if !checkEqSliceString(sorted.Data().([]string), expected, nil, "") {
 		t.Errorf("SeriesString.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]string))
 	}
@@ -698,11 +698,11 @@ func Test_SeriesString_Arithmetic_Add(t *testing.T) {
 		SetNullMask([]bool{false, true, false, true, false, true, false, true, false, true})
 
 	// scalar | NA
-	if !checkEqSlice(ss.Add(nas).Data().([]string), []string{"2" + NULL_STRING}, nil, "String Add") {
-		t.Errorf("Expected %v, got %v", []string{"2" + NULL_STRING}, ss.Add(nas).Data().([]string))
+	if !checkEqSlice(ss.Add(nas).Data().([]string), []string{"2" + NA_TEXT}, nil, "String Add") {
+		t.Errorf("Expected %v, got %v", []string{"2" + NA_TEXT}, ss.Add(nas).Data().([]string))
 	}
-	if !checkEqSlice(ss.Add(nav).Data().([]string), []string{"2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING}, nil, "String Add") {
-		t.Errorf("Expected %v, got %v", []string{"2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING, "2" + NULL_STRING}, ss.Add(nav).Data().([]string))
+	if !checkEqSlice(ss.Add(nav).Data().([]string), []string{"2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT}, nil, "String Add") {
+		t.Errorf("Expected %v, got %v", []string{"2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT, "2" + NA_TEXT}, ss.Add(nav).Data().([]string))
 	}
 	if !checkEqSlice(ss.Add(nas).GetNullMask(), []bool{false}, nil, "String Add") {
 		t.Errorf("Expected %v, got %v", []bool{false}, ss.Add(nas).GetNullMask())
@@ -788,11 +788,11 @@ func Test_SeriesString_Arithmetic_Add(t *testing.T) {
 	}
 
 	// vector | NA
-	if !checkEqSlice(sv.Add(nas).Data().([]string), []string{"1" + NULL_STRING, "2" + NULL_STRING, "3" + NULL_STRING, "4" + NULL_STRING, "5" + NULL_STRING, "6" + NULL_STRING, "7" + NULL_STRING, "8" + NULL_STRING, "9" + NULL_STRING, "10" + NULL_STRING}, nil, "String Add") {
-		t.Errorf("Expected %v, got %v", []string{"1" + NULL_STRING, "2" + NULL_STRING, "3" + NULL_STRING, "4" + NULL_STRING, "5" + NULL_STRING, "6" + NULL_STRING, "7" + NULL_STRING, "8" + NULL_STRING, "9" + NULL_STRING, "10" + NULL_STRING}, sv.Add(nas).Data().([]string))
+	if !checkEqSlice(sv.Add(nas).Data().([]string), []string{"1" + NA_TEXT, "2" + NA_TEXT, "3" + NA_TEXT, "4" + NA_TEXT, "5" + NA_TEXT, "6" + NA_TEXT, "7" + NA_TEXT, "8" + NA_TEXT, "9" + NA_TEXT, "10" + NA_TEXT}, nil, "String Add") {
+		t.Errorf("Expected %v, got %v", []string{"1" + NA_TEXT, "2" + NA_TEXT, "3" + NA_TEXT, "4" + NA_TEXT, "5" + NA_TEXT, "6" + NA_TEXT, "7" + NA_TEXT, "8" + NA_TEXT, "9" + NA_TEXT, "10" + NA_TEXT}, sv.Add(nas).Data().([]string))
 	}
-	if !checkEqSlice(sv.Add(nav).Data().([]string), []string{"1" + NULL_STRING, "2" + NULL_STRING, "3" + NULL_STRING, "4" + NULL_STRING, "5" + NULL_STRING, "6" + NULL_STRING, "7" + NULL_STRING, "8" + NULL_STRING, "9" + NULL_STRING, "10" + NULL_STRING}, nil, "String Add") {
-		t.Errorf("Expected %v, got %v", []string{"1" + NULL_STRING, "2" + NULL_STRING, "3" + NULL_STRING, "4" + NULL_STRING, "5" + NULL_STRING, "6" + NULL_STRING, "7" + NULL_STRING, "8" + NULL_STRING, "9" + NULL_STRING, "10" + NULL_STRING}, sv.Add(nav).Data().([]string))
+	if !checkEqSlice(sv.Add(nav).Data().([]string), []string{"1" + NA_TEXT, "2" + NA_TEXT, "3" + NA_TEXT, "4" + NA_TEXT, "5" + NA_TEXT, "6" + NA_TEXT, "7" + NA_TEXT, "8" + NA_TEXT, "9" + NA_TEXT, "10" + NA_TEXT}, nil, "String Add") {
+		t.Errorf("Expected %v, got %v", []string{"1" + NA_TEXT, "2" + NA_TEXT, "3" + NA_TEXT, "4" + NA_TEXT, "5" + NA_TEXT, "6" + NA_TEXT, "7" + NA_TEXT, "8" + NA_TEXT, "9" + NA_TEXT, "10" + NA_TEXT}, sv.Add(nav).Data().([]string))
 	}
 	if !checkEqSlice(sv.Add(nas).GetNullMask(), []bool{false, false, false, false, false, false, false, false, false, false}, nil, "String Add") {
 		t.Errorf("Expected %v, got %v", []bool{false, false, false, false, false, false, false, false, false, false}, sv.Add(nas).GetNullMask())

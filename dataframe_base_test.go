@@ -683,7 +683,7 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 
 	resAexp = []int64{1, 1, 2, 3, 4, 5, 5}
 	resBexp = []string{"a", "b", "c", "d", "e", "f", "g"}
-	resCexp = []string{NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, "h", "i", "i"}
+	resCexp = []string{NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, "h", "i", "i"}
 
 	if !checkEqSliceInt64(resAexp, res.SeriesAt(0).Data().([]int64), nil, "Left Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.SeriesAt(0).Data().([]int64))
@@ -712,7 +712,7 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	}
 
 	resAexp = []int64{4, 5, 5, 6, 6}
-	resBexp = []string{"e", "f", "g", NULL_STRING, NULL_STRING}
+	resBexp = []string{"e", "f", "g", NA_TEXT, NA_TEXT}
 	resCexp = []string{"h", "i", "i", "j", "k"}
 
 	if !checkEqSliceInt64(resAexp, res.SeriesAt(0).Data().([]int64), nil, "Right Join") {
@@ -742,8 +742,8 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	}
 
 	resAexp = []int64{1, 1, 2, 3, 4, 5, 5, 6, 6}
-	resBexp = []string{"a", "b", "c", "d", "e", "f", "g", NULL_STRING, NULL_STRING}
-	resCexp = []string{NULL_STRING, NULL_STRING, NULL_STRING, NULL_STRING, "h", "i", "i", "j", "k"}
+	resBexp = []string{"a", "b", "c", "d", "e", "f", "g", NA_TEXT, NA_TEXT}
+	resCexp = []string{NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, "h", "i", "i", "j", "k"}
 
 	if !checkEqSliceInt64(resAexp, res.SeriesAt(0).Data().([]int64), nil, "Full Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.SeriesAt(0).Data().([]int64))
@@ -976,7 +976,7 @@ func Test_BaseDataFrame_Sort_Nulls(t *testing.T) {
 		t.Error("BaseDataFrame Sort A asc: A nullmask failed")
 	}
 
-	if !checkEqSliceString(res.Series("B").(SeriesString).Strings(), []string{"a", "d", NULL_STRING, "c", "e", "g", NULL_STRING, "b", "c", NULL_STRING}, nil, "") {
+	if !checkEqSliceString(res.Series("B").(SeriesString).Strings(), []string{"a", "d", NA_TEXT, "c", "e", "g", NA_TEXT, "b", "c", NA_TEXT}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B failed")
 	}
 	if !checkEqSliceBool(res.Series("B").GetNullMask(), []bool{false, false, true, false, false, false, true, false, false, true}, nil, "") {
@@ -991,7 +991,7 @@ func Test_BaseDataFrame_Sort_Nulls(t *testing.T) {
 		t.Error("BaseDataFrame Sort A asc: A nullmask failed")
 	}
 
-	if !checkEqSliceString(res.Series("B").(SeriesString).Strings(), []string{NULL_STRING, "d", "a", "c", NULL_STRING, "g", "e", NULL_STRING, "c", "b"}, nil, "") {
+	if !checkEqSliceString(res.Series("B").(SeriesString).Strings(), []string{NA_TEXT, "d", "a", "c", NA_TEXT, "g", "e", NA_TEXT, "c", "b"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B failed")
 	}
 	if !checkEqSliceBool(res.Series("B").GetNullMask(), []bool{true, false, false, false, true, false, false, true, false, false}, nil, "") {

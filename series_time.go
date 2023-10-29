@@ -33,7 +33,7 @@ func (s SeriesTime) SetTimeFormat(format string) Series {
 // Get the element at index i as a string.
 func (s SeriesTime) GetAsString(i int) string {
 	if s.isNullable && s.nullMask[i>>3]&(1<<uint(i%8)) != 0 {
-		return NULL_STRING
+		return NA_TEXT
 	}
 	return s.data[i].Format(s.timeFormat)
 }
@@ -91,7 +91,7 @@ func (s SeriesTime) DataAsString() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else {
 				data[i] = v.Format(s.timeFormat)
 			}
@@ -160,7 +160,7 @@ func (s SeriesTime) Cast(t preludiometa.BaseType) Series {
 		if s.isNullable {
 			for i, v := range s.data {
 				if s.IsNull(i) {
-					data[i] = s.ctx.stringPool.Put(NULL_STRING)
+					data[i] = s.ctx.stringPool.Put(NA_TEXT)
 				} else {
 					data[i] = s.ctx.stringPool.Put(v.Format(s.timeFormat))
 				}

@@ -16,7 +16,7 @@ const (
 	defaultInfText             = "Inf"
 )
 
-type F64Formatter struct {
+type NumericFormatter struct {
 	decimalDigits       int    // The number of digits to print after the decimal point.
 	threshold           int    // The number of digits to print before the decimal point.
 	scientificThreshold int    // The number of digits to print before switching to scientific notation.
@@ -25,10 +25,11 @@ type F64Formatter struct {
 	nanText             string // The text to print for NaNs.
 	infText             string // The text to print for Infs.
 	exponentialFormat   bool   // Whether to use scientific notation.
+	useLipGloss         bool   // Whether to use lipgloss.
 }
 
-func NewF64Formatter() *F64Formatter {
-	return &F64Formatter{
+func NewNumericFormatter() *NumericFormatter {
+	return &NumericFormatter{
 		decimalDigits:       defaultDecimalDigits,
 		threshold:           defaultThreshold,
 		scientificThreshold: defaultScientificThreshold,
@@ -37,10 +38,11 @@ func NewF64Formatter() *F64Formatter {
 		nanText:             defaultNanText,
 		infText:             defaultInfText,
 		exponentialFormat:   false,
+		useLipGloss:         false,
 	}
 }
 
-func (f *F64Formatter) Push(num float64) {
+func (f *NumericFormatter) Push(num float64) {
 	if math.IsNaN(num) || math.IsInf(num, 0) {
 		return
 	}
@@ -77,7 +79,7 @@ func (f *F64Formatter) Push(num float64) {
 	}
 }
 
-func (f *F64Formatter) Format(num float64) string {
+func (f *NumericFormatter) Format(num float64) string {
 	if math.IsInf(num, 0) {
 		return f.infText
 	}
@@ -92,7 +94,7 @@ func (f *F64Formatter) Format(num float64) string {
 
 	signif, exponent := sigAndExp(num)
 	if f.exponentialFormat {
-		if math.Abs(signif) >= 9.9995-1e-4*cutoffDelta { // to avoid printing "10.000 x 10^exp" when signif would be rounded up, eg. 9.99999
+		if math.Abs(signif) >= 9.9995-1e-4*cutoffDelta { // to avoid printing "10.000 x 10^exp" when signif rounded up, eg. 9.99999
 			if signif < 0 {
 				signif = -1.0
 			} else {

@@ -22,7 +22,7 @@ type SeriesFloat64 struct {
 // Get the element at index i as a string.
 func (s SeriesFloat64) GetAsString(i int) string {
 	if s.isNullable && s.IsNull(i) {
-		return NULL_STRING
+		return NA_TEXT
 	}
 	return floatToString(s.data[i])
 }
@@ -144,7 +144,7 @@ func (s SeriesFloat64) DataAsString() []string {
 	if s.isNullable {
 		for i, v := range s.data {
 			if s.IsNull(i) {
-				data[i] = NULL_STRING
+				data[i] = NA_TEXT
 			} else {
 				data[i] = floatToString(v)
 			}
@@ -213,7 +213,7 @@ func (s SeriesFloat64) Cast(t preludiometa.BaseType) Series {
 		if s.isNullable {
 			for i, v := range s.data {
 				if s.IsNull(i) {
-					data[i] = s.ctx.stringPool.Put(NULL_STRING)
+					data[i] = s.ctx.stringPool.Put(NA_TEXT)
 				} else {
 					data[i] = s.ctx.stringPool.Put(floatToString(v))
 				}

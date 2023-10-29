@@ -175,7 +175,7 @@ func (s SeriesString) Append(v any) Series {
 
 	switch v := v.(type) {
 	case nil:
-		s.data = append(s.data, s.ctx.stringPool.nullStringPtr)
+		s.data = append(s.data, s.ctx.stringPool.naTextPtr)
 		s = s.MakeNullable().(SeriesString)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)

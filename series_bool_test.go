@@ -346,8 +346,8 @@ func Test_SeriesBool_Cast(t *testing.T) {
 
 	// Check the data.
 	for i, v := range castString.Data().([]string) {
-		if mask[i] && v != NULL_STRING {
-			t.Errorf("Expected %s, got %s at index %d", NULL_STRING, v, i)
+		if mask[i] && v != NA_TEXT {
+			t.Errorf("Expected %s, got %s at index %d", NA_TEXT, v, i)
 		} else if !mask[i] && data[i] && v != "true" {
 			t.Errorf("Expected %s, got %s at index %d", "true", v, i)
 		} else if !mask[i] && !data[i] && v != "false" {
