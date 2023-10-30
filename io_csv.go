@@ -506,6 +506,27 @@ func (w *CsvWriter) SetDataFrame(dataframe DataFrame) *CsvWriter {
 }
 
 func (w *CsvWriter) Write() DataFrame {
+	if w.dataframe == nil {
+		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no dataframe specified")}
+	}
+
+	if w.dataframe.IsErrored() {
+		return w.dataframe
+	}
+
+	if w.path != "" {
+		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		if err != nil {
+			return BaseDataFrame{err: err}
+		}
+		defer file.Close()
+		w.writer = file
+	}
+
+	if w.writer == nil {
+		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no writer specified")}
+	}
+
 	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
@@ -518,10 +539,6 @@ func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, naTex
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
 		series[i] = df.SeriesAt(i)
-	}
-
-	if writer == nil {
-		return fmt.Errorf("writeCsv: no writer specified")
 	}
 
 	if header {

@@ -10,12 +10,12 @@ const DELTA = 10e-16
 
 func Roundtrip(n float64) (float64, error) {
 	ibm := SasFloat{}
-	err := ibm.FromIeee(n)
+	err := ibm.FromIeee(n, binary.BigEndian)
 	if err != nil {
 		return 0, err
 	}
 
-	ieee, err := ibm.ToIeee()
+	ieee, err := ibm.ToIeee(binary.BigEndian)
 	if err != nil {
 		return 0, err
 	}
@@ -29,7 +29,7 @@ func Roundtrip(n float64) (float64, error) {
 
 func Test_IOXpt_Overflow(t *testing.T) {
 	ibm := SasFloat{}
-	err := ibm.FromIeee(math.Pow(16, 63))
+	err := ibm.FromIeee(math.Pow(16, 63), binary.BigEndian)
 	if err == nil || err.Error() != "cannot store magnitude more than ~ 16 ** 63 as IBM-format" {
 		t.FailNow()
 	}
@@ -37,7 +37,7 @@ func Test_IOXpt_Overflow(t *testing.T) {
 
 func Test_IOXpt_Underflow(t *testing.T) {
 	ibm := SasFloat{}
-	err := ibm.FromIeee(math.Pow(16, -66))
+	err := ibm.FromIeee(math.Pow(16, -66), binary.BigEndian)
 	if err == nil || err.Error() != "cannot store magnitude less than ~ 16 ** -65 as IBM-format" {
 		t.FailNow()
 	}

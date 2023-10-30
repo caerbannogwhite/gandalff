@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strings"
+	"time"
 )
 
 // Python divmod build-in for Go.
@@ -47,7 +49,7 @@ func NewSasFloat(b []byte) *SasFloat {
 }
 
 // Convert IBM-format floating point (bytes) to IEEE 754 64-bit (float).
-func (sf *SasFloat) ToIeee() (float64, error) {
+func (sf *SasFloat) ToIeee(byteOrder binary.ByteOrder) (float64, error) {
 
 	// IBM mainframe:    sign * 0.mantissa * 16 ** (exponent - 64)
 	// Python uses IEEE: sign * 1.mantissa * 2 ** (exponent - 1023)
@@ -61,7 +63,7 @@ func (sf *SasFloat) ToIeee() (float64, error) {
 	}
 
 	// parse the 64 bits of IBM float as one 8-byte unsigned long long
-	ulong := binary.BigEndian.Uint64(ibm)
+	ulong := byteOrder.Uint64(ibm)
 
 	// IBM: 1-bit sign, 7-bits exponent, 56-bits mantissa
 	sign := int64(ulong & 0x8000000000000000)
@@ -115,7 +117,7 @@ func (sf *SasFloat) ToIeee() (float64, error) {
 }
 
 // Convert Python floating point numbers to IBM-format (bytes).
-func (sf *SasFloat) FromIeee(ieee float64) error {
+func (sf *SasFloat) FromIeee(ieee float64, byteOrder binary.ByteOrder) error {
 	// Python uses IEEE: sign * 1.mantissa * 2 ** (exponent - 1023)
 	// IBM mainframe:    sign * 0.mantissa * 16 ** (exponent - 64)
 
@@ -138,6 +140,7 @@ func (sf *SasFloat) FromIeee(ieee float64) error {
 		*sf = SasFloat([]byte{'.', 0, 0, 0, 0, 0, 0, 0})
 		return nil
 	}
+
 	if math.IsInf(ieee, 0) {
 		return fmt.Errorf("cannot convert infinity")
 	}
@@ -150,7 +153,7 @@ func (sf *SasFloat) FromIeee(ieee float64) error {
 
 	// Special Missing Values
 	buff := make([]byte, 8)
-	binary.BigEndian.PutUint64(buff, ulong)
+	byteOrder.PutUint64(buff, ulong)
 	if ((buff[0] >= 'A' && buff[0] <= 'Z') || buff[0] == '_') && (ulong&0x00ffffffffffffff == 0) {
 		*sf = SasFloat([]byte{buff[0], 0, 0, 0, 0, 0, 0, 0})
 		return nil
@@ -193,8 +196,18 @@ func (sf *SasFloat) FromIeee(ieee float64) error {
 
 	// We lose some precision, but who said floats were perfect?
 	buff = make([]byte, 8)
-	binary.BigEndian.PutUint64(buff, uint64(sign|exponent|mantissa))
+	byteOrder.PutUint64(buff, uint64(sign|exponent|mantissa))
 	*sf = SasFloat(buff)
 
 	return nil
+}
+
+// This functions formats the date/time in SAS format, e.g. 28OCT23:14:46:32
+func formatDateTimeSAS(t time.Time) string {
+	return fmt.Sprintf(
+		"%02d%s%d:%02d:%02d:%02d",
+		t.Day(),
+		strings.ToUpper(t.Month().String()[:3]),
+		t.Year()%100,
+		t.Hour(), t.Minute(), t.Second())
 }

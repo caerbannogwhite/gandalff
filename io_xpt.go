@@ -1,14 +1,15 @@
 package gandalff
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -17,28 +18,35 @@ type XptVersionType uint8
 const (
 	XPT_VERSION_5 XptVersionType = iota + 5
 	XPT_VERSION_6
-	XPT_VERSION_8
+	XPT_VERSION_8 XptVersionType = iota + 6
 	XPT_VERSION_9
 )
 
 type XptReader struct {
-	version XptVersionType
-	path    string
-	reader  io.Reader
-	ctx     *Context
+	version   XptVersionType
+	byteOrder binary.ByteOrder
+	path      string
+	reader    io.Reader
+	ctx       *Context
 }
 
 func NewXptReader(ctx *Context) *XptReader {
 	return &XptReader{
-		version: XPT_VERSION_5,
-		path:    "",
-		reader:  nil,
-		ctx:     ctx,
+		version:   XPT_VERSION_8,
+		byteOrder: binary.BigEndian,
+		path:      "",
+		reader:    nil,
+		ctx:       ctx,
 	}
 }
 
 func (r *XptReader) SetVersion(version XptVersionType) *XptReader {
 	r.version = version
+	return r
+}
+
+func (r *XptReader) SetByteOrder(byteOrder binary.ByteOrder) *XptReader {
+	r.byteOrder = byteOrder
 	return r
 }
 
@@ -76,9 +84,9 @@ func (r *XptReader) Read() DataFrame {
 
 	switch r.version {
 	case XPT_VERSION_5, XPT_VERSION_6:
-		names, series, err = readXPTv56(r.reader, r.ctx)
+		names, series, err = readXPTv56(r.reader, r.byteOrder, r.ctx)
 	case XPT_VERSION_8, XPT_VERSION_9:
-		names, series, err = readXPTv89(r.reader, r.ctx)
+		names, series, err = readXPTv89(r.reader, r.byteOrder, r.ctx)
 	default:
 		return BaseDataFrame{err: fmt.Errorf("XptReader: unknown version")}
 	}
@@ -97,6 +105,7 @@ func (r *XptReader) Read() DataFrame {
 
 type XptWriter struct {
 	version   XptVersionType
+	byteOrder binary.ByteOrder
 	path      string
 	writer    io.Writer
 	dataframe DataFrame
@@ -104,7 +113,8 @@ type XptWriter struct {
 
 func NewXptWriter() *XptWriter {
 	return &XptWriter{
-		version:   XPT_VERSION_5,
+		version:   XPT_VERSION_8,
+		byteOrder: binary.BigEndian,
 		path:      "",
 		writer:    nil,
 		dataframe: nil,
@@ -113,6 +123,11 @@ func NewXptWriter() *XptWriter {
 
 func (w *XptWriter) SetVersion(version XptVersionType) *XptWriter {
 	w.version = version
+	return w
+}
+
+func (w *XptWriter) SetByteOrder(byteOrder binary.ByteOrder) *XptWriter {
+	w.byteOrder = byteOrder
 	return w
 }
 
@@ -129,6 +144,45 @@ func (w *XptWriter) SetWriter(writer io.Writer) *XptWriter {
 func (w *XptWriter) SetDataFrame(dataframe DataFrame) *XptWriter {
 	w.dataframe = dataframe
 	return w
+}
+
+func (w *XptWriter) Write() DataFrame {
+	if w.dataframe == nil {
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: no dataframe specified")}
+	}
+
+	if w.dataframe.IsErrored() {
+		return w.dataframe
+	}
+
+	if w.path != "" {
+		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		if err != nil {
+			return BaseDataFrame{err: err}
+		}
+		defer file.Close()
+		w.writer = file
+	}
+
+	if w.writer == nil {
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: no writer specified")}
+	}
+
+	var err error
+	switch w.version {
+	case XPT_VERSION_5, XPT_VERSION_6:
+		err = writeXPTv56(w.dataframe, w.writer, w.byteOrder)
+	case XPT_VERSION_8, XPT_VERSION_9:
+		err = writeXPTv89(w.dataframe, w.writer, w.byteOrder)
+	default:
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: unknown SAS version '%d'", w.version)}
+	}
+
+	if err != nil {
+		w.dataframe = BaseDataFrame{err: err}
+	}
+
+	return w.dataframe
 }
 
 const (
@@ -159,6 +213,75 @@ type __NAMESTRv56 struct {
 	nifd   int16    // INFORMAT NUMBER OF DECIMALS			(bytes: 082 to 084)
 	npos   int32    // POSITION OF VALUE IN OBSERVATION		(bytes: 084 to 088)
 	rest   [52]byte // remaining fields are irrelevant		(bytes: 088 to 140)
+}
+
+func NewNamestrV56() *__NAMESTRv56 {
+	return &__NAMESTRv56{
+		ntype: 0,
+		nhfun: 0,
+		nlng:  0,
+		nvar0: 0,
+		nname: [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nlabel: [40]byte{
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		},
+		nform:  [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nfl:    0,
+		nfd:    0,
+		nfj:    0,
+		nfill:  [2]byte{},
+		niform: [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nifl:   0,
+		nifd:   0,
+		npos:   0,
+		rest:   [52]byte{},
+	}
+}
+
+func (nms *__NAMESTRv56) FromBinary(buffer []byte, byteOrder binary.ByteOrder) {
+	nms.ntype = int16(byteOrder.Uint16(buffer[0:2]))
+	nms.nhfun = int16(byteOrder.Uint16(buffer[2:4]))
+	nms.nlng = int16(byteOrder.Uint16(buffer[4:6]))
+	nms.nvar0 = int16(byteOrder.Uint16(buffer[6:8]))
+	copy(nms.nname[:], buffer[8:16])
+	copy(nms.nlabel[:], buffer[16:56])
+	copy(nms.nform[:], buffer[56:64])
+	nms.nfl = int16(byteOrder.Uint16(buffer[64:66]))
+	nms.nfd = int16(byteOrder.Uint16(buffer[66:68]))
+	nms.nfj = int16(byteOrder.Uint16(buffer[68:70]))
+	copy(nms.nfill[:], buffer[70:72])
+	copy(nms.niform[:], buffer[72:80])
+	nms.nifl = int16(byteOrder.Uint16(buffer[80:82]))
+	nms.nifd = int16(byteOrder.Uint16(buffer[82:84]))
+	nms.npos = int32(byteOrder.Uint32(buffer[84:88]))
+	copy(nms.rest[:], buffer[88:140])
+}
+
+func (nms *__NAMESTRv56) ToBinary(byteOrder binary.ByteOrder) []byte {
+	buffer := make([]byte, 140)
+
+	byteOrder.PutUint16(buffer[0:2], uint16(nms.ntype))
+	byteOrder.PutUint16(buffer[2:4], uint16(nms.nhfun))
+	byteOrder.PutUint16(buffer[4:6], uint16(nms.nlng))
+	byteOrder.PutUint16(buffer[6:8], uint16(nms.nvar0))
+	copy(buffer[8:16], nms.nname[:])
+	copy(buffer[16:56], nms.nlabel[:])
+	copy(buffer[56:64], nms.nform[:])
+	byteOrder.PutUint16(buffer[64:66], uint16(nms.nfl))
+	byteOrder.PutUint16(buffer[66:68], uint16(nms.nfd))
+	byteOrder.PutUint16(buffer[68:70], uint16(nms.nfj))
+	copy(buffer[70:72], nms.nfill[:])
+	copy(buffer[72:80], nms.niform[:])
+	byteOrder.PutUint16(buffer[80:82], uint16(nms.nifl))
+	byteOrder.PutUint16(buffer[82:84], uint16(nms.nifd))
+	byteOrder.PutUint32(buffer[84:88], uint32(nms.npos))
+	copy(buffer[88:140], nms.rest[:])
+
+	return buffer
 }
 
 func (nms *__NAMESTRv56) ToString() string {
@@ -201,7 +324,7 @@ func (nms *__NAMESTRv56) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 5/6).
-func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
+func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readXPTv56: no context specified")
 	}
@@ -284,45 +407,11 @@ func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 	// 7	Namestr records
 
 	names := make([]string, varsNum)
-	namestrs := make([]__NAMESTRv89, varsNum)
+	namestrs := make([]__NAMESTRv56, varsNum)
 
 	// read namestr
 	for i := 0; i < varsNum; i++ {
-
-		// ntype  int16    // VARIABLE TYPE: 1=NUMERIC, 2=CHAR 		(bytes: 000 to 002)
-		// nhfun  int16    // HASH OF NNAME (always 0)				(bytes: 002 to 004)
-		// nlng   int16    // LENGTH OF VARIABLE IN OBSERVATION		(bytes: 004 to 006)
-		// nvar0  int16    // VARNUM								(bytes: 006 to 008)
-		// nname  [8]byte  // NAME OF VARIABLE						(bytes: 008 to 016)
-		// nlabel [40]byte // LABEL OF VARIABLE						(bytes: 016 to 056)
-		// nform  [8]byte  // NAME OF FORMAT						(bytes: 056 to 064)
-		// nfl    int16    // FORMAT FIELD LENGTH OR 0				(bytes: 064 to 066)
-		// nfd    int16    // FORMAT NUMBER OF DECIMALS				(bytes: 066 to 068)
-		// nfj    int16    // 0=LEFT JUSTIFICATION, 1=RIGHT JUST	(bytes: 068 to 070)
-		// nfill  [2]byte  // (UNUSED, FOR ALIGNMENT AND FUTURE)	(bytes: 070 to 072)
-		// niform [8]byte  // NAME OF INPUT FORMAT					(bytes: 072 to 080)
-		// nifl   int16    // INFORMAT LENGTH ATTRIBUTE				(bytes: 080 to 082)
-		// nifd   int16    // INFORMAT NUMBER OF DECIMALS			(bytes: 082 to 084)
-		// npos   int32    // POSITION OF VALUE IN OBSERVATION		(bytes: 084 to 088)
-		// rest   [52]byte // remaining fields are irrelevant		(bytes: 088 to 140)
-
-		namestrs[i].ntype = int16(binary.BigEndian.Uint16(content[offset : offset+2]))
-		// namestrs[i].nhfun = int16(binary.BigEndian.Uint16(content[offset+2 : offset+4]))
-		namestrs[i].nlng = int16(binary.BigEndian.Uint16(content[offset+4 : offset+6]))
-		namestrs[i].nvar0 = int16(binary.BigEndian.Uint16(content[offset+6 : offset+8]))
-		copy(namestrs[i].nname[:], content[offset+8:offset+16])
-		copy(namestrs[i].nlabel[:], content[offset+16:offset+56])
-		// copy(namestrs[i].nform[:], content[offset+56:offset+64])
-		// namestrs[i].nfl = int16(binary.BigEndian.Uint16(content[offset+64 : offset+66]))
-		// namestrs[i].nfd = int16(binary.BigEndian.Uint16(content[offset+66 : offset+68]))
-		// namestrs[i].nfj = int16(binary.BigEndian.Uint16(content[offset+68 : offset+70]))
-		// copy(namestrs[i].nfill[:], content[offset+70:offset+72])
-		// copy(namestrs[i].niform[:], content[offset+72:offset+80])
-		// namestrs[i].nifl = int16(binary.BigEndian.Uint16(content[offset+80 : offset+82]))
-		// namestrs[i].nifd = int16(binary.BigEndian.Uint16(content[offset+82 : offset+84]))
-		namestrs[i].npos = int32(binary.BigEndian.Uint32(content[offset+84 : offset+88]))
-		// copy(namestrs[i].rest[:], content[offset+88:offset+140])
-
+		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
 		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
 		offset += namestrSize
 	}
@@ -382,7 +471,7 @@ func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 
 			switch namestrs[i].ntype {
 			case 1:
-				f, err := NewSasFloat(buffer).ToIeee()
+				f, err := NewSasFloat(buffer).ToIeee(byteOrder)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -420,12 +509,8 @@ func readXPTv56(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 }
 
 // This functions writes a SAS XPT file (versions 5/6).
-func writeXPTv56(path string) error {
-	buff := make([]byte, 0)
-
-	// write buff to file
-	os.WriteFile(path, buff, 0644)
-
+func writeXPTv56(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) error {
+	// TODO: implement
 	return nil
 }
 
@@ -455,7 +540,80 @@ type __NAMESTRv89 struct {
 	rest     [18]byte // remaining fields are irrelevant	(bytes: 122 to 140)
 }
 
-func (nms *__NAMESTRv89) ToString() string {
+func NewNamestrV89() *__NAMESTRv89 {
+	return &__NAMESTRv89{
+		ntype: 0,
+		nhfun: 0,
+		nlng:  0,
+		nvar0: 0,
+		nname: [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nlabel: [40]byte{
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		},
+		nform:  [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nfl:    0,
+		nfd:    0,
+		nfj:    0,
+		nfill:  [2]byte{},
+		niform: [8]byte{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+		nifl:   0,
+		nifd:   0,
+		npos:   0,
+		rest:   [18]byte{},
+	}
+}
+
+func (nms *__NAMESTRv89) FromBinary(buffer []byte, byteOrder binary.ByteOrder) {
+	nms.ntype = int16(byteOrder.Uint16(buffer[0:2]))
+	nms.nhfun = int16(byteOrder.Uint16(buffer[2:4]))
+	nms.nlng = int16(byteOrder.Uint16(buffer[4:6]))
+	nms.nvar0 = int16(byteOrder.Uint16(buffer[6:8]))
+	copy(nms.nname[:], buffer[8:16])
+	copy(nms.nlabel[:], buffer[16:56])
+	copy(nms.nform[:], buffer[56:64])
+	nms.nfl = int16(byteOrder.Uint16(buffer[64:66]))
+	nms.nfd = int16(byteOrder.Uint16(buffer[66:68]))
+	nms.nfj = int16(byteOrder.Uint16(buffer[68:70]))
+	copy(nms.nfill[:], buffer[70:72])
+	copy(nms.niform[:], buffer[72:80])
+	nms.nifl = int16(byteOrder.Uint16(buffer[80:82]))
+	nms.nifd = int16(byteOrder.Uint16(buffer[82:84]))
+	nms.npos = int32(byteOrder.Uint32(buffer[84:88]))
+	copy(nms.longname[:], buffer[88:120])
+	nms.lablen = int16(byteOrder.Uint16(buffer[120:122]))
+	copy(nms.rest[:], buffer[122:140])
+}
+
+func (nms *__NAMESTRv89) ToBinary(byteOrder binary.ByteOrder) []byte {
+	buffer := make([]byte, 140)
+
+	byteOrder.PutUint16(buffer[0:2], uint16(nms.ntype))
+	byteOrder.PutUint16(buffer[2:4], uint16(nms.nhfun))
+	byteOrder.PutUint16(buffer[4:6], uint16(nms.nlng))
+	byteOrder.PutUint16(buffer[6:8], uint16(nms.nvar0))
+	copy(buffer[8:16], nms.nname[:])
+	copy(buffer[16:56], nms.nlabel[:])
+	copy(buffer[56:64], nms.nform[:])
+	byteOrder.PutUint16(buffer[64:66], uint16(nms.nfl))
+	byteOrder.PutUint16(buffer[66:68], uint16(nms.nfd))
+	byteOrder.PutUint16(buffer[68:70], uint16(nms.nfj))
+	copy(buffer[70:72], nms.nfill[:])
+	copy(buffer[72:80], nms.niform[:])
+	byteOrder.PutUint16(buffer[80:82], uint16(nms.nifl))
+	byteOrder.PutUint16(buffer[82:84], uint16(nms.nifd))
+	byteOrder.PutUint32(buffer[84:88], uint32(nms.npos))
+	copy(buffer[88:120], nms.longname[:])
+	byteOrder.PutUint16(buffer[120:122], uint16(nms.lablen))
+	copy(buffer[122:140], nms.rest[:])
+
+	return buffer
+}
+
+func (nms *__NAMESTRv89) String() string {
 	return fmt.Sprintf(
 		"NAMESTRv89[\n"+
 			"\tntype:    %d\n"+
@@ -499,7 +657,7 @@ func (nms *__NAMESTRv89) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 8/9).
-func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
+func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readXPTv89: no context specified")
 	}
@@ -596,43 +754,7 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 
 	// read namestr
 	for i := 0; i < varsNum; i++ {
-
-		// ntype    int16    // VARIABLE TYPE: 1=NUMERIC, 2=CHAR	(bytes: 000 to 002)
-		// nhfun    int16    // HASH OF NNAME (always 0)			(bytes: 002 to 004)
-		// nlng     int16    // LENGTH OF VARIABLE IN OBSERVATION	(bytes: 004 to 006)
-		// nvar0    int16    // VARNUM								(bytes: 006 to 008)
-		// nname    [8]byte  // NAME OF VARIABLE					(bytes: 008 to 016)
-		// nlabel   [40]byte // LABEL OF VARIABLE					(bytes: 016 to 056)
-		// nform    [8]byte  // NAME OF FORMAT						(bytes: 056 to 064)
-		// nfl      int16    // FORMAT FIELD LENGTH OR 0			(bytes: 064 to 066)
-		// nfd      int16    // FORMAT NUMBER OF DECIMALS			(bytes: 066 to 068)
-		// nfj      int16    // 0=LEFT JUSTIFICATION, 1=RIGHT JUST	(bytes: 068 to 070)
-		// nfill    [2]byte  // (UNUSED, FOR ALIGNMENT AND FUTURE)	(bytes: 070 to 072)
-		// niform   [8]byte  // NAME OF INPUT FORMAT				(bytes: 072 to 080)
-		// nifl     int16    // INFORMAT LENGTH ATTRIBUTE			(bytes: 080 to 082)
-		// nifd     int16    // INFORMAT NUMBER OF DECIMALS			(bytes: 082 to 084)
-		// npos     int32    // POSITION OF VALUE IN OBSERVATION	(bytes: 084 to 088)
-		// longname [32]byte // long name for Version 8-style		(bytes: 088 to 120)
-		// lablen   int16    // length of label						(bytes: 120 to 122)
-		// rest     [18]byte // remaining fields are irrelevant		(bytes: 122 to 140)
-
-		namestrs[i].ntype = int16(binary.BigEndian.Uint16(content[offset : offset+2]))
-		// namestrs[i].nhfun = int16(binary.BigEndian.Uint16(content[offset+2 : offset+4]))
-		namestrs[i].nlng = int16(binary.BigEndian.Uint16(content[offset+4 : offset+6]))
-		namestrs[i].nvar0 = int16(binary.BigEndian.Uint16(content[offset+6 : offset+8]))
-		copy(namestrs[i].nname[:], content[offset+8:offset+16])
-		copy(namestrs[i].nlabel[:], content[offset+16:offset+56])
-		// copy(namestrs[i].nform[:], content[offset+56:offset+64])
-		// namestrs[i].nfl = int16(binary.BigEndian.Uint16(content[offset+64 : offset+66]))
-		// namestrs[i].nfd = int16(binary.BigEndian.Uint16(content[offset+66 : offset+68]))
-		// namestrs[i].nfj = int16(binary.BigEndian.Uint16(content[offset+68 : offset+70]))
-		// copy(namestrs[i].niform[:], content[offset+72:offset+80])
-		// namestrs[i].nifl = int16(binary.BigEndian.Uint16(content[offset+80 : offset+82]))
-		// namestrs[i].nifd = int16(binary.BigEndian.Uint16(content[offset+82 : offset+84]))
-		namestrs[i].npos = int32(binary.BigEndian.Uint32(content[offset+84 : offset+88]))
-		copy(namestrs[i].longname[:], content[offset+88:offset+120])
-		namestrs[i].lablen = int16(binary.BigEndian.Uint16(content[offset+122 : offset+124]))
-
+		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
 		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
 		offset += namestrSize
 	}
@@ -692,7 +814,7 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 
 			switch namestrs[i].ntype {
 			case 1:
-				f, err := NewSasFloat(buffer).ToIeee()
+				f, err := NewSasFloat(buffer).ToIeee(byteOrder)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -730,38 +852,193 @@ func readXPTv89(reader io.Reader, ctx *Context) ([]string, []Series, error) {
 }
 
 // This functions writes a SAS XPT file (versions 8/9).
-func writeXPTv89(path string) error {
-	const firstHeaderRecord = "HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000  "
+func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) error {
 
-	var osVersion string
-	switch runtime.GOOS {
-	// case "darwin":
-	// 	osVersion = "MacOS"
-	// case "linux":
-	// 	osVersion = "Linux"
-	case "windows":
-		osVersion = "X64_10HO"
-	default:
-		osVersion = runtime.GOOS
+	const xptV89Template = "" +
+		"HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000  " +
+		"SAS     SAS     SASLIB  {{.Vrs}}{{.Ops}}                        {{.SasCreateDt}}" +
+		"{{.SasCreateDt}}                                                                " +
+		"HEADER RECORD*******MEMBER  HEADER RECORD!!!!!!!000000000000000001600000000140  " +
+		"HEADER RECORD*******DSCRPTR HEADER RECORD!!!!!!!000000000000000000000000000000  " +
+		"SAS     VALUES  SASDATA {{.Vrs}}{{.Ops}}                        {{.SasCreateDt}}" +
+		"{{.SasCreateDt}}                                                                " +
+		"HEADER RECORD*******NAMESTR HEADER RECORD!!!!!!!{{.VarsN}}00000000000000000000  "
+
+	const xptV89ObsHeader = "" +
+		"HEADER RECORD*******OBS     HEADER RECORD!!!!!!!000000000000000000000000000000  "
+
+	type xptV89TemplateData struct {
+		Vrs         string
+		Ops         string
+		SasCreateDt string
+		VarsN       string
 	}
 
-	buff := make([]byte, 0)
+	tmpl, err := template.New("xptV89").Parse(xptV89Template)
+	if err != nil {
+		return err
+	}
 
-	buff = append(buff, []byte(fmt.Sprintf(
-		"%s%8s%8s%8s%8s%8s%24s%16s%80s",
-		firstHeaderRecord,                     // 1-80 		First header record
-		"SAS     ",                            // 81-88 	SAS
-		"SAS     ",                            // 89-96 	SAS
-		"SASLIB  ",                            // 97-104 	SASLIB
-		"9.4     ",                            // 105-112 	SAS Version
-		osVersion,                             // 113-120 	Operating System
-		"",                                    //
-		time.Now().Format("ddMMMyy:hh:mm:ss"), // 153-176   Date/time created
-		time.Now().Format("ddMMMyy:hh:mm:ss"), // 177-200 	Second header record, date/time modified
-	))...)
+	err = tmpl.Execute(writer, xptV89TemplateData{
+		Vrs:         "9.4     ",
+		Ops:         "X64_10HO",
+		SasCreateDt: formatDateTimeSAS(time.Now()),
+		VarsN:       fmt.Sprintf("%010d", df.NCols()),
+	})
+	if err != nil {
+		return err
+	}
 
-	// write buff to file
-	os.WriteFile(path, buff, 0644)
+	offset := 0
+	stringVarLengths := make([]int, df.NCols())
+
+	var series Series
+	for i := 0; i < df.NCols(); i++ {
+		series = df.SeriesAt(i)
+
+		namestr := NewNamestrV89()
+		namestr.npos = int32(offset)
+
+		switch s := series.(type) {
+		case SeriesBool:
+			namestr.ntype = 1
+			namestr.nlng = 8
+			offset += 8
+
+		case SeriesInt:
+			namestr.ntype = 1
+			namestr.nlng = 8
+			offset += 8
+
+		case SeriesInt64:
+			namestr.ntype = 1
+			namestr.nlng = 8
+			offset += 8
+
+		case SeriesFloat64:
+			namestr.ntype = 1
+			namestr.nlng = 8
+			offset += 8
+
+		case SeriesString:
+			for _, v := range s.Data().([]string) {
+				if len(v) > stringVarLengths[i] {
+					stringVarLengths[i] = len(v)
+				}
+			}
+
+			namestr.ntype = 2
+			namestr.nlng = int16(stringVarLengths[i])
+			offset += stringVarLengths[i]
+
+		// TODO: implement
+		// case preludiometa.TimeType:
+		// 	namestr.ntype = 2
+		// 	namestr.nlng = 0
+		// 	offset += 0
+
+		case SeriesDuration:
+			namestr.ntype = 1
+			namestr.nlng = 8
+			offset += 8
+
+		default:
+			return fmt.Errorf("writeXPTv89: invalid variable type '%v'", series.Type())
+		}
+
+		namestr.nvar0 = int16(i + 1)
+		copy(namestr.nname[:], []byte(fmt.Sprintf("%-8s", df.NameAt(i))[0:8])) // TODO: check if are repeated names
+		// copy(namestr.nlabel[:], []byte(df.NameAt(i))[0:40]) // TODO: add labels to writer
+
+		_, err = writer.Write(namestr.ToBinary(byteOrder))
+		if err != nil {
+			return err
+		}
+	}
+
+	// add padding
+	if p := ((140 * df.NCols()) % 80); p != 0 {
+		_, err = writer.Write(bytes.Repeat([]byte{0x20}, 80-p))
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = writer.Write([]byte(xptV89ObsHeader))
+	if err != nil {
+		return err
+	}
+
+	offset = 0
+	for i := 0; i < df.NRows(); i++ {
+		for j := 0; j < df.NCols(); j++ {
+			series = df.SeriesAt(j)
+
+			switch series.(type) {
+
+			// Numeric types
+			case SeriesBool, SeriesInt, SeriesInt64, SeriesFloat64:
+				var val float64
+				if series.IsNull(i) {
+					val = math.NaN()
+				} else {
+					switch s := series.(type) {
+					case SeriesBool:
+						val = 0
+						if s.Get(i).(bool) {
+							val = 1
+						}
+					case SeriesInt:
+						val = float64(s.Get(i).(int))
+					case SeriesInt64:
+						val = float64(s.Get(i).(int64))
+					case SeriesFloat64:
+						val = s.Get(i).(float64)
+					case SeriesDuration:
+						val = float64(s.Get(i).(time.Duration))
+					}
+				}
+
+				sf := NewSasFloat([]byte{})
+				err = sf.FromIeee(val, byteOrder)
+				if err != nil {
+					return err
+				}
+
+				_, err = writer.Write([]byte(*sf))
+				if err != nil {
+					return err
+				}
+
+				offset += 8
+
+			// String types
+			case SeriesString:
+				val := ""
+				if !series.IsNull(i) {
+					val = series.Get(i).(string)
+				}
+
+				_, err = writer.Write([]byte(fmt.Sprintf("%-*s", stringVarLengths[j], val)))
+				if err != nil {
+					return err
+				}
+
+				offset += stringVarLengths[j]
+
+				// TODO: implement
+				// case SeriesTime:
+			}
+		}
+	}
+
+	// add padding
+	if p := (offset % 80); p != 0 {
+		_, err = writer.Write(bytes.Repeat([]byte{0x20}, 80-p))
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

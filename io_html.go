@@ -3,9 +3,11 @@ package gandalff
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 type HtmlWriter struct {
+	path      string
 	naText    string
 	writer    io.Writer
 	dataframe DataFrame
@@ -13,10 +15,16 @@ type HtmlWriter struct {
 
 func NewHtmlWriter() *HtmlWriter {
 	return &HtmlWriter{
+		path:      "",
 		naText:    NA_TEXT,
 		writer:    nil,
 		dataframe: nil,
 	}
+}
+
+func (w *HtmlWriter) SetPath(path string) *HtmlWriter {
+	w.path = path
+	return w
 }
 
 func (w *HtmlWriter) SetNaText(naText string) *HtmlWriter {
@@ -35,6 +43,29 @@ func (w *HtmlWriter) SetDataFrame(dataframe DataFrame) *HtmlWriter {
 }
 
 func (w *HtmlWriter) Write() DataFrame {
+	if w.dataframe == nil {
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no dataframe specified")}
+		return w.dataframe
+	}
+
+	if w.dataframe.IsErrored() {
+		return w.dataframe
+	}
+
+	if w.path != "" {
+		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		if err != nil {
+			return BaseDataFrame{err: err}
+		}
+		defer file.Close()
+		w.writer = file
+	}
+
+	if w.writer == nil {
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no writer specified")}
+		return w.dataframe
+	}
+
 	err := writeHtml(w.dataframe, w.writer, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}

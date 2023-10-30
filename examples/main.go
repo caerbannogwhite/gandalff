@@ -166,13 +166,16 @@ func Example05() {
 		SetPath("../testdata/xpt_test_mixed.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
+		ToXPT().
+		SetPath("../testdata/xpt_test_mixed_out.xpt").
+		SetVersion(XPT_VERSION_9).
+		Write().
 
 		// ToHtml().
 		// SetWriter(f).
 		// Write()
 
-		PrettyPrint(NewPrettyPrintParams().SetWidth(400))
-
+		PrettyPrint(NewPrettyPrintParams())
 }
 
 func main() {

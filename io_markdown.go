@@ -3,6 +3,7 @@ package gandalff
 import (
 	"fmt"
 	"io"
+	"os"
 	"preludiometa"
 )
 
@@ -58,6 +59,29 @@ func (w *MarkDownWriter) SetDataFrame(dataframe DataFrame) *MarkDownWriter {
 }
 
 func (w *MarkDownWriter) Write() DataFrame {
+	if w.dataframe == nil {
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeMarkDown: no dataframe specified")}
+		return w.dataframe
+	}
+
+	if w.dataframe.IsErrored() {
+		return w.dataframe
+	}
+
+	if w.path != "" {
+		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		if err != nil {
+			return BaseDataFrame{err: err}
+		}
+		defer file.Close()
+		w.writer = file
+	}
+
+	if w.writer == nil {
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeMarkDown: no writer specified")}
+		return w.dataframe
+	}
+
 	err := writeMarkDown(w.dataframe, w.writer, w.header, w.index, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
@@ -67,9 +91,7 @@ func (w *MarkDownWriter) Write() DataFrame {
 }
 
 func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, naText string) error {
-
 	buff := ""
-
 	if header {
 		buff += "|"
 		if index {
