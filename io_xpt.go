@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// https://www.loc.gov/preservation/digital/formats/fdd/fdd000464.shtml
+
 type XptVersionType uint8
 
 const (
@@ -359,10 +361,12 @@ func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 	}
 
 	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	if version != "" { // TODO: check version
+	switch strings.Split(version, ".")[0] {
+	case "5", "6":
+
+	default:
 		return nil, nil, fmt.Errorf("readXPTv56: invalid version '%s'", version)
 	}
-	offset += 80
 
 	///////////////////////////////////////
 	// 3	Second real header record: ddMMMyy:hh:mm:ss
@@ -692,9 +696,13 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 	}
 
 	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	if version != "9.4" {
+	switch strings.Split(version, ".")[0] {
+	case "8", "9":
+
+	default:
 		return nil, nil, fmt.Errorf("readXPTv89: invalid version '%s'", version)
 	}
+
 	offset += 80
 
 	///////////////////////////////////////

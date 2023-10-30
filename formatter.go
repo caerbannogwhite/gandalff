@@ -7,6 +7,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type Formatter interface {
+	Push(val any)
+	Format(val any) string
+}
+
 const (
 	cutoffDelta                = 3.14159265358979323846 * 1e-6 // pi * 10^-6 used in rounding last digits close to 5
 	defaultDecimalDigits       = 11
@@ -104,7 +109,19 @@ func (f *NumericFormatter) SetUseLipGloss(useLipGloss bool) *NumericFormatter {
 	return f
 }
 
-func (f *NumericFormatter) Push(num float64) {
+func (f *NumericFormatter) Push(val any) {
+	var num float64
+	switch val.(type) {
+	case int:
+		num = float64(val.(int))
+	case int64:
+		num = float64(val.(int64))
+	case float64:
+		num = val.(float64)
+	default:
+		return
+	}
+
 	if math.IsNaN(num) {
 		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.naText))))
 		return
@@ -154,7 +171,19 @@ func (f *NumericFormatter) Push(num float64) {
 	}
 }
 
-func (f *NumericFormatter) Format(num float64) string {
+func (f *NumericFormatter) Format(val any) string {
+	var num float64
+	switch val.(type) {
+	case int:
+		num = float64(val.(int))
+	case int64:
+		num = float64(val.(int64))
+	case float64:
+		num = val.(float64)
+	default:
+		return f.naText
+	}
+
 	if math.IsInf(num, -1) {
 		return f.render(fmt.Sprintf("-%s", f.infText), f.styleNumNeg)
 	}
@@ -221,4 +250,48 @@ func sigAndExp(num float64) (float64, int) {
 	}
 
 	return signif, exponent
+}
+
+type StringFormatter struct {
+	useLipGloss bool
+	lengths     []int
+
+	styleString lipgloss.Style
+}
+
+func NewStringFormatter() *StringFormatter {
+	return &StringFormatter{
+		useLipGloss: false,
+		lengths:     make([]int, 0),
+		styleString: lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#98AFC7")),
+	}
+}
+
+func (f *StringFormatter) SetUseLipGloss(useLipGloss bool) *StringFormatter {
+	f.useLipGloss = useLipGloss
+	return f
+}
+
+func (f *StringFormatter) Push(val any) {
+	if s, ok := val.(string); ok {
+		for i := 0; i < len(f.lengths); i++ {
+			if len(s) > f.lengths[i] {
+				f.lengths = append(f.lengths, 0)
+				copy(f.lengths[i+1:], f.lengths[i:])
+				f.lengths[i] = len(s)
+				return
+			}
+		}
+	}
+}
+
+func (f *StringFormatter) Format(val any) string {
+	if s, ok := val.(string); ok {
+		if f.useLipGloss {
+			return f.styleString.Render(fmt.Sprintf("%-*s", f.lengths[0], s))
+		} else {
+			return fmt.Sprintf("%-*s", f.lengths[0], s)
+		}
+	}
+	return NA_TEXT
 }

@@ -1292,9 +1292,9 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		return df
 	}
 
-	colSize := 10
-	actualColSize := colSize + 3
-	fmtString := fmt.Sprintf(" %%%ds ", colSize)
+	colWidth := params.colWidth
+	actualWidth := colWidth + 3
+	fmtString := fmt.Sprintf(" %%%ds ", colWidth)
 	buffer := ""
 
 	if df.isGrouped {
@@ -1309,19 +1309,34 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	}
 
 	// check the data and collect records
+	if df.NRows() == 0 {
+		buffer += "Empty DataFrame\n"
+		fmt.Println(buffer)
+		return df
+	}
 
-	for _, c := range df.series {
-		if c.Len() == 0 {
-			buffer += "Empty DataFrame\n"
-			fmt.Println(buffer)
-			return df
+	// check how many variables to print
+	nCols := df.NCols()
+	if params.width < nCols*actualWidth {
+		nCols = int(params.width / actualWidth)
+	}
+
+	formatters := make([]Formatter, nCols)
+	for i := 0; i < nCols; i++ {
+		switch df.series[i].Type() {
+		case preludiometa.BoolType, preludiometa.StringType, preludiometa.TimeType:
+			formatters[i] = NewStringFormatter().
+				SetUseLipGloss(params.useLipGloss)
+		case preludiometa.IntType, preludiometa.Int64Type, preludiometa.Float64Type, preludiometa.DurationType:
+			formatters[i] = NewNumericFormatter().
+				SetUseLipGloss(params.useLipGloss)
 		}
 	}
 
 	// header
 	buffer += params.indent + "╭"
-	for i := 1; i < df.NCols()*actualColSize; i++ {
-		if i%actualColSize == 0 {
+	for i := 1; i < nCols*actualWidth; i++ {
+		if i%actualWidth == 0 {
 			buffer += "┬"
 		} else {
 			buffer += "─"
@@ -1331,15 +1346,21 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 
 	// column names
 	buffer += params.indent + "│"
-	for _, name := range df.names {
-		buffer += fmt.Sprintf(fmtString, truncate(name, colSize)) + "│"
+	if params.useLipGloss {
+		for _, name := range df.names[:nCols] {
+			buffer += params.styleNames.Render(fmt.Sprintf(fmtString, truncate(name, colWidth))) + "│"
+		}
+	} else {
+		for _, name := range df.names[:nCols] {
+			buffer += fmt.Sprintf(fmtString, truncate(name, colWidth)) + "│"
+		}
 	}
 	buffer += "\n"
 
 	// separator
 	buffer += params.indent + "├"
-	for i := 1; i < df.NCols()*actualColSize; i++ {
-		if i%actualColSize == 0 {
+	for i := 1; i < nCols*actualWidth; i++ {
+		if i%actualWidth == 0 {
 			buffer += "┼"
 		} else {
 			buffer += "─"
@@ -1349,15 +1370,21 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 
 	// column types
 	buffer += params.indent + "│"
-	for _, c := range df.series {
-		buffer += fmt.Sprintf(fmtString, c.Type().ToString()) + "│"
+	if params.useLipGloss {
+		for _, c := range df.series[:nCols] {
+			buffer += params.styleTypes.Render(fmt.Sprintf(fmtString, c.Type().ToString())) + "│"
+		}
+	} else {
+		for _, c := range df.series[:nCols] {
+			buffer += fmt.Sprintf(fmtString, c.Type().ToString()) + "│"
+		}
 	}
 	buffer += "\n"
 
 	// separator
 	buffer += params.indent + "├"
-	for i := 1; i < df.NCols()*actualColSize; i++ {
-		if i%actualColSize == 0 {
+	for i := 1; i < nCols*actualWidth; i++ {
+		if i%actualWidth == 0 {
 			buffer += "┼"
 		} else {
 			buffer += "─"
@@ -1368,21 +1395,21 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	// data
 	nrows := int(math.Min(10, float64(df.NRows())))
 	if params.nrows > 0 {
-		params.nrows = int(math.Min(float64(params.nrows), float64(df.NRows())))
+		nrows = int(math.Min(float64(params.nrows), float64(df.NRows())))
 	}
 
 	for i := 0; i < nrows; i++ {
 		buffer += params.indent + "│"
-		for _, c := range df.series {
-			buffer += fmt.Sprintf(fmtString, truncate(c.GetAsString(i), colSize)) + "│"
+		for _, c := range df.series[:nCols] {
+			buffer += fmt.Sprintf(fmtString, truncate(c.GetAsString(i), colWidth)) + "│"
 		}
 		buffer += "\n"
 	}
 
 	// end
 	buffer += params.indent + "╰"
-	for i := 1; i < df.NCols()*actualColSize; i++ {
-		if i%actualColSize == 0 {
+	for i := 1; i < nCols*actualWidth; i++ {
+		if i%actualWidth == 0 {
 			buffer += "┴"
 		} else {
 			buffer += "─"
