@@ -40,7 +40,10 @@ func Example01() {
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
 		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
-		PrettyPrint(NewPrettyPrintParams())
+		PrettyPrint(NewPrettyPrintParams().
+			SetUseLipGloss(true).
+			SetWidth(130).
+			SetNRows(50))
 
 	// ToMarkdown().
 	// SetWriter(f).
@@ -164,8 +167,10 @@ func Example05() {
 	NewBaseDataFrame(NewContext()).
 		FromXPT().
 		SetPath("../testdata/CDBRFS90.XPT").
+		SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
+		// Take(20).
 		// ToXPT().
 		// SetPath("../testdata/CDBRFS90_out.XPT").
 		// SetVersion(XPT_VERSION_9).
@@ -178,13 +183,13 @@ func Example05() {
 		PrettyPrint(
 			NewPrettyPrintParams().
 				SetUseLipGloss(true).
-				SetWidth(150).
-				SetNRows(40))
+				SetWidth(130).
+				SetNRows(50))
 }
 
 func main() {
-	// fmt.Println("Example01:")
-	// Example01()
+	fmt.Println("Example01:")
+	Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()

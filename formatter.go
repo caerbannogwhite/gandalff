@@ -3,13 +3,16 @@ package gandalff
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Formatter interface {
+	Compute()
+	GetMaxWidth() int
 	Push(val any)
-	Format(val any) string
+	Format(width int, val any) string
 }
 
 const (
@@ -24,18 +27,19 @@ const (
 )
 
 type NumericFormatter struct {
-	decimalDigits       int    // The number of digits to print after the decimal point.
-	threshold           int    // The number of digits to print before the decimal point.
-	scientificThreshold int    // The number of digits to print before switching to scientific notation.
-	maxDigits           int    // The maximum number of digits to print.
-	maxWidth            int    // Maximum width required to print the number.
-	movingDigits        int    // The number of digits to print before the decimal point for very small numbers.
-	naText              string // The text to print for NaNs.
-	infText             string // The text to print for Infs.
-	useExpFormat        bool   // Whether to use scientific notation.
-	hasNegative         bool   // Whether negative numbers are present.
-	useLipGloss         bool   // Whether to use lipgloss.
-	justifyLeft         bool   // Whether to justify left.
+	maxWidth            int       // Maximum width required to print the number.
+	values              []float64 // The values to print.
+	decimalDigits       int       // The number of digits to print after the decimal point.
+	threshold           int       // The number of digits to print before the decimal point.
+	scientificThreshold int       // The number of digits to print before switching to scientific notation.
+	maxDigits           int       // The maximum number of digits to print.
+	movingDigits        int       // The number of digits to print before the decimal point for very small numbers.
+	naText              string    // The text to print for NaNs.
+	infText             string    // The text to print for Infs.
+	useExpFormat        bool      // Whether to use scientific notation.
+	hasNegative         bool      // Whether negative numbers are present.
+	useLipGloss         bool      // Whether to use lipgloss.
+	justifyLeft         bool      // Whether to justify left.
 
 	styleBold   lipgloss.Style
 	styleItalic lipgloss.Style
@@ -47,11 +51,12 @@ type NumericFormatter struct {
 
 func NewNumericFormatter() *NumericFormatter {
 	return &NumericFormatter{
+		maxWidth:            0,
+		values:              make([]float64, 0),
 		decimalDigits:       defaultDecimalDigits,
 		threshold:           defaultThreshold,
 		scientificThreshold: defaultScientificThreshold,
 		maxDigits:           defaultMaxDigits,
-		maxWidth:            0,
 		movingDigits:        defaultMovingDigits,
 		naText:              defaultNaText,
 		infText:             defaultInfText,
@@ -109,6 +114,24 @@ func (f *NumericFormatter) SetUseLipGloss(useLipGloss bool) *NumericFormatter {
 	return f
 }
 
+func (f *NumericFormatter) Compute() {
+	f.maxWidth = 0
+	useLipGloss := f.useLipGloss
+	f.useLipGloss = false
+
+	var s string
+	for _, val := range f.values {
+		s = f.Format(f.maxDigits*10, val)
+		f.maxWidth = max(f.maxWidth, len(s))
+	}
+
+	f.useLipGloss = useLipGloss
+}
+
+func (f *NumericFormatter) GetMaxWidth() int {
+	return f.maxWidth
+}
+
 func (f *NumericFormatter) Push(val any) {
 	var num float64
 	switch val.(type) {
@@ -123,17 +146,17 @@ func (f *NumericFormatter) Push(val any) {
 	}
 
 	if math.IsNaN(num) {
-		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.naText))))
+		f.maxWidth = max(f.maxWidth, len(f.naText))
 		return
 	}
 
 	if math.IsInf(num, 1) {
-		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.infText))))
+		f.maxWidth = max(f.maxWidth, len(f.infText))
 		return
 	}
 
 	if math.IsInf(num, -1) {
-		f.maxWidth = int(math.Max(float64(f.maxWidth), float64(len(f.infText)+1)))
+		f.maxWidth = max(f.maxWidth, len(f.infText)+1)
 		f.hasNegative = true
 		return
 	}
@@ -154,10 +177,10 @@ func (f *NumericFormatter) Push(val any) {
 
 	// If the number would be rounded up, there might be less digits needed / no switch to exp format.
 	// To check this, determine the number of digits that would be needed for this number:
-	digits := int(math.Min(float64(f.maxDigits), math.Max(0, float64(f.movingDigits-exponent))))
+	digits := min(f.maxDigits, max(0, f.movingDigits-exponent))
 
 	// If this is 0, no need to check anything, otherwise find out where the rounding digit is related to the exponent.
-	if digits > 0 && (math.Abs(signif) >= 10-math.Pow(0.1, math.Min(float64(f.maxDigits+exponent), float64(f.movingDigits))+1)*(5+cutoffDelta)) { // this is for rounding issues
+	if digits > 0 && (math.Abs(signif) >= 10-math.Pow(0.1, float64(min(f.maxDigits+exponent, f.movingDigits))+1)*(5+cutoffDelta)) { // this is for rounding issues
 		signif = 1 // not used but will keep for consistency
 		exponent++
 	}
@@ -166,12 +189,12 @@ func (f *NumericFormatter) Push(val any) {
 		f.useExpFormat = true
 
 	} else if exponent > f.threshold && f.decimalDigits > 0 {
-		f.decimalDigits = int(math.Min(float64(f.maxDigits), math.Max(0, float64(f.movingDigits-exponent))))
+		f.decimalDigits = min(f.maxDigits, max(0, f.movingDigits-exponent))
 		f.threshold = exponent
 	}
 }
 
-func (f *NumericFormatter) Format(val any) string {
+func (f *NumericFormatter) Format(width int, val any) string {
 	var num float64
 	switch val.(type) {
 	case int:
@@ -185,18 +208,18 @@ func (f *NumericFormatter) Format(val any) string {
 	}
 
 	if math.IsInf(num, -1) {
-		return f.render(fmt.Sprintf("-%s", f.infText), f.styleNumNeg)
+		return f.render(width, fmt.Sprintf("-%s", f.infText), f.styleNumNeg)
 	}
 	if math.IsInf(num, 1) {
-		return f.render(f.infText, f.styleNum)
+		return f.render(width, f.infText, f.styleNum)
 	}
 	if math.IsNaN(num) {
-		return f.render(f.naText, f.styleNa)
+		return f.render(width, f.naText, f.styleNa)
 	}
 
 	// Very small numbers, which are treated as zero, are formatted as 0.
 	if math.Abs(num) <= 1e-50 {
-		return f.render("0", f.styleNum)
+		return f.render(width, "0", f.styleNum)
 	}
 
 	signif, exponent := sigAndExp(num)
@@ -210,7 +233,7 @@ func (f *NumericFormatter) Format(val any) string {
 			exponent++
 		}
 
-		return f.render(fmt.Sprintf("%se%d", fmt.Sprintf("%.*f", 3, signif), exponent), f.styleNum)
+		return f.render(width, fmt.Sprintf("%se%d", fmt.Sprintf("%.*f", 3, signif), exponent), f.styleNum)
 	}
 
 	if exponent < -f.decimalDigits && f.decimalDigits != f.maxDigits {
@@ -219,25 +242,25 @@ func (f *NumericFormatter) Format(val any) string {
 			minNeededDigits++
 		}
 
-		return f.render(fmt.Sprintf("%.*f", minNeededDigits, num), f.styleNum)
+		return f.render(width, fmt.Sprintf("%.*f", minNeededDigits, num), f.styleNum)
 	}
 
-	return f.render(fmt.Sprintf("%.*f", f.decimalDigits, num), f.styleNum)
+	return f.render(width, fmt.Sprintf("%.*f", f.decimalDigits, num), f.styleNum)
 }
 
-func (f *NumericFormatter) render(s string, style lipgloss.Style) string {
+func (f *NumericFormatter) render(width int, s string, style lipgloss.Style) string {
 	if f.useLipGloss {
 		if f.justifyLeft {
-			return style.Render(fmt.Sprintf("%-*s", f.maxDigits, s))
+			return style.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
 		} else {
-			return style.Render(fmt.Sprintf("%*s", f.maxDigits, s))
+			return style.Render(fmt.Sprintf("%*s", width, truncate(s, width)))
 		}
 	}
 
 	if f.justifyLeft {
-		return fmt.Sprintf("%-*s", f.maxDigits, s)
+		return fmt.Sprintf("%-*s", width, truncate(s, width))
 	} else {
-		return fmt.Sprintf("%*s", f.maxDigits, s)
+		return fmt.Sprintf("%*s", width, truncate(s, width))
 	}
 }
 
@@ -254,6 +277,7 @@ func sigAndExp(num float64) (float64, int) {
 
 type StringFormatter struct {
 	useLipGloss bool
+	maxWidth    int
 	lengths     []int
 
 	styleString lipgloss.Style
@@ -272,25 +296,27 @@ func (f *StringFormatter) SetUseLipGloss(useLipGloss bool) *StringFormatter {
 	return f
 }
 
+func (f *StringFormatter) Compute() {
+	sort.IntSlice(f.lengths).Sort()
+	f.maxWidth = f.lengths[int(math.Floor(0.8*float64(len(f.lengths))))-1]
+}
+
+func (f *StringFormatter) GetMaxWidth() int {
+	return f.maxWidth
+}
+
 func (f *StringFormatter) Push(val any) {
 	if s, ok := val.(string); ok {
-		for i := 0; i < len(f.lengths); i++ {
-			if len(s) > f.lengths[i] {
-				f.lengths = append(f.lengths, 0)
-				copy(f.lengths[i+1:], f.lengths[i:])
-				f.lengths[i] = len(s)
-				return
-			}
-		}
+		f.lengths = append(f.lengths, len(s))
 	}
 }
 
-func (f *StringFormatter) Format(val any) string {
+func (f *StringFormatter) Format(width int, val any) string {
 	if s, ok := val.(string); ok {
 		if f.useLipGloss {
-			return f.styleString.Render(fmt.Sprintf("%-*s", f.lengths[0], s))
+			return f.styleString.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
 		} else {
-			return fmt.Sprintf("%-*s", f.lengths[0], s)
+			return fmt.Sprintf("%-*s", width, truncate(s, width))
 		}
 	}
 	return NA_TEXT

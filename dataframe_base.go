@@ -2,7 +2,6 @@ package gandalff
 
 import (
 	"fmt"
-	"math"
 	"sort"
 	"sync"
 	"time"
@@ -1294,7 +1293,6 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 
 	colWidth := params.colWidth
 	actualWidth := colWidth + 3
-	fmtString := fmt.Sprintf(" %%%ds ", colWidth)
 	buffer := ""
 
 	if df.isGrouped {
@@ -1315,31 +1313,93 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		return df
 	}
 
-	// check how many variables to print
-	nCols := df.NCols()
-	if params.width < nCols*actualWidth {
-		nCols = int(params.width / actualWidth)
+	// check how many variables can fit in the screen
+	nColsOut := df.NCols()
+	if params.width < nColsOut*actualWidth {
+		nColsOut = int(params.width / actualWidth)
 	}
 
-	formatters := make([]Formatter, nCols)
-	for i := 0; i < nCols; i++ {
+	nRowsOut := min(10, df.NRows())
+	if params.nrows > 0 {
+		nRowsOut = min(params.nrows, df.NRows())
+	}
+
+	formatters := make([]Formatter, nColsOut)
+	for i := 0; i < nColsOut; i++ {
 		switch df.series[i].Type() {
 		case preludiometa.BoolType, preludiometa.StringType, preludiometa.TimeType:
 			formatters[i] = NewStringFormatter().
 				SetUseLipGloss(params.useLipGloss)
 		case preludiometa.IntType, preludiometa.Int64Type, preludiometa.Float64Type, preludiometa.DurationType:
 			formatters[i] = NewNumericFormatter().
-				SetUseLipGloss(params.useLipGloss)
+				SetUseLipGloss(params.useLipGloss).
+				SetNaText(df.ctx.naText)
+		}
+
+		switch s := df.series[i].(type) {
+		case SeriesBool:
+			for _, v := range s.DataAsString()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesInt:
+			for _, v := range s.Ints()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesInt64:
+			for _, v := range s.Int64s()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesFloat64:
+			for _, v := range s.Float64s()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesString:
+			for _, v := range s.Strings()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesTime:
+			for _, v := range s.DataAsString()[:nRowsOut] {
+				formatters[i].Push(v)
+			}
+
+		case SeriesDuration:
+			for _, v := range s.Data().([]time.Duration)[:nRowsOut] {
+				formatters[i].Push(v)
+			}
 		}
 	}
 
+	// compute the optimal width for each column with the given formatter
+	// get the new number of columns that can fit in the screen
+	actualWidthsSum := 0
+	widths := make([]int, nColsOut)
+
+	nColsOut = 0
+	for i, f := range formatters {
+		f.Compute()
+		widths[i] = max(f.GetMaxWidth(), colWidth)
+		actualWidthsSum += widths[i] + 3
+		if actualWidthsSum > params.width {
+			break
+		}
+		nColsOut++
+	}
+
+	widths = widths[:nColsOut]
+
 	// header
 	buffer += params.indent + "╭"
-	for i := 1; i < nCols*actualWidth; i++ {
-		if i%actualWidth == 0 {
-			buffer += "┬"
-		} else {
+	for i, w := range widths {
+		for j := 0; j < w+2; j++ {
 			buffer += "─"
+		}
+		if i < nColsOut-1 {
+			buffer += "┬"
 		}
 	}
 	buffer += "╮\n"
@@ -1347,23 +1407,24 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	// column names
 	buffer += params.indent + "│"
 	if params.useLipGloss {
-		for _, name := range df.names[:nCols] {
-			buffer += params.styleNames.Render(fmt.Sprintf(fmtString, truncate(name, colWidth))) + "│"
+		for i, name := range df.names[:nColsOut] {
+			buffer += params.styleNames.Render(fmt.Sprintf(" %-*s ", widths[i], truncate(name, widths[i]))) + "│"
 		}
 	} else {
-		for _, name := range df.names[:nCols] {
-			buffer += fmt.Sprintf(fmtString, truncate(name, colWidth)) + "│"
+		for i, name := range df.names[:nColsOut] {
+			buffer += fmt.Sprintf(" %-*s ", widths[i], truncate(name, widths[i])) + "│"
 		}
 	}
 	buffer += "\n"
 
 	// separator
 	buffer += params.indent + "├"
-	for i := 1; i < nCols*actualWidth; i++ {
-		if i%actualWidth == 0 {
-			buffer += "┼"
-		} else {
+	for i, w := range widths {
+		for j := 0; j < w+2; j++ {
 			buffer += "─"
+		}
+		if i < nColsOut-1 {
+			buffer += "┼"
 		}
 	}
 	buffer += "┤\n"
@@ -1371,48 +1432,60 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	// column types
 	buffer += params.indent + "│"
 	if params.useLipGloss {
-		for _, c := range df.series[:nCols] {
-			buffer += params.styleTypes.Render(fmt.Sprintf(fmtString, c.Type().ToString())) + "│"
+		for i, c := range df.series[:nColsOut] {
+			buffer += params.styleTypes.Render(fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString())) + "│"
 		}
 	} else {
-		for _, c := range df.series[:nCols] {
-			buffer += fmt.Sprintf(fmtString, c.Type().ToString()) + "│"
+		for i, c := range df.series[:nColsOut] {
+			buffer += fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString()) + "│"
 		}
 	}
 	buffer += "\n"
 
 	// separator
 	buffer += params.indent + "├"
-	for i := 1; i < nCols*actualWidth; i++ {
-		if i%actualWidth == 0 {
-			buffer += "┼"
-		} else {
+	for i, w := range widths {
+		for j := 0; j < w+2; j++ {
 			buffer += "─"
+		}
+		if i < nColsOut-1 {
+			buffer += "┼"
 		}
 	}
 	buffer += "┤\n"
 
 	// data
-	nrows := int(math.Min(10, float64(df.NRows())))
-	if params.nrows > 0 {
-		nrows = int(math.Min(float64(params.nrows), float64(df.NRows())))
-	}
-
-	for i := 0; i < nrows; i++ {
+	for i := 0; i < nRowsOut; i++ {
 		buffer += params.indent + "│"
-		for _, c := range df.series[:nCols] {
-			buffer += fmt.Sprintf(fmtString, truncate(c.GetAsString(i), colWidth)) + "│"
+		for j, c := range df.series[:nColsOut] {
+			switch s := c.(type) {
+			case SeriesBool:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+			case SeriesInt:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+			case SeriesInt64:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+			case SeriesFloat64:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+			case SeriesString:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+			case SeriesTime:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+			case SeriesDuration:
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+			}
 		}
 		buffer += "\n"
 	}
 
 	// end
 	buffer += params.indent + "╰"
-	for i := 1; i < nCols*actualWidth; i++ {
-		if i%actualWidth == 0 {
-			buffer += "┴"
-		} else {
+	for i, w := range widths {
+		for j := 0; j < w+2; j++ {
 			buffer += "─"
+		}
+		if i < nColsOut-1 {
+			buffer += "┴"
 		}
 	}
 	buffer += "╯\n"
