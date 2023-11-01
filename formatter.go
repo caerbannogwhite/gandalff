@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,7 +22,7 @@ const (
 	defaultDecimalDigits       = 11
 	defaultThreshold           = -8
 	defaultScientificThreshold = 9
-	defaultMaxDigits           = 10
+	defaultMaxDigits           = 11
 	defaultMovingDigits        = 3
 	defaultNaText              = NA_TEXT
 	defaultInfText             = INF_TEXT
@@ -40,6 +42,7 @@ type NumericFormatter struct {
 	hasNegative         bool      // Whether negative numbers are present.
 	useLipGloss         bool      // Whether to use lipgloss.
 	justifyLeft         bool      // Whether to justify left.
+	truncateOutput      bool      // Whether to truncate output.
 
 	styleBold   lipgloss.Style
 	styleItalic lipgloss.Style
@@ -64,6 +67,7 @@ func NewNumericFormatter() *NumericFormatter {
 		hasNegative:         false,
 		useLipGloss:         false,
 		justifyLeft:         false,
+		truncateOutput:      false,
 
 		styleBold:   lipgloss.NewStyle().Bold(true),
 		styleItalic: lipgloss.NewStyle().Italic(true),
@@ -114,18 +118,33 @@ func (f *NumericFormatter) SetUseLipGloss(useLipGloss bool) *NumericFormatter {
 	return f
 }
 
+func (f *NumericFormatter) SetJustifyLeft(justifyLeft bool) *NumericFormatter {
+	f.justifyLeft = justifyLeft
+	return f
+}
+
+func (f *NumericFormatter) SetTruncateOutput(truncateOutput bool) *NumericFormatter {
+	f.truncateOutput = truncateOutput
+	return f
+}
+
 func (f *NumericFormatter) Compute() {
 	f.maxWidth = 0
+
 	useLipGloss := f.useLipGloss
+	truncateOutput := f.truncateOutput
+
 	f.useLipGloss = false
+	f.truncateOutput = false
 
 	var s string
 	for _, val := range f.values {
-		s = f.Format(f.maxDigits*10, val)
+		s = f.Format(1, val)
 		f.maxWidth = max(f.maxWidth, len(s))
 	}
 
 	f.useLipGloss = useLipGloss
+	f.truncateOutput = truncateOutput
 }
 
 func (f *NumericFormatter) GetMaxWidth() int {
@@ -144,6 +163,8 @@ func (f *NumericFormatter) Push(val any) {
 	default:
 		return
 	}
+
+	f.values = append(f.values, num)
 
 	if math.IsNaN(num) {
 		f.maxWidth = max(f.maxWidth, len(f.naText))
@@ -249,18 +270,22 @@ func (f *NumericFormatter) Format(width int, val any) string {
 }
 
 func (f *NumericFormatter) render(width int, s string, style lipgloss.Style) string {
+	if f.truncateOutput {
+		s = truncate(s, width)
+	}
+
 	if f.useLipGloss {
 		if f.justifyLeft {
-			return style.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
+			return style.Render(fmt.Sprintf("%-*s", width, s))
 		} else {
-			return style.Render(fmt.Sprintf("%*s", width, truncate(s, width)))
+			return style.Render(fmt.Sprintf("%*s", width, s))
 		}
 	}
 
 	if f.justifyLeft {
-		return fmt.Sprintf("%-*s", width, truncate(s, width))
+		return fmt.Sprintf("%-*s", width, s)
 	} else {
-		return fmt.Sprintf("%*s", width, truncate(s, width))
+		return fmt.Sprintf("%*s", width, s)
 	}
 }
 
@@ -307,12 +332,13 @@ func (f *StringFormatter) GetMaxWidth() int {
 
 func (f *StringFormatter) Push(val any) {
 	if s, ok := val.(string); ok {
-		f.lengths = append(f.lengths, len(s))
+		f.lengths = append(f.lengths, len(toPrintable(s)))
 	}
 }
 
 func (f *StringFormatter) Format(width int, val any) string {
 	if s, ok := val.(string); ok {
+		s = toPrintable(s)
 		if f.useLipGloss {
 			return f.styleString.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
 		} else {
@@ -320,4 +346,13 @@ func (f *StringFormatter) Format(width int, val any) string {
 		}
 	}
 	return NA_TEXT
+}
+
+func toPrintable(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return '.'
+	}, s)
 }

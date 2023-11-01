@@ -167,7 +167,7 @@ func Example05() {
 	NewBaseDataFrame(NewContext()).
 		FromXPT().
 		SetPath("../testdata/CDBRFS90.XPT").
-		SetPath("../testdata/xpt_test_num.xpt").
+		// SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
 		// Take(20).
@@ -183,13 +183,13 @@ func Example05() {
 		PrettyPrint(
 			NewPrettyPrintParams().
 				SetUseLipGloss(true).
-				SetWidth(130).
+				SetWidth(200).
 				SetNRows(50))
 }
 
 func main() {
-	fmt.Println("Example01:")
-	Example01()
+	// fmt.Println("Example01:")
+	// Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()

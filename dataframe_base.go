@@ -1291,8 +1291,6 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		return df
 	}
 
-	colWidth := params.colWidth
-	actualWidth := colWidth + 3
 	buffer := ""
 
 	if df.isGrouped {
@@ -1314,10 +1312,19 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 	}
 
 	// check how many variables can fit in the screen
-	nColsOut := df.NCols()
-	if params.width < nColsOut*actualWidth {
-		nColsOut = int(params.width / actualWidth)
+	nColsOut := 0
+	actualWidthsSum := 0
+
+	widths := make([]int, df.NCols())
+	for i, name := range df.names {
+		widths[i] = max(len(df.series[i].Type().ToString()), len(name))
+		actualWidthsSum += widths[i] + 3
+		if actualWidthsSum > params.width {
+			break
+		}
+		nColsOut++
 	}
+	widths = widths[:nColsOut]
 
 	nRowsOut := min(10, df.NRows())
 	if params.nrows > 0 {
@@ -1333,7 +1340,8 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		case preludiometa.IntType, preludiometa.Int64Type, preludiometa.Float64Type, preludiometa.DurationType:
 			formatters[i] = NewNumericFormatter().
 				SetUseLipGloss(params.useLipGloss).
-				SetNaText(df.ctx.naText)
+				SetNaText(df.ctx.naText).
+				SetTruncateOutput(true)
 		}
 
 		switch s := df.series[i].(type) {
@@ -1376,21 +1384,19 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 
 	// compute the optimal width for each column with the given formatter
 	// get the new number of columns that can fit in the screen
-	actualWidthsSum := 0
-	widths := make([]int, nColsOut)
-
+	actualWidthsSum = 0
 	nColsOut = 0
 	for i, f := range formatters {
 		f.Compute()
-		widths[i] = max(f.GetMaxWidth(), colWidth)
+		widths[i] = max(f.GetMaxWidth(), widths[i])
 		actualWidthsSum += widths[i] + 3
 		if actualWidthsSum > params.width {
 			break
 		}
 		nColsOut++
 	}
-
 	widths = widths[:nColsOut]
+	formatters = formatters[:nColsOut]
 
 	// header
 	buffer += params.indent + "╭"
