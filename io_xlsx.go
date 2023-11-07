@@ -4,25 +4,32 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"preludiometa"
 
 	"github.com/tealeg/xlsx"
 )
 
 type XlsxReader struct {
-	path   string
-	sheet  string
-	header int
-	rows   int
-	ctx    *Context
+	path             string
+	sheet            string
+	header           int
+	rows             int
+	guessDataTypeLen int
+	nullValues       bool
+	schema           *preludiometa.Schema
+	ctx              *Context
 }
 
 func NewXlsxReader(ctx *Context) *XlsxReader {
 	return &XlsxReader{
-		path:   "",
-		sheet:  "",
-		header: 0,
-		rows:   -1,
-		ctx:    ctx,
+		path:             "",
+		sheet:            "",
+		header:           0,
+		rows:             -1,
+		guessDataTypeLen: XLSX_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
+		nullValues:       false,
+		schema:           nil,
+		ctx:              ctx,
 	}
 }
 
@@ -46,12 +53,27 @@ func (r *XlsxReader) SetRows(rows int) *XlsxReader {
 	return r
 }
 
+func (r *XlsxReader) SetGuessDataTypeLen(guessDataTypeLen int) *XlsxReader {
+	r.guessDataTypeLen = guessDataTypeLen
+	return r
+}
+
+func (r *XlsxReader) SetNullValues(nullValues bool) *XlsxReader {
+	r.nullValues = nullValues
+	return r
+}
+
+func (r *XlsxReader) SetSchema(schema *preludiometa.Schema) *XlsxReader {
+	r.schema = schema
+	return r
+}
+
 func (r *XlsxReader) Read() DataFrame {
 	if r.ctx == nil {
 		return BaseDataFrame{err: fmt.Errorf("XlsxReader: no context specified")}
 	}
 
-	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.ctx)
+	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 
 	if err != nil {
 		return BaseDataFrame{err: err}
@@ -65,7 +87,37 @@ func (r *XlsxReader) Read() DataFrame {
 	return df
 }
 
-func readXlsx(path string, sheet string, header int, rows int, ctx *Context) ([]string, []Series, error) {
+type xlsxRowReader struct {
+	sh    *xlsx.Sheet
+	row   int
+	cols  int
+	cells []*xlsx.Cell
+}
+
+func (r *xlsxRowReader) Read() ([]string, error) {
+	if r.row >= r.sh.MaxRow {
+		return nil, io.EOF
+	}
+
+	row := r.sh.Row(r.row)
+	r.cells = row.Cells
+	r.row++
+
+	values := make([]string, len(r.cells))
+	for i, cell := range r.cells {
+		values[i] = cell.String()
+	}
+
+	if len(values) < r.cols {
+		for i := len(values); i < r.cols; i++ {
+			values = append(values, "")
+		}
+	}
+
+	return values, nil
+}
+
+func readXlsx(path string, sheet string, header, rows int, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
 	wb, err := xlsx.OpenFile(path)
 	if err != nil {
 		return nil, nil, err
@@ -80,14 +132,24 @@ func readXlsx(path string, sheet string, header int, rows int, ctx *Context) ([]
 		rows = sh.MaxRow
 	}
 
-	for i := header; i < header+rows; i++ {
-		row := sh.Row(i)
-		for _, cell := range row.Cells {
-			fmt.Printf("%s\n", cell.String())
-		}
+	names := make([]string, len(sh.Row(header).Cells))
+	for i, cell := range sh.Row(header).Cells {
+		names[i] = cell.String()
 	}
 
-	return nil, nil, nil
+	xlsxRowReader := &xlsxRowReader{
+		sh:    sh,
+		row:   header + 1,
+		cols:  len(names),
+		cells: nil,
+	}
+
+	series, err := readRowData(xlsxRowReader, nullValues, guessDataTypeLen, schema, ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return names, series, nil
 }
 
 type XlsxWriter struct {

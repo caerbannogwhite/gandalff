@@ -29,6 +29,12 @@ const (
 	NA_TEXT         = "Na"
 	BOOL_TRUE_TEXT  = "true"
 	BOOL_FALSE_TEXT = "false"
+
+	CSV_READER_DEFAULT_DELIMITER           = ','
+	CSV_READER_DEFAULT_HEADER              = true
+	CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN = 1000
+
+	XLSX_READER_DEFAULT_GUESS_DATA_TYPE_LEN = 1000
 )
 
 ////////////////////////////////			ENUMS AND INTERFACES

@@ -193,7 +193,9 @@ func Example06() {
 
 	NewBaseDataFrame(NewContext()).
 		FromXlsx().
-		SetHeader(4).
+		SetPath("").
+		SetSheet("").
+		SetHeader(3).
 		Read().
 		PrettyPrint(
 			NewPrettyPrintParams().
