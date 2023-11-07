@@ -113,7 +113,7 @@ func Test_TypeGuesser(t *testing.T) {
 	}
 }
 
-func Test_FromCSV(t *testing.T) {
+func Test_FromCsv(t *testing.T) {
 
 	data := `name,age,weight,junior
 Alice C,29,75.0,F
@@ -127,7 +127,7 @@ Charlie,33,95.0,t
 `
 
 	// Create a new dataframe from the CSV data.
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -248,7 +248,7 @@ Charlie,33,95.0,t
 	}
 }
 
-func Benchmark_FromCSV_100000Rows(b *testing.B) {
+func Benchmark_FromCsv_100000Rows(b *testing.B) {
 
 	// Create a new dataframe from the CSV data.
 	var df DataFrame
@@ -260,7 +260,7 @@ func Benchmark_FromCSV_100000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		df = NewBaseDataFrame(ctx).FromCSV().
+		df = NewBaseDataFrame(ctx).FromCsv().
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).
@@ -332,7 +332,7 @@ func Benchmark_FromCSV_100000Rows(b *testing.B) {
 	}
 }
 
-func Benchmark_FromCSV_500000Rows(b *testing.B) {
+func Benchmark_FromCsv_500000Rows(b *testing.B) {
 	// Create a new dataframe from the CSV data.
 	var df DataFrame
 
@@ -343,7 +343,7 @@ func Benchmark_FromCSV_500000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		df = NewBaseDataFrame(ctx).FromCSV().
+		df = NewBaseDataFrame(ctx).FromCsv().
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).

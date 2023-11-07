@@ -1503,22 +1503,32 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 
 ////////////////////////			IO
 
-func (df BaseDataFrame) FromCSV() *CsvReader {
+func (df BaseDataFrame) FromCsv() *CsvReader {
 	return NewCsvReader(df.ctx)
 }
 
-func (df BaseDataFrame) ToCSV() *CsvWriter {
+func (df BaseDataFrame) ToCsv() *CsvWriter {
 	return NewCsvWriter().
 		SetDataFrame(df).
 		SetNaText(df.ctx.naText)
 }
 
-func (df BaseDataFrame) FromXPT() *XptReader {
+func (df BaseDataFrame) FromXpt() *XptReader {
 	return NewXptReader(df.ctx)
 }
 
-func (df BaseDataFrame) ToXPT() *XptWriter {
+func (df BaseDataFrame) ToXpt() *XptWriter {
 	return NewXptWriter().SetDataFrame(df)
+}
+
+func (df BaseDataFrame) FromXlsx() *XlsxReader {
+	return NewXlsxReader(df.ctx)
+}
+
+func (df BaseDataFrame) ToXlsx() *XlsxWriter {
+	return NewXlsxWriter().
+		SetDataFrame(df).
+		SetNaText(df.ctx.naText)
 }
 
 func (df BaseDataFrame) ToHtml() *HtmlWriter {

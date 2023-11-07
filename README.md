@@ -35,7 +35,7 @@ Megan,26,55.0,F,IT,3
 `
 
 	gandalff.NewBaseDataFrame(gandalff.NewContext()).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		Read().
 		Select("department", "age", "weight", "junior").

@@ -6,6 +6,7 @@ replace preludiometa => ../preludiometa
 
 require (
 	github.com/charmbracelet/lipgloss v0.9.1
+	github.com/tealeg/xlsx v1.0.5
 	preludiometa v0.0.0-00010101000000-000000000000
 )
 

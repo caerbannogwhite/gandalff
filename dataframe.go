@@ -100,11 +100,14 @@ type DataFrame interface {
 	Records(header bool) [][]string
 	PrettyPrint(params PrettyPrintParams) DataFrame
 
-	FromCSV() *CsvReader
-	ToCSV() *CsvWriter
+	FromCsv() *CsvReader
+	ToCsv() *CsvWriter
 
-	FromXPT() *XptReader
-	ToXPT() *XptWriter
+	FromXpt() *XptReader
+	ToXpt() *XptWriter
+
+	FromXlsx() *XlsxReader
+	ToXlsx() *XlsxWriter
 
 	ToHtml() *HtmlWriter
 	ToMarkDown() *MarkDownWriter

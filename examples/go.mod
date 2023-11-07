@@ -17,6 +17,7 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/tealeg/xlsx v1.0.5 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	preludiometa v0.0.0-00010101000000-000000000000 // indirect
 )

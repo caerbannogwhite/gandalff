@@ -40,7 +40,7 @@ func Test_BaseDataFrame_Base(t *testing.T) {
 
 func Test_BaseDataFrame_Filter(t *testing.T) {
 	// Create a new dataframe from the CSV data.
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -86,7 +86,7 @@ func Benchmark_100000Rows_Filter(b *testing.B) {
 		b.Error(err)
 	}
 
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(f).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -112,7 +112,7 @@ func Benchmark_100000Rows_Filter(b *testing.B) {
 
 func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	// Create a new dataframe from the CSV data.
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -289,7 +289,7 @@ func Benchmark_100000Rows_GroupBy_Count(b *testing.B) {
 		b.Error(err)
 	}
 
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(f).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -307,7 +307,7 @@ func Benchmark_100000Rows_GroupBy_Count(b *testing.B) {
 
 func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 	// Create a new dataframe from the CSV data.
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -362,7 +362,7 @@ func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 
 // func Test_BaseDataFrame_GroupBy_Min(t *testing.T) {
 // 	// Create a new dataframe from the CSV data.
-// 	df := NewBaseDataFrame(ctx).FromCSV().
+// 	df := NewBaseDataFrame(ctx).FromCsv().
 // 		SetReader(strings.NewReader(data1)).
 // 		SetDelimiter(',').
 // 		SetHeader(true).
@@ -417,7 +417,7 @@ func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 
 // func Test_BaseDataFrame_GroupBy_Max(t *testing.T) {
 // 	// Create a new dataframe from the CSV data.
-// 	df := NewBaseDataFrame(ctx).FromCSV().
+// 	df := NewBaseDataFrame(ctx).FromCsv().
 // 		SetReader(strings.NewReader(data1)).
 // 		SetDelimiter(',').
 // 		SetHeader(true).
@@ -472,7 +472,7 @@ func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 
 func Test_BaseDataFrame_GroupBy_Mean(t *testing.T) {
 	// Create a new dataframe from the CSV data.
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -532,7 +532,7 @@ func Benchmark_100000Rows_GroupBy_Mean(b *testing.B) {
 		b.Error(err)
 	}
 
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(f).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -555,7 +555,7 @@ func Benchmark_500000Rows_GroupBy_Mean(b *testing.B) {
 		b.Error(err)
 	}
 
-	df := NewBaseDataFrame(ctx).FromCSV().
+	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(f).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -573,7 +573,7 @@ func Benchmark_500000Rows_GroupBy_Mean(b *testing.B) {
 
 // func Test_BaseDataFrame_GroupBy_Std(t *testing.T) {
 // 	// Create a new dataframe from the CSV data.
-// 	df := NewBaseDataFrame(ctx).FromCSV().
+// 	df := NewBaseDataFrame(ctx).FromCsv().
 // 		SetReader(strings.NewReader(data1)).
 // 		SetDelimiter(',').
 // 		SetHeader(true).

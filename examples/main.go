@@ -32,7 +32,7 @@ func Example01() {
 	// f, _ := os.Create("test.csv")
 
 	NewBaseDataFrame(NewContext()).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -40,10 +40,11 @@ func Example01() {
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
 		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
-		PrettyPrint(NewPrettyPrintParams().
-			SetUseLipGloss(true).
-			SetWidth(130).
-			SetNRows(50))
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(130).
+				SetNRows(50))
 
 	// ToMarkdown().
 	// SetWriter(f).
@@ -52,7 +53,7 @@ func Example01() {
 	// SetNullString("").
 	// Write()
 
-	// ToCSV().
+	// ToCsv().
 	// SetDelimiter('\t').
 	// SetWriter(f).
 	// Write()
@@ -74,14 +75,14 @@ func Example02() {
 	ppp := NewPrettyPrintParams()
 
 	employees := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
 	departments := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data2)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -134,14 +135,14 @@ a,b
 	ppp := NewPrettyPrintParams()
 
 	dfX := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(x)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
 	dfY := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(y)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -165,13 +166,13 @@ func Example05() {
 	// f, _ := os.Create("test.html")
 
 	NewBaseDataFrame(NewContext()).
-		FromXPT().
+		FromXpt().
 		SetPath("../testdata/CDBRFS90.XPT").
 		// SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
 		// Take(20).
-		// ToXPT().
+		// ToXpt().
 		// SetPath("../testdata/CDBRFS90_out.XPT").
 		// SetVersion(XPT_VERSION_9).
 		// Write().
@@ -187,6 +188,21 @@ func Example05() {
 				SetNRows(50))
 }
 
+// Excel read and write
+func Example06() {
+
+	NewBaseDataFrame(NewContext()).
+		FromXlsx().
+		SetHeader(4).
+		Read().
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(200).
+				SetNRows(50))
+
+}
+
 func main() {
 	// fmt.Println("Example01:")
 	// Example01()
@@ -200,6 +216,9 @@ func main() {
 	// fmt.Println("Example04:")
 	// Example04()
 
-	fmt.Println("Example05:")
-	Example05()
+	// fmt.Println("Example05:")
+	// Example05()
+
+	fmt.Println("Example06:")
+	Example06()
 }

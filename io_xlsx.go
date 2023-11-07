@@ -8,36 +8,50 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-type XlscReader struct {
-	path  string
-	sheet string
-	ctx   *Context
+type XlsxReader struct {
+	path   string
+	sheet  string
+	header int
+	rows   int
+	ctx    *Context
 }
 
-func NewXlscReader(ctx *Context) *XlscReader {
-	return &XlscReader{
-		path:  "",
-		sheet: "",
-		ctx:   ctx,
+func NewXlsxReader(ctx *Context) *XlsxReader {
+	return &XlsxReader{
+		path:   "",
+		sheet:  "",
+		header: 0,
+		rows:   -1,
+		ctx:    ctx,
 	}
 }
 
-func (r *XlscReader) SetPath(path string) *XlscReader {
+func (r *XlsxReader) SetPath(path string) *XlsxReader {
 	r.path = path
 	return r
 }
 
-func (r *XlscReader) SetSheet(sheet string) *XlscReader {
+func (r *XlsxReader) SetSheet(sheet string) *XlsxReader {
 	r.sheet = sheet
 	return r
 }
 
-func (r *XlscReader) Read() DataFrame {
+func (r *XlsxReader) SetHeader(header int) *XlsxReader {
+	r.header = header
+	return r
+}
+
+func (r *XlsxReader) SetRows(rows int) *XlsxReader {
+	r.rows = rows
+	return r
+}
+
+func (r *XlsxReader) Read() DataFrame {
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlscReader: no context specified")}
+		return BaseDataFrame{err: fmt.Errorf("XlsxReader: no context specified")}
 	}
 
-	names, series, err := readXlsx(r.path, r.sheet, r.ctx)
+	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.ctx)
 
 	if err != nil {
 		return BaseDataFrame{err: err}
@@ -51,7 +65,7 @@ func (r *XlscReader) Read() DataFrame {
 	return df
 }
 
-func readXlsx(path string, sheet string, ctx *Context) ([]string, []Series, error) {
+func readXlsx(path string, sheet string, header int, rows int, ctx *Context) ([]string, []Series, error) {
 	wb, err := xlsx.OpenFile(path)
 	if err != nil {
 		return nil, nil, err
@@ -62,12 +76,23 @@ func readXlsx(path string, sheet string, ctx *Context) ([]string, []Series, erro
 		return nil, nil, fmt.Errorf("Sheet %s not found", sheet)
 	}
 
-	// sh.ForEachRow(rowVisitor)
+	if rows < 0 {
+		rows = sh.MaxRow
+	}
+
+	for i := header; i < header+rows; i++ {
+		row := sh.Row(i)
+		for _, cell := range row.Cells {
+			fmt.Printf("%s\n", cell.String())
+		}
+	}
+
 	return nil, nil, nil
 }
 
 type XlsxWriter struct {
 	path      string
+	naText    string
 	writer    io.Writer
 	dataframe DataFrame
 }
@@ -82,6 +107,11 @@ func NewXlsxWriter() *XlsxWriter {
 
 func (w *XlsxWriter) SetPath(path string) *XlsxWriter {
 	w.path = path
+	return w
+}
+
+func (w *XlsxWriter) SetNaText(naText string) *XlsxWriter {
+	w.naText = naText
 	return w
 }
 
