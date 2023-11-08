@@ -136,6 +136,13 @@ The data types not checked are not yet supported, but might be in the future.
 - [ ] Variance
 - [ ] Quantile
 
+### Dependencies
+
+Built with:
+
+- [xslx](https://github.com/tealeg/xlsx/tree/master)
+- [lipgloss](https://github.com/charmbracelet/lipgloss)
+
 ### TODO
 
 - [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
