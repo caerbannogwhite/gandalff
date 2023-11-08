@@ -154,6 +154,7 @@ func readXlsx(path string, sheet string, header, rows int, nullValues bool, gues
 
 type XlsxWriter struct {
 	path      string
+	sheet     string
 	naText    string
 	writer    io.Writer
 	dataframe DataFrame
@@ -162,6 +163,7 @@ type XlsxWriter struct {
 func NewXlsxWriter() *XlsxWriter {
 	return &XlsxWriter{
 		path:      "",
+		sheet:     "Sheet1",
 		writer:    nil,
 		dataframe: nil,
 	}
@@ -169,6 +171,11 @@ func NewXlsxWriter() *XlsxWriter {
 
 func (w *XlsxWriter) SetPath(path string) *XlsxWriter {
 	w.path = path
+	return w
+}
+
+func (w *XlsxWriter) SetSheet(sheet string) *XlsxWriter {
+	w.sheet = sheet
 	return w
 }
 
@@ -209,7 +216,7 @@ func (w *XlsxWriter) Write() DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no writer specified")}
 	}
 
-	err := writeXlsx(w.dataframe, w.writer)
+	err := writeXlsx(w.dataframe, w.writer, w.sheet)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -217,6 +224,35 @@ func (w *XlsxWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeXlsx(dataframe DataFrame, writer io.Writer) error {
+func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string) error {
+
+	file := xlsx.NewFile()
+
+	sheet, err := file.AddSheet(sheetName)
+	if err != nil {
+		return err
+	}
+
+	// write header
+	row := sheet.AddRow()
+	for _, name := range dataframe.Names() {
+		cell := row.AddCell()
+		cell.Value = name
+	}
+
+	// write data
+	for i := 0; i < dataframe.NRows(); i++ {
+		row := sheet.AddRow()
+		for j := range dataframe.Names() {
+			cell := row.AddCell()
+			cell.Value = dataframe.SeriesAt(j).GetAsString(i)
+		}
+	}
+
+	err = file.Write(writer)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

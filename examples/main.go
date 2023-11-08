@@ -44,7 +44,11 @@ func Example01() {
 			NewPrettyPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(130).
-				SetNRows(50))
+				SetNRows(50)).
+		ToXlsx().
+		SetPath("../testdata/test.xlsx").
+		SetSheet("test").
+		Write()
 
 	// ToMarkdown().
 	// SetWriter(f).
@@ -206,8 +210,8 @@ func Example06() {
 }
 
 func main() {
-	// fmt.Println("Example01:")
-	// Example01()
+	fmt.Println("Example01:")
+	Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()
@@ -221,6 +225,6 @@ func main() {
 	// fmt.Println("Example05:")
 	// Example05()
 
-	fmt.Println("Example06:")
-	Example06()
+	// fmt.Println("Example06:")
+	// Example06()
 }
