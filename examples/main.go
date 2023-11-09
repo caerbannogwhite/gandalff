@@ -175,11 +175,16 @@ func Example05() {
 		// SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
-		// Take(20).
+		Take(20).
 		// ToXpt().
 		// SetPath("../testdata/CDBRFS90_out.XPT").
 		// SetVersion(XPT_VERSION_9).
 		// Write().
+
+		ToXlsx().
+		SetPath("../testdata/test.xlsx").
+		SetSheet("test").
+		Write().
 
 		// ToHtml().
 		// SetWriter(f).
@@ -210,8 +215,8 @@ func Example06() {
 }
 
 func main() {
-	fmt.Println("Example01:")
-	Example01()
+	// fmt.Println("Example01:")
+	// Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()
@@ -222,8 +227,8 @@ func main() {
 	// fmt.Println("Example04:")
 	// Example04()
 
-	// fmt.Println("Example05:")
-	// Example05()
+	fmt.Println("Example05:")
+	Example05()
 
 	// fmt.Println("Example06:")
 	// Example06()

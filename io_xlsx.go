@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"preludiometa"
+	"time"
 
 	"github.com/tealeg/xlsx"
 )
@@ -216,7 +217,7 @@ func (w *XlsxWriter) Write() DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no writer specified")}
 	}
 
-	err := writeXlsx(w.dataframe, w.writer, w.sheet)
+	err := writeXlsx(w.dataframe, w.writer, w.sheet, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err}
 	}
@@ -224,7 +225,7 @@ func (w *XlsxWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string) error {
+func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText string) error {
 
 	file := xlsx.NewFile()
 
@@ -245,7 +246,53 @@ func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string) error {
 		row := sheet.AddRow()
 		for j := range dataframe.Names() {
 			cell := row.AddCell()
-			cell.Value = dataframe.SeriesAt(j).GetAsString(i)
+
+			switch s := dataframe.SeriesAt(j).(type) {
+			case SeriesBool:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetBool(s.Get(i).(bool))
+
+			case SeriesInt:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetInt(s.Get(i).(int))
+
+			case SeriesFloat64:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetFloat(s.Get(i).(float64))
+
+			case SeriesString:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.Value = s.Get(i).(string)
+
+			case SeriesTime:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetDateTime(s.Get(i).(time.Time))
+
+			case SeriesDuration:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetInt(int(s.Get(i).(time.Duration).Nanoseconds()))
+
+			default:
+				cell.Value = naText
+			}
 		}
 	}
 
