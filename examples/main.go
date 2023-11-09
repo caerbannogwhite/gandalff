@@ -167,34 +167,38 @@ a,b
 
 func Example05() {
 
-	// f, _ := os.Create("test.html")
-
 	NewBaseDataFrame(NewContext()).
 		FromXpt().
 		SetPath("../testdata/CDBRFS90.XPT").
 		// SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
 		Read().
-		Take(20).
-		// ToXpt().
-		// SetPath("../testdata/CDBRFS90_out.XPT").
-		// SetVersion(XPT_VERSION_9).
-		// Write().
+		// Select("IDATE").
+		Take(10).
 
+		// to SAS XPT
+		ToXpt().
+		SetPath("../testdata/CDBRFS90_out.XPT").
+		SetVersion(XPT_VERSION_9).
+		Write().
+
+		// to Excel
 		ToXlsx().
 		SetPath("../testdata/test.xlsx").
 		SetSheet("test").
 		Write().
 
-		// ToHtml().
-		// SetWriter(f).
-		// Write()
+		// to HTML
+		ToHtml().
+		SetPath("../testdata/test.html").
+		Write().
 
+		// Pretty print
 		PrettyPrint(
 			NewPrettyPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(200).
-				SetNRows(50))
+				SetNRows(20))
 }
 
 // Excel read and write

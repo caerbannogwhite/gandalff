@@ -152,6 +152,7 @@ Built with:
 - [ ] Add `Slice(i []int) Series` (using filter?).
 - [ ] Implement memory optimized Bool series with uint64.
 - [ ] Use uint64 for null mask.
+- [ ] Optimize XPT reader/writer with float32.
 - [ ] Implement chunked series.
 - [ ] Implement JSON reader and writer.
 - [ ] Implement Parquet reader and writer.

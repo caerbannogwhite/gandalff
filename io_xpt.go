@@ -589,7 +589,7 @@ func (nms *__NAMESTRv89) FromBinary(buffer []byte, byteOrder binary.ByteOrder) {
 	nms.npos = int32(byteOrder.Uint32(buffer[84:88]))
 	copy(nms.longname[:], buffer[88:120])
 	nms.lablen = int16(byteOrder.Uint16(buffer[120:122]))
-	copy(nms.rest[:], buffer[122:140])
+	// copy(nms.rest[:], buffer[122:140])
 }
 
 func (nms *__NAMESTRv89) ToBinary(byteOrder binary.ByteOrder) []byte {
@@ -612,7 +612,7 @@ func (nms *__NAMESTRv89) ToBinary(byteOrder binary.ByteOrder) []byte {
 	byteOrder.PutUint32(buffer[84:88], uint32(nms.npos))
 	copy(buffer[88:120], nms.longname[:])
 	byteOrder.PutUint16(buffer[120:122], uint16(nms.lablen))
-	copy(buffer[122:140], nms.rest[:])
+	// copy(buffer[122:140], nms.rest[:])
 
 	return buffer
 }
@@ -793,7 +793,12 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 
 		switch namestrs[i].ntype {
 		case 1:
+			// TODO: waiting for float32 support
+			// if namestrs[i].nlng <= 4 {
+			// 	values[i] = make([]float32, 0)
+			// } else {
 			values[i] = make([]float64, 0)
+			// }
 		case 2:
 			values[i] = make([]string, 0)
 		default:
@@ -821,6 +826,8 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 			buffer := content[offset+int(namestrs[i].npos) : offset+int(namestrs[i].npos)+int(namestrs[i].nlng)]
 
 			switch namestrs[i].ntype {
+
+			// NUMERIC
 			case 1:
 				f, err := NewSasFloat(buffer).ToIeee(byteOrder)
 				if err != nil {
@@ -832,9 +839,19 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 				} else {
 					nulls[i] = append(nulls[i], false)
 				}
-				values[i] = append(values[i].([]float64), f)
 
+				// TODO: waiting for float32 support
+				// if namestrs[i].nlng <= 4 {
+				// 	values[i] = append(values[i].([]float32), float32(f))
+				// } else {
+				values[i] = append(values[i].([]float64), f)
+				// }
+
+			// CHAR
 			case 2:
+				// if names[i] == "IDATE" {
+				// 	fmt.Println("IDATE", buffer, offset, namestrs[i].npos, namestrs[i].nlng)
+				// }
 				s := string(buffer)
 
 				nulls[i] = append(nulls[i], false)
@@ -849,6 +866,9 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 	series := make([]Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
+		// TODO: waiting for float32 support
+		// case []float32:
+		// 	series[i] = NewSeriesFloat32(t, nulls[i], false, ctx)
 		case []float64:
 			series[i] = NewSeriesFloat64(t, nulls[i], false, ctx)
 		case []string:
