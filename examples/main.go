@@ -172,9 +172,10 @@ func Example05() {
 		SetPath("../testdata/CDBRFS90.XPT").
 		// SetPath("../testdata/xpt_test_num.xpt").
 		SetVersion(XPT_VERSION_9).
+		// SetMaxObservations(10).
 		Read().
 		// Select("IDATE").
-		Take(10).
+		Take(100).
 
 		// to SAS XPT
 		ToXpt().
@@ -186,6 +187,7 @@ func Example05() {
 		ToXlsx().
 		SetPath("../testdata/test.xlsx").
 		SetSheet("test").
+		SetNaText("").
 		Write().
 
 		// to HTML

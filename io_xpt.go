@@ -25,21 +25,28 @@ const (
 )
 
 type XptReader struct {
-	version   XptVersionType
-	byteOrder binary.ByteOrder
-	path      string
-	reader    io.Reader
-	ctx       *Context
+	maxObservations int
+	version         XptVersionType
+	byteOrder       binary.ByteOrder
+	path            string
+	reader          io.Reader
+	ctx             *Context
 }
 
 func NewXptReader(ctx *Context) *XptReader {
 	return &XptReader{
-		version:   XPT_VERSION_8,
-		byteOrder: binary.BigEndian,
-		path:      "",
-		reader:    nil,
-		ctx:       ctx,
+		maxObservations: -1,
+		version:         XPT_VERSION_8,
+		byteOrder:       binary.BigEndian,
+		path:            "",
+		reader:          nil,
+		ctx:             ctx,
 	}
+}
+
+func (r *XptReader) SetMaxObservations(maxObservations int) *XptReader {
+	r.maxObservations = maxObservations
+	return r
 }
 
 func (r *XptReader) SetVersion(version XptVersionType) *XptReader {
@@ -86,9 +93,9 @@ func (r *XptReader) Read() DataFrame {
 
 	switch r.version {
 	case XPT_VERSION_5, XPT_VERSION_6:
-		names, series, err = readXPTv56(r.reader, r.byteOrder, r.ctx)
+		names, series, err = readXPTv56(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	case XPT_VERSION_8, XPT_VERSION_9:
-		names, series, err = readXPTv89(r.reader, r.byteOrder, r.ctx)
+		names, series, err = readXPTv89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	default:
 		return BaseDataFrame{err: fmt.Errorf("XptReader: unknown version"), ctx: r.ctx}
 	}
@@ -326,7 +333,7 @@ func (nms *__NAMESTRv56) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 5/6).
-func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
+func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readXPTv56: no context specified")
 	}
@@ -455,7 +462,13 @@ func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 	}
 
 	// read observations by rows
-	for offset < len(content) {
+	if maxObservations < 0 {
+		maxObservations = math.MaxInt32
+	}
+
+	var tmp []byte
+	rowCounter := 0
+	for offset < len(content) && rowCounter < maxObservations {
 
 		allNulls := true
 		for i := offset; i < len(content); i++ {
@@ -471,11 +484,14 @@ func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 
 		rowLen := 0
 		for i := 0; i < varsNum; i++ {
-			buffer := content[offset+int(namestrs[i].npos) : offset+int(namestrs[i].npos)+int(namestrs[i].nlng)]
+			tmp = make([]byte, namestrs[i].nlng)
+			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
 			switch namestrs[i].ntype {
+
+			// NUMERIC
 			case 1:
-				f, err := NewSasFloat(buffer).ToIeee(byteOrder)
+				f, err := NewSasFloat(tmp).ToIeee(byteOrder)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -485,10 +501,17 @@ func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 				} else {
 					nulls[i] = append(nulls[i], false)
 				}
-				values[i] = append(values[i].([]float64), f)
 
+				// TODO: waiting for float32 support
+				// if namestrs[i].nlng <= 4 {
+				// 	values[i] = append(values[i].([]float32), float32(f))
+				// } else {
+				values[i] = append(values[i].([]float64), f)
+				// }
+
+			// CHAR
 			case 2:
-				s := string(buffer)
+				s := string(tmp)
 
 				nulls[i] = append(nulls[i], false)
 				values[i] = append(values[i].([]string), s)
@@ -497,6 +520,7 @@ func readXPTv56(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 		}
 
 		offset += rowLen
+		rowCounter++
 	}
 
 	series := make([]Series, varsNum)
@@ -661,7 +685,7 @@ func (nms *__NAMESTRv89) String() string {
 }
 
 // This functions reads a SAS XPT file (versions 8/9).
-func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
+func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readXPTv89: no context specified")
 	}
@@ -807,7 +831,13 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 	}
 
 	// read observations by rows
-	for offset < len(content) {
+	if maxObservations < 0 {
+		maxObservations = math.MaxInt32
+	}
+
+	var tmp []byte
+	rowCounter := 0
+	for offset < len(content) && rowCounter < maxObservations {
 
 		allNulls := true
 		for i := offset; i < len(content); i++ {
@@ -823,13 +853,14 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 
 		rowLen := 0
 		for i := 0; i < varsNum; i++ {
-			buffer := content[offset+int(namestrs[i].npos) : offset+int(namestrs[i].npos)+int(namestrs[i].nlng)]
+			tmp = make([]byte, namestrs[i].nlng)
+			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
 			switch namestrs[i].ntype {
 
 			// NUMERIC
 			case 1:
-				f, err := NewSasFloat(buffer).ToIeee(byteOrder)
+				f, err := NewSasFloat(tmp).ToIeee(byteOrder)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -849,10 +880,7 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 
 			// CHAR
 			case 2:
-				// if names[i] == "IDATE" {
-				// 	fmt.Println("IDATE", buffer, offset, namestrs[i].npos, namestrs[i].nlng)
-				// }
-				s := string(buffer)
+				s := string(tmp)
 
 				nulls[i] = append(nulls[i], false)
 				values[i] = append(values[i].([]string), s)
@@ -861,6 +889,7 @@ func readXPTv89(reader io.Reader, byteOrder binary.ByteOrder, ctx *Context) ([]s
 		}
 
 		offset += rowLen
+		rowCounter++
 	}
 
 	series := make([]Series, varsNum)
