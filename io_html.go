@@ -44,7 +44,7 @@ func (w *HtmlWriter) SetDataFrame(dataframe DataFrame) *HtmlWriter {
 
 func (w *HtmlWriter) Write() DataFrame {
 	if w.dataframe == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no dataframe specified")}
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no dataframe specified"), ctx: w.dataframe.GetContext()}
 		return w.dataframe
 	}
 
@@ -55,20 +55,20 @@ func (w *HtmlWriter) Write() DataFrame {
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no writer specified")}
+		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no writer specified"), ctx: w.dataframe.GetContext()}
 		return w.dataframe
 	}
 
 	err := writeHtml(w.dataframe, w.writer, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err}
+		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
 
 	return w.dataframe

@@ -78,23 +78,23 @@ func (r *CsvReader) Read() DataFrame {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: r.ctx}
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvReader: no reader specified")}
+		return BaseDataFrame{err: fmt.Errorf("CsvReader: no reader specified"), ctx: r.ctx}
 	}
 
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvReader: no context specified")}
+		return BaseDataFrame{err: fmt.Errorf("CsvReader: no context specified"), ctx: r.ctx}
 	}
 
 	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 	if err != nil {
-		return BaseDataFrame{err: err}
+		return BaseDataFrame{err: err, ctx: r.ctx}
 	}
 
 	df := NewBaseDataFrame(r.ctx)
@@ -199,7 +199,7 @@ func (w *CsvWriter) SetDataFrame(dataframe DataFrame) *CsvWriter {
 
 func (w *CsvWriter) Write() DataFrame {
 	if w.dataframe == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no dataframe specified")}
+		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	if w.dataframe.IsErrored() {
@@ -209,19 +209,19 @@ func (w *CsvWriter) Write() DataFrame {
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no writer specified")}
+		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no writer specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err}
+		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
 
 	return w.dataframe

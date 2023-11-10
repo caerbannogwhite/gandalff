@@ -71,13 +71,13 @@ func (r *XlsxReader) SetSchema(schema *preludiometa.Schema) *XlsxReader {
 
 func (r *XlsxReader) Read() DataFrame {
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxReader: no context specified")}
+		return BaseDataFrame{err: fmt.Errorf("XlsxReader: no context specified"), ctx: r.ctx}
 	}
 
 	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 
 	if err != nil {
-		return BaseDataFrame{err: err}
+		return BaseDataFrame{err: err, ctx: r.ctx}
 	}
 
 	df := NewBaseDataFrame(r.ctx)
@@ -197,7 +197,7 @@ func (w *XlsxWriter) SetDataFrame(dataframe DataFrame) *XlsxWriter {
 
 func (w *XlsxWriter) Write() DataFrame {
 	if w.dataframe == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no dataframe specified")}
+		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	if w.dataframe.IsErrored() {
@@ -207,19 +207,19 @@ func (w *XlsxWriter) Write() DataFrame {
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no writer specified")}
+		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no writer specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	err := writeXlsx(w.dataframe, w.writer, w.sheet, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err}
+		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
 
 	return w.dataframe

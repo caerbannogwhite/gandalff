@@ -66,18 +66,18 @@ func (r *XptReader) Read() DataFrame {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: r.ctx}
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return BaseDataFrame{err: fmt.Errorf("XptReader: no reader specified")}
+		return BaseDataFrame{err: fmt.Errorf("XptReader: no reader specified"), ctx: r.ctx}
 	}
 
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("XptReader: no context specified")}
+		return BaseDataFrame{err: fmt.Errorf("XptReader: no context specified"), ctx: r.ctx}
 	}
 
 	var err error
@@ -90,11 +90,11 @@ func (r *XptReader) Read() DataFrame {
 	case XPT_VERSION_8, XPT_VERSION_9:
 		names, series, err = readXPTv89(r.reader, r.byteOrder, r.ctx)
 	default:
-		return BaseDataFrame{err: fmt.Errorf("XptReader: unknown version")}
+		return BaseDataFrame{err: fmt.Errorf("XptReader: unknown version"), ctx: r.ctx}
 	}
 
 	if err != nil {
-		return BaseDataFrame{err: err}
+		return BaseDataFrame{err: err, ctx: r.ctx}
 	}
 
 	df := NewBaseDataFrame(r.ctx)
@@ -150,7 +150,7 @@ func (w *XptWriter) SetDataFrame(dataframe DataFrame) *XptWriter {
 
 func (w *XptWriter) Write() DataFrame {
 	if w.dataframe == nil {
-		return BaseDataFrame{err: fmt.Errorf("XptWriter: no dataframe specified")}
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	if w.dataframe.IsErrored() {
@@ -160,14 +160,14 @@ func (w *XptWriter) Write() DataFrame {
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err}
+			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("XptWriter: no writer specified")}
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: no writer specified"), ctx: w.dataframe.GetContext()}
 	}
 
 	var err error
@@ -177,11 +177,11 @@ func (w *XptWriter) Write() DataFrame {
 	case XPT_VERSION_8, XPT_VERSION_9:
 		err = writeXPTv89(w.dataframe, w.writer, w.byteOrder)
 	default:
-		return BaseDataFrame{err: fmt.Errorf("XptWriter: unknown SAS version '%d'", w.version)}
+		return BaseDataFrame{err: fmt.Errorf("XptWriter: unknown SAS version '%d'", w.version), ctx: w.dataframe.GetContext()}
 	}
 
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err}
+		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
 
 	return w.dataframe
