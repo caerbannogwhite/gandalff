@@ -103,6 +103,9 @@ type DataFrame interface {
 	FromCsv() *CsvReader
 	ToCsv() *CsvWriter
 
+	FromJson() *JsonReader
+	ToJson() *JsonWriter
+
 	FromXpt() *XptReader
 	ToXpt() *XptWriter
 

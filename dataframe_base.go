@@ -1513,12 +1513,22 @@ func (df BaseDataFrame) ToCsv() *CsvWriter {
 		SetNaText(df.ctx.naText)
 }
 
+func (df BaseDataFrame) FromJson() *JsonReader {
+	return NewJsonReader(df.ctx)
+}
+
+func (df BaseDataFrame) ToJson() *JsonWriter {
+	return NewJsonWriter().
+		SetDataFrame(df)
+}
+
 func (df BaseDataFrame) FromXpt() *XptReader {
 	return NewXptReader(df.ctx)
 }
 
 func (df BaseDataFrame) ToXpt() *XptWriter {
-	return NewXptWriter().SetDataFrame(df)
+	return NewXptWriter().
+		SetDataFrame(df)
 }
 
 func (df BaseDataFrame) FromXlsx() *XlsxReader {
