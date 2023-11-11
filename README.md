@@ -9,6 +9,15 @@ The goal is to provide a simple and efficient API for data manipulation in Go,
 similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
 
+Gandalff is a work in progress, and the API is not stable yet.
+However, it already supports the following formats:
+
+- CSV
+- XPT (SAS)
+- XLSX
+- HTML
+- Markdown
+
 ### Examples
 
 ```go
@@ -145,6 +154,7 @@ Built with:
 
 ### TODO
 
+- [ ] Improve filtering interface.
 - [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
 - [ ] Implement string factors.
 - [ ] SeriesTime: set time format.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type HtmlWriter struct {
@@ -84,7 +85,7 @@ func writeHtml(df DataFrame, writer io.Writer, naText string) error {
 		return fmt.Errorf("writeHtml: no writer specified")
 	}
 
-	_, err := writer.Write([]byte("<html><head><style>table, th, td {border: 1px solid black;}</style></head><body><table>"))
+	_, err := writer.Write([]byte("<html><head></head><body><table>"))
 	if err != nil {
 		return err
 	}
@@ -101,31 +102,25 @@ func writeHtml(df DataFrame, writer io.Writer, naText string) error {
 		}
 	}
 
-	_, err = writer.Write([]byte("</tr>"))
-	if err != nil {
-		return err
-	}
+	var rowBuffer strings.Builder
+	rowBuffer.WriteString("<tr>")
 
 	for i := 0; i < df.NRows(); i++ {
-		_, err = writer.Write([]byte("<tr>"))
-		if err != nil {
-			return err
-		}
 
+		rowBuffer.WriteString("<tr>")
 		for _, s := range series {
-			_, err = writer.Write([]byte(fmt.Sprintf("<td>%s</td>", s.GetAsString(i))))
-			if err != nil {
-				return err
+			if s.IsNull(i) {
+				rowBuffer.WriteString(fmt.Sprintf("<td>%s</td>", naText))
+			} else {
+				rowBuffer.WriteString(fmt.Sprintf("<td>%s</td>", s.GetAsString(i)))
 			}
 		}
+		rowBuffer.WriteString("</tr>")
 
-		_, err = writer.Write([]byte("</tr>"))
-		if err != nil {
-			return err
-		}
 	}
+	rowBuffer.WriteString("</table></body></html>")
 
-	_, err = writer.Write([]byte("</table></body></html>"))
+	_, err = writer.Write([]byte(rowBuffer.String()))
 	if err != nil {
 		return err
 	}

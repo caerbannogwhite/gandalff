@@ -193,6 +193,7 @@ func Example05() {
 		// to HTML
 		ToHtml().
 		SetPath("../testdata/test.html").
+		SetNaText("-").
 		Write().
 
 		// Pretty print
