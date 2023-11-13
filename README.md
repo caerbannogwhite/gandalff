@@ -163,7 +163,11 @@ Built with:
 - [ ] Implement memory optimized Bool series with uint64.
 - [ ] Use uint64 for null mask.
 - [ ] Optimize XPT reader/writer with float32.
+- [ ] Add url resolver to each reader.
+- [ ] Add format option to each writer.
+- [ ] Add (DataTables)[https://datatables.net/] option to html writer.
 - [ ] Implement chunked series.
+- [ ] Implement OpenAI interface.
 - [ ] Implement JSON reader and writer.
 - [ ] Implement Parquet reader and writer.
 - [ ] Implement SPSS reader and writer.

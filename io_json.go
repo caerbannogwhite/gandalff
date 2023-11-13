@@ -70,7 +70,6 @@ func (r *JsonReader) Read() DataFrame {
 }
 
 func readJson(reader io.Reader, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
-	// TODO
 	return nil, nil, nil
 }
 

@@ -150,6 +150,7 @@ func readCsv(reader io.Reader, delimiter rune, header bool, nullValues bool, gue
 type CsvWriter struct {
 	delimiter rune
 	header    bool
+	format    bool // TODO: Implement this
 	path      string
 	naText    string
 	writer    io.Writer
@@ -160,6 +161,7 @@ func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
 		delimiter: CSV_READER_DEFAULT_DELIMITER,
 		header:    CSV_READER_DEFAULT_HEADER,
+		format:    true,
 		path:      "",
 		naText:    NA_TEXT,
 		writer:    nil,
@@ -174,6 +176,11 @@ func (w *CsvWriter) SetDelimiter(delimiter rune) *CsvWriter {
 
 func (w *CsvWriter) SetHeader(header bool) *CsvWriter {
 	w.header = header
+	return w
+}
+
+func (w *CsvWriter) SetFormat(format bool) *CsvWriter {
+	w.format = format
 	return w
 }
 
@@ -219,7 +226,7 @@ func (w *CsvWriter) Write() DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no writer specified"), ctx: w.dataframe.GetContext()}
 	}
 
-	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.naText)
+	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.format, w.naText)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
@@ -227,7 +234,7 @@ func (w *CsvWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, naText string) error {
+func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
 		series[i] = df.SeriesAt(i)

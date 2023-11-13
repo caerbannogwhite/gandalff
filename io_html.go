@@ -10,6 +10,8 @@ import (
 type HtmlWriter struct {
 	path      string
 	naText    string
+	newLine   string
+	indent    string
 	writer    io.Writer
 	dataframe DataFrame
 }
@@ -18,6 +20,8 @@ func NewHtmlWriter() *HtmlWriter {
 	return &HtmlWriter{
 		path:      "",
 		naText:    NA_TEXT,
+		newLine:   "\n",
+		indent:    "\t",
 		writer:    nil,
 		dataframe: nil,
 	}
@@ -30,6 +34,16 @@ func (w *HtmlWriter) SetPath(path string) *HtmlWriter {
 
 func (w *HtmlWriter) SetNaText(naText string) *HtmlWriter {
 	w.naText = naText
+	return w
+}
+
+func (w *HtmlWriter) SetNewLine(newLine string) *HtmlWriter {
+	w.newLine = newLine
+	return w
+}
+
+func (w *HtmlWriter) SetIndent(indent string) *HtmlWriter {
+	w.indent = indent
 	return w
 }
 
@@ -67,7 +81,7 @@ func (w *HtmlWriter) Write() DataFrame {
 		return w.dataframe
 	}
 
-	err := writeHtml(w.dataframe, w.writer, w.naText)
+	err := writeHtml(w.dataframe, w.writer, w.naText, w.newLine, w.indent)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
@@ -75,7 +89,7 @@ func (w *HtmlWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeHtml(df DataFrame, writer io.Writer, naText string) error {
+func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
 		series[i] = df.SeriesAt(i)
@@ -85,40 +99,49 @@ func writeHtml(df DataFrame, writer io.Writer, naText string) error {
 		return fmt.Errorf("writeHtml: no writer specified")
 	}
 
-	_, err := writer.Write([]byte("<html><head></head><body><table>"))
+	indent2 := indent + indent
+	indent3 := indent2 + indent
+	indent4 := indent3 + indent
+
+	_, err := writer.Write([]byte(
+		"<html>" + newLine +
+			indent + "<head>" + newLine +
+			indent + "</head>" + newLine +
+			indent + "<body>" + newLine +
+			indent2 + "<table>" + newLine))
 	if err != nil {
 		return err
 	}
 
-	_, err = writer.Write([]byte("<tr>"))
+	_, err = writer.Write([]byte(indent3 + "<tr>" + newLine))
 	if err != nil {
 		return err
 	}
 
 	for _, name := range df.Names() {
-		_, err = writer.Write([]byte(fmt.Sprintf("<th>%s</th>", name)))
+		_, err = writer.Write([]byte(fmt.Sprintf("%s<th>%s</th>%s", indent4, name, newLine)))
 		if err != nil {
 			return err
 		}
 	}
 
 	var rowBuffer strings.Builder
-	rowBuffer.WriteString("<tr>")
+	rowBuffer.WriteString(indent3 + "</tr>" + newLine)
 
 	for i := 0; i < df.NRows(); i++ {
 
-		rowBuffer.WriteString("<tr>")
+		rowBuffer.WriteString(indent3 + "<tr>" + newLine)
 		for _, s := range series {
 			if s.IsNull(i) {
-				rowBuffer.WriteString(fmt.Sprintf("<td>%s</td>", naText))
+				rowBuffer.WriteString(fmt.Sprintf("%s<td>%s</td>%s", indent4, naText, newLine))
 			} else {
-				rowBuffer.WriteString(fmt.Sprintf("<td>%s</td>", s.GetAsString(i)))
+				rowBuffer.WriteString(fmt.Sprintf("%s<td>%s</td>%s", indent4, s.GetAsString(i), newLine))
 			}
 		}
-		rowBuffer.WriteString("</tr>")
+		rowBuffer.WriteString(indent3 + "</tr>" + newLine)
 
 	}
-	rowBuffer.WriteString("</table></body></html>")
+	rowBuffer.WriteString(indent2 + "</table>" + newLine + indent + "</body>" + newLine + "</html>" + newLine)
 
 	_, err = writer.Write([]byte(rowBuffer.String()))
 	if err != nil {

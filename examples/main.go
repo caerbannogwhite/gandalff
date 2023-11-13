@@ -169,17 +169,16 @@ func Example05() {
 
 	NewBaseDataFrame(NewContext()).
 		FromXpt().
-		SetPath("../testdata/CDBRFS90.XPT").
-		// SetPath("../testdata/xpt_test_num.xpt").
+		// SetPath("../testdata/CDBRFS90.XPT").
+		SetPath("../testdata/xpt_test_mixed.xpt").
 		SetVersion(XPT_VERSION_9).
 		// SetMaxObservations(10).
 		Read().
-		// Select("IDATE").
-		Take(100).
+		// Take(100).
 
 		// to SAS XPT
 		ToXpt().
-		SetPath("../testdata/CDBRFS90_out.XPT").
+		SetPath("../testdata/mixed_out.XPT").
 		SetVersion(XPT_VERSION_9).
 		Write().
 
@@ -194,6 +193,8 @@ func Example05() {
 		ToHtml().
 		SetPath("../testdata/test.html").
 		SetNaText("-").
+		SetNewLine("\n").
+		SetIndent("  ").
 		Write().
 
 		// Pretty print
