@@ -1,6 +1,7 @@
 package gandalff
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -70,11 +71,99 @@ func (r *JsonReader) Read() DataFrame {
 }
 
 func readJson(reader io.Reader, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
-	return nil, nil, nil
+
+	tokens := json.NewDecoder(reader)
+
+	token, err := tokens.Token()
+	if err != nil || token != json.Delim('{') {
+		return nil, nil, fmt.Errorf("readJson: invalid json")
+	}
+
+	var names []string
+	var series []Series
+
+	// read by column
+	for {
+
+		// read column name
+		token, err := tokens.Token()
+		if err != nil {
+			return nil, nil, fmt.Errorf("readJson: invalid json")
+		}
+		if token == json.Delim('}') {
+			break
+		}
+
+		if token != json.Delim('"') {
+			return nil, nil, fmt.Errorf("readJson: invalid json")
+		}
+
+		token, err = tokens.Token()
+		if err != nil {
+			return nil, nil, fmt.Errorf("readJson: invalid json")
+		}
+
+		name := token.(string)
+		fmt.Println(name)
+
+		token, err = tokens.Token()
+		if err != nil || token != json.Delim('"') {
+			return nil, nil, fmt.Errorf("readJson: invalid json")
+		}
+
+		// token, err = tokens.Token()
+		// if err != nil || token != json.Delim(':') {
+		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
+		// }
+
+		// token, err = tokens.Token()
+		// if err != nil || token != json.Delim('{') {
+		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
+		// }
+
+		// // read column values
+		// var values []string
+		// for tokens.More() {
+
+		// 	token, err := tokens.Token()
+		// 	if err != nil {
+		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
+		// 	}
+		// 	if token == json.Delim('}') {
+		// 		break
+		// 	}
+
+		// 	if token != json.Delim('"') {
+		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
+		// 	}
+
+		// 	token, err = tokens.Token()
+		// 	if err != nil {
+		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
+		// 	}
+
+		// 	value := token.(string)
+
+		// 	values = append(values, value)
+		// }
+
+		// create series
+		// names = append(names, name)
+		// series = append(series, NewSeriesString(values, nil, false, ctx))
+
+		// token, err = tokens.Token()
+		// if err != nil || token != json.Delim('}') {
+		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
+		// }
+	}
+
+	return names, series, nil
 }
 
 type JsonWriter struct {
 	path      string
+	newLine   string
+	indent    string
 	writer    io.Writer
 	dataframe DataFrame
 }
@@ -82,6 +171,8 @@ type JsonWriter struct {
 func NewJsonWriter() *JsonWriter {
 	return &JsonWriter{
 		path:      "",
+		newLine:   "\n",
+		indent:    "\t",
 		writer:    nil,
 		dataframe: nil,
 	}
@@ -89,6 +180,16 @@ func NewJsonWriter() *JsonWriter {
 
 func (w *JsonWriter) SetPath(path string) *JsonWriter {
 	w.path = path
+	return w
+}
+
+func (w *JsonWriter) SetNewLine(newLine string) *JsonWriter {
+	w.newLine = newLine
+	return w
+}
+
+func (w *JsonWriter) SetIndent(indent string) *JsonWriter {
+	w.indent = indent
 	return w
 }
 
@@ -126,7 +227,7 @@ func (w *JsonWriter) Write() DataFrame {
 		return w.dataframe
 	}
 
-	err := writeJson(w.dataframe, w.writer)
+	err := writeJson(w.dataframe, w.writer, w.newLine, w.indent)
 	if err != nil {
 		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 	}
@@ -134,7 +235,93 @@ func (w *JsonWriter) Write() DataFrame {
 	return w.dataframe
 }
 
-func writeJson(dataframe DataFrame, writer io.Writer) error {
-	// TODO
+func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) error {
+	indent2 := indent + indent
+
+	writer.Write([]byte("{\n"))
+	for i, name := range dataframe.Names() {
+		writer.Write([]byte(fmt.Sprintf("%s\"%s\": {%s", indent2, name, newLine)))
+
+		series := dataframe.SeriesAt(i)
+		switch ser := series.(type) {
+		case SeriesBool:
+			for j, b := range ser.Bools() {
+				if series.IsNull(j) {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
+				} else {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": %v", indent2, j, b)))
+				}
+
+				if j < series.Len()-1 {
+					writer.Write([]byte(","))
+				}
+				writer.Write([]byte(newLine))
+			}
+
+		case SeriesInt:
+			for j, n := range ser.Ints() {
+				if series.IsNull(j) {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
+				} else {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": %d", indent2, j, n)))
+				}
+
+				if j < series.Len()-1 {
+					writer.Write([]byte(","))
+				}
+				writer.Write([]byte(newLine))
+			}
+
+		case SeriesInt64:
+			for j, n := range ser.Int64s() {
+				if series.IsNull(j) {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
+				} else {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": %d", indent2, j, n)))
+				}
+
+				if j < series.Len()-1 {
+					writer.Write([]byte(","))
+				}
+				writer.Write([]byte(newLine))
+			}
+
+		case SeriesFloat64:
+			for j, f := range ser.Float64s() {
+				if series.IsNull(j) {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
+				} else {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": %f", indent2, j, f)))
+				}
+
+				if j < series.Len()-1 {
+					writer.Write([]byte(","))
+				}
+				writer.Write([]byte(newLine))
+			}
+
+		case SeriesString:
+			for j, s := range ser.Strings() {
+				if series.IsNull(j) {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
+				} else {
+					writer.Write([]byte(fmt.Sprintf("%s\"%d\": \"%s\"", indent2, j, s)))
+				}
+
+				if j < series.Len()-1 {
+					writer.Write([]byte(","))
+				}
+				writer.Write([]byte(newLine))
+			}
+		}
+
+		writer.Write([]byte(indent + "}"))
+		if i < dataframe.NCols()-1 {
+			writer.Write([]byte(","))
+		}
+		writer.Write([]byte(newLine))
+	}
+
+	writer.Write([]byte("}" + newLine))
 	return nil
 }
