@@ -197,6 +197,11 @@ func Example05() {
 		SetIndent("  ").
 		Write().
 
+		// to JSON
+		ToJson().
+		SetPath("../testdata/test.json").
+		Write().
+
 		// Pretty print
 		PrettyPrint(
 			NewPrettyPrintParams().
@@ -207,12 +212,25 @@ func Example05() {
 
 // Excel read and write
 func Example06() {
-
 	NewBaseDataFrame(NewContext()).
 		FromXlsx().
 		SetPath("").
 		SetSheet("").
 		SetHeader(3).
+		Read().
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(200).
+				SetNRows(50))
+
+}
+
+// JSON read and write
+func Example07() {
+	NewBaseDataFrame(NewContext()).
+		FromJson().
+		SetPath("../testdata/test.json").
 		Read().
 		PrettyPrint(
 			NewPrettyPrintParams().
@@ -235,9 +253,26 @@ func main() {
 	// fmt.Println("Example04:")
 	// Example04()
 
-	fmt.Println("Example05:")
-	Example05()
+	// fmt.Println("Example05:")
+	// Example05()
 
 	// fmt.Println("Example06:")
 	// Example06()
+
+	fmt.Println("Example07:")
+	Example07()
+
+	// f, _ := os.Open("../testdata/test.json")
+	// tokens := json.NewDecoder(f)
+
+	// for {
+	// 	token, err := tokens.Token()
+	// 	fmt.Println(token)
+
+	// 	if err != nil {
+	// 		if err.Error() == "EOF" {
+	// 			break
+	// 		}
+	// 	}
+	// }
 }
