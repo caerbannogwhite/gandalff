@@ -76,7 +76,7 @@ func readJson(reader io.Reader, schema *preludiometa.Schema, ctx *Context) ([]st
 
 	token, err := tokens.Token()
 	if err != nil || token != json.Delim('{') {
-		return nil, nil, fmt.Errorf("readJson: invalid json")
+		return nil, nil, fmt.Errorf("readJson: invalid json, expected '{' at the beginning")
 	}
 
 	var names []string
@@ -85,79 +85,94 @@ func readJson(reader io.Reader, schema *preludiometa.Schema, ctx *Context) ([]st
 	// read by column
 	for {
 
-		// read column name
+		// read column name or end of json
 		token, err := tokens.Token()
 		if err != nil {
-			return nil, nil, fmt.Errorf("readJson: invalid json")
-		}
-		if token == json.Delim('}') {
-			break
+			return nil, nil, fmt.Errorf("readJson: invalid json, expected column name or '}'")
 		}
 
-		if token != json.Delim('"') {
-			return nil, nil, fmt.Errorf("readJson: invalid json")
+		switch t := token.(type) {
+		case json.Delim:
+			if t == json.Delim('}') {
+				return names, series, nil
+			} else {
+				return nil, nil, fmt.Errorf("readJson: invalid json, expected column name or '}'")
+			}
+
+		case string:
+			names = append(names, t)
+
+		default:
+			return nil, nil, fmt.Errorf("readJson: invalid json, expected column name or '}'")
 		}
 
+		// read array
 		token, err = tokens.Token()
 		if err != nil {
-			return nil, nil, fmt.Errorf("readJson: invalid json")
+			return nil, nil, fmt.Errorf("readJson: invalid json, column '%s' expected array begin, got '%v'", names[len(names)-1], token)
 		}
 
-		name := token.(string)
-		fmt.Println(name)
+		if token != json.Delim('{') {
+			return nil, nil, fmt.Errorf("readJson: invalid json, column '%s' expected array begin, got '%v'", names[len(names)-1], token)
+		}
 
+		// read column values
+		var type_ preludiometa.BaseType
+		var boolValues []bool
+		var floatValues []float64
+		var stringValues []string
+
+		for tokens.More() {
+
+			// read index
+			token, err := tokens.Token()
+			if err != nil {
+				return nil, nil, fmt.Errorf("readJson: invalid json")
+			}
+
+			token, err = tokens.Token()
+			if err != nil {
+				return nil, nil, fmt.Errorf("readJson: invalid json")
+			}
+
+			switch t := token.(type) {
+			case bool:
+				type_ = preludiometa.BoolType
+				boolValues = append(boolValues, t)
+
+			case float64:
+				type_ = preludiometa.Float64Type
+				floatValues = append(floatValues, t)
+
+			case string:
+				type_ = preludiometa.StringType
+				stringValues = append(stringValues, t)
+
+			default:
+				return nil, nil, fmt.Errorf("readJson: invalid json")
+			}
+		}
+
+		// read end of array
 		token, err = tokens.Token()
-		if err != nil || token != json.Delim('"') {
-			return nil, nil, fmt.Errorf("readJson: invalid json")
+		if err != nil {
+			return nil, nil, fmt.Errorf("readJson: invalid json, column '%s' expected array end, got '%v'", names[len(names)-1], token)
 		}
 
-		// token, err = tokens.Token()
-		// if err != nil || token != json.Delim(':') {
-		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
-		// }
-
-		// token, err = tokens.Token()
-		// if err != nil || token != json.Delim('{') {
-		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
-		// }
-
-		// // read column values
-		// var values []string
-		// for tokens.More() {
-
-		// 	token, err := tokens.Token()
-		// 	if err != nil {
-		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
-		// 	}
-		// 	if token == json.Delim('}') {
-		// 		break
-		// 	}
-
-		// 	if token != json.Delim('"') {
-		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
-		// 	}
-
-		// 	token, err = tokens.Token()
-		// 	if err != nil {
-		// 		return nil, nil, fmt.Errorf("readJson: invalid json")
-		// 	}
-
-		// 	value := token.(string)
-
-		// 	values = append(values, value)
-		// }
+		if token != json.Delim('}') {
+			return nil, nil, fmt.Errorf("readJson: invalid json, column '%s' expected array end, got '%v'", names[len(names)-1], token)
+		}
 
 		// create series
-		// names = append(names, name)
-		// series = append(series, NewSeriesString(values, nil, false, ctx))
-
-		// token, err = tokens.Token()
-		// if err != nil || token != json.Delim('}') {
-		// 	return nil, nil, fmt.Errorf("readJson: invalid json")
-		// }
+		switch type_ {
+		case preludiometa.BoolType:
+			series = append(series, NewSeriesBool(boolValues, nil, false, ctx))
+		case preludiometa.Float64Type:
+			series = append(series, NewSeriesFloat64(floatValues, nil, false, ctx))
+		case preludiometa.StringType:
+			series = append(series, NewSeriesString(stringValues, nil, false, ctx))
+		}
 	}
-
-	return names, series, nil
 }
 
 type JsonWriter struct {
