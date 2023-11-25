@@ -262,6 +262,13 @@ func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText s
 				}
 				cell.SetInt(s.Get(i).(int))
 
+			case SeriesInt64:
+				if s.IsNull(i) {
+					cell.Value = naText
+					continue
+				}
+				cell.SetInt64(s.Get(i).(int64))
+
 			case SeriesFloat64:
 				if s.IsNull(i) {
 					cell.Value = naText
