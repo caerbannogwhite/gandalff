@@ -14,6 +14,46 @@ func (s SeriesBool) Not() Series {
 	return s
 }
 
+func (s SeriesBool) All() bool {
+	if s.isNullable {
+		for i := 0; i < len(s.data); i++ {
+			if s.nullMask[i>>3]&(1<<uint(i%8)) == 0 && !s.data[i] {
+				return false
+			}
+		}
+
+		return true
+	} else {
+		for i := 0; i < len(s.data); i++ {
+			if !s.data[i] {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
+func (s SeriesBool) Any() bool {
+	if s.isNullable {
+		for i := 0; i < len(s.data); i++ {
+			if s.nullMask[i>>3]&(1<<uint(i%8)) == 0 && s.data[i] {
+				return true
+			}
+		}
+
+		return false
+	} else {
+		for i := 0; i < len(s.data); i++ {
+			if s.data[i] {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
 func (s SeriesBool) And(other Series) Series {
 	if s.ctx != other.GetContext() {
 		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, other.GetContext())}
