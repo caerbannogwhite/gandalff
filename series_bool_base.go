@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 func (s SeriesBool) printInfo() {

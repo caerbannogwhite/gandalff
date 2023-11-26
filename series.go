@@ -1,7 +1,7 @@
 package gandalff
 
 import (
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type Series interface {

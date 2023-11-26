@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_SeriesTime_Append(t *testing.T) {

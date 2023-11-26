@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 // SeriesBool represents a series of bools.

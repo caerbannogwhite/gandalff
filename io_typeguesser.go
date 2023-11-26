@@ -3,9 +3,10 @@ package gandalff
 import (
 	"fmt"
 	"io"
-	"preludiometa"
 	"regexp"
 	"strconv"
+
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type typeGuesser struct {

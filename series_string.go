@@ -8,7 +8,7 @@ import (
 	"time"
 	"unsafe"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 // SeriesString represents a series of strings.

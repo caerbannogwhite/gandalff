@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type BaseDataFramePartitionEntry struct {

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"preludiometa"
 	"time"
+
+	"github.com/caerbannogwhite/preludiometa"
 
 	"github.com/tealeg/xlsx"
 )

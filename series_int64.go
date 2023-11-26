@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 // SeriesInt64 represents a series of ints.

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"preludiometa"
+
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type MarkDownWriter struct {

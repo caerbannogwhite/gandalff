@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"preludiometa"
+
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type JsonReader struct {

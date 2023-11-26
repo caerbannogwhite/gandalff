@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_SeriesBool_Base(t *testing.T) {

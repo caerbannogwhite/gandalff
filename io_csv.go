@@ -7,7 +7,7 @@ import (
 
 	"io"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type CsvReader struct {

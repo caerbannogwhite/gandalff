@@ -3,7 +3,7 @@ package gandalff
 import (
 	"time"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type DataFrameJoinType int8

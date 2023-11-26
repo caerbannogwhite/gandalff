@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 func Test_TypeGuesser(t *testing.T) {
