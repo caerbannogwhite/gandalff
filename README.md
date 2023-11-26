@@ -5,7 +5,18 @@ Or, for short, GDL: Golang Data Library
 ### What is it?
 
 Gandalff is a library for data wrangling in Go.
+The goal is to provide a simple and efficient API for data manipulation in Go,
+similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
+
+Gandalff is a work in progress, and the API is not stable yet.
+However, it already supports the following formats:
+
+- CSV
+- XPT (SAS)
+- XLSX
+- HTML
+- Markdown
 
 ### Examples
 
@@ -33,27 +44,27 @@ Megan,26,55.0,F,IT,3
 `
 
 	gandalff.NewBaseDataFrame(gandalff.NewContext()).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
-		SetDelimiter(',').
-		SetHeader(true).
 		Read().
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
 		Agg(gandalff.Min("age"), gandalff.Max("weight"), gandalff.Mean("junior"), gandalff.Count()).
-		PrettyPrint(gandalff.NewPrettyPrintParams())
+		PrettyPrint(
+      gandalff.NewPrettyPrintParams().
+			  SetUseLipGloss(true))
 }
 
 // Output:
-// ╭────────────┬────────────┬────────────┬────────────┬────────────╮
-// │ department │        age │     weight │     junior │          n │
-// ├────────────┼────────────┼────────────┼────────────┼────────────┤
-// │     String │    Float64 │    Float64 │    Float64 │      Int64 │
-// ├────────────┼────────────┼────────────┼────────────┼────────────┤
-// │         HR │         29 │         90 │        0.5 │          2 │
-// │         IT │         25 │         85 │        0.2 │          5 │
-// │   Business │         27 │         65 │        0.5 │          2 │
-// ╰────────────┴────────────┴────────────┴────────────┴────────────╯
+// ╭────────────┬─────────┬─────────┬─────────┬───────╮
+// │ department │ age     │ weight  │ junior  │ n     │
+// ├────────────┼─────────┼─────────┼─────────┼───────┤
+// │ String     │ Float64 │ Float64 │ Float64 │ Int64 │
+// ├────────────┼─────────┼─────────┼─────────┼───────┤
+// │ HR         │   29.00 │   90.00 │  0.5000 │ 2.000 │
+// │ IT         │   25.00 │   85.00 │  0.5000 │ 4.000 │
+// │ Business   │   27.00 │   65.00 │  0.5000 │ 2.000 │
+// ╰────────────┴─────────┴─────────┴─────────┴───────╯
 ```
 
 ### Community
@@ -119,6 +130,8 @@ The data types not checked are not yet supported, but might be in the future.
 - [x] OrderBy
 - [x] Select
 - [x] Take
+- [ ] Pivot
+- [ ] Stack/Append
 
 ### Supported stats functions
 
@@ -132,121 +145,16 @@ The data types not checked are not yet supported, but might be in the future.
 - [ ] Variance
 - [ ] Quantile
 
-### Implementation details
+### Dependencies
 
-This is how the interface for the Series type currently looks like:
+Built with:
 
-```go
-// Basic accessors.
-
-// Return the context of the series.
-GetContext() *Context
-// Return the number of elements in the series.
-Len() int
-// Return the type of the series.
-Type() typesys.BaseType
-// Return the type and cardinality of the series.
-TypeCard() typesys.BaseTypeCard
-// Return if the series is grouped.
-IsGrouped() bool
-// Return if the series admits null values.
-IsNullable() bool
-// Return if the series is sorted.
-IsSorted() SeriesSortOrder
-// Return if the series is error.
-IsError() bool
-// Return the error message of the series.
-GetError() string
-
-// Nullability operations.
-
-// Return if the series has null values.
-HasNull() bool
-// Return the number of null values in the series.
-NullCount() int
-// Return if the element at index i is null.
-IsNull(i int) bool
-// Return the null mask of the series.
-GetNullMask() []bool
-// Set the null mask of the series.
-SetNullMask(mask []bool) Series
-// Make the series nullable.
-MakeNullable() Series
-// Make the series non-nullable.
-MakeNonNullable() Series
-
-// Get the element at index i.
-Get(i int) any
-// Get the element at index i as a string.
-GetAsString(i int) string
-// Set the element at index i.
-Set(i int, v any) Series
-// Take the elements according to the given interval.
-Take(params ...int) Series
-
-// Append elements to the series.
-// Value can be a single value, slice of values,
-// a nullable value, a slice of nullable values or a series.
-Append(v any) Series
-
-// All-data accessors.
-
-// Return the actual data of the series.
-Data() any
-// Return the nullable data of the series.
-DataAsNullable() any
-// Return the data of the series as a slice of strings.
-DataAsString() []string
-
-// Cast the series to a given type.
-Cast(t typesys.BaseType) Series
-// Copie the series.
-Copy() Series
-
-// Series operations.
-
-// Filter out the elements by the given mask.
-// Mask can be a bool series, a slice of bools or a slice of ints.
-Filter(mask any) Series
-
-// Apply the given function to each element of the series.
-Map(f MapFunc) Series
-MapNull(f MapFuncNull) Series
-
-// Group the elements in the series.
-GroupBy(gp SeriesPartition) Series
-UnGroup() Series
-
-// Get the partition of the series.
-GetPartition() SeriesPartition
-
-// Sort Interface.
-Less(i, j int) bool
-Swap(i, j int)
-
-// Sort the elements of the series.
-Sort() Series
-SortRev() Series
-
-// Arithmetic operations.
-Mul(other Series) Series
-Div(other Series) Series
-Mod(other Series) Series
-Exp(other Series) Series
-Add(other Series) Series
-Sub(other Series) Series
-
-// Logical operations.
-Eq(other Series) Series
-Ne(other Series) Series
-Gt(other Series) Series
-Ge(other Series) Series
-Lt(other Series) Series
-Le(other Series) Series
-```
+- [xslx](https://github.com/tealeg/xlsx/tree/master)
+- [lipgloss](https://github.com/charmbracelet/lipgloss)
 
 ### TODO
 
+- [ ] Improve filtering interface.
 - [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
 - [ ] Implement string factors.
 - [ ] SeriesTime: set time format.
@@ -254,6 +162,13 @@ Le(other Series) Series
 - [ ] Add `Slice(i []int) Series` (using filter?).
 - [ ] Implement memory optimized Bool series with uint64.
 - [ ] Use uint64 for null mask.
+- [ ] Optimize XPT reader/writer with float32.
+- [ ] Add url resolver to each reader.
+- [ ] Add format option to each writer.
+- [ ] Add (DataTables)[https://datatables.net/] option to html writer.
 - [ ] Implement chunked series.
-- [ ] Implement Excel reader and writer (https://github.com/tealeg/xlsx).
+- [ ] Implement OpenAI interface.
 - [ ] Implement JSON reader and writer.
+- [ ] Implement Parquet reader and writer.
+- [ ] Implement SPSS reader and writer.
+- [ ] Implement SAS7BDAT reader and writer (https://cran.r-project.org/web/packages/sas7bdat/vignettes/sas7bdat.pdf)

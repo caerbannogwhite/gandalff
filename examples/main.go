@@ -32,7 +32,7 @@ func Example01() {
 	// f, _ := os.Create("test.csv")
 
 	NewBaseDataFrame(NewContext()).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -40,8 +40,24 @@ func Example01() {
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
 		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
-		PrettyPrint(NewPrettyPrintParams())
-	// ToCSV().
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(130).
+				SetNRows(50)).
+		ToXlsx().
+		SetPath("../testdata/test.xlsx").
+		SetSheet("test").
+		Write()
+
+	// ToMarkdown().
+	// SetWriter(f).
+	// SetHeader(true).
+	// SetIndex(false).
+	// SetNullString("").
+	// Write()
+
+	// ToCsv().
 	// SetDelimiter('\t').
 	// SetWriter(f).
 	// Write()
@@ -63,14 +79,14 @@ func Example02() {
 	ppp := NewPrettyPrintParams()
 
 	employees := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
 	departments := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(data2)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -123,14 +139,14 @@ a,b
 	ppp := NewPrettyPrintParams()
 
 	dfX := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(x)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
 	dfY := NewBaseDataFrame(ctx).
-		FromCSV().
+		FromCsv().
 		SetReader(strings.NewReader(y)).
 		SetDelimiter(',').
 		SetHeader(true).
@@ -149,9 +165,85 @@ a,b
 		PrettyPrint(ppp)
 }
 
+func Example05() {
+	NewBaseDataFrame(NewContext()).
+		FromXpt().
+		SetPath("../testdata/CDBRFS90.XPT").
+		// SetPath("../testdata/xpt_test_mixed.xpt").
+		SetVersion(XPT_VERSION_9).
+		// SetMaxObservations(10).
+		Read().
+		// Select("_WTFORHT", "_FRTSERV", "_DRNKMO", "_GRAMFAT", "_POSTSTR").
+		Take(500).
+
+		// to SAS XPT
+		// ToXpt().
+		// SetPath("../testdata/mixed_out.XPT").
+		// SetVersion(XPT_VERSION_9).
+		// Write().
+
+		// to Excel
+		// ToXlsx().
+		// SetPath("../testdata/test.xlsx").
+		// SetSheet("test").
+		// SetNaText("").
+		// Write().
+
+		// to HTML
+		ToHtml().
+		SetPath("../testdata/test.html").
+		// SetDatatables(tsrue).
+		SetNaText("-").
+		SetNewLine("\n").
+		SetIndent("  ").
+		Write().
+
+		// to JSON
+		// ToJson().
+		// SetPath("../testdata/test.json").
+		// Write().
+
+		// Pretty print
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(200).
+				SetNRows(20))
+}
+
+// Excel read and write
+func Example06() {
+	NewBaseDataFrame(NewContext()).
+		FromXlsx().
+		SetPath("").
+		SetSheet("").
+		SetHeader(3).
+		Read().
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(200).
+				SetNRows(50))
+
+}
+
+// JSON read and write
+func Example07() {
+	NewBaseDataFrame(NewContext()).
+		FromJson().
+		SetPath("../testdata/test.json").
+		Read().
+		PrettyPrint(
+			NewPrettyPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(200).
+				SetNRows(50))
+
+}
+
 func main() {
-	fmt.Println("Example01:")
-	Example01()
+	// fmt.Println("Example01:")
+	// Example01()
 
 	// fmt.Println("Example02:")
 	// Example02()
@@ -161,4 +253,13 @@ func main() {
 
 	// fmt.Println("Example04:")
 	// Example04()
+
+	fmt.Println("Example05:")
+	Example05()
+
+	// fmt.Println("Example06:")
+	// Example06()
+
+	// fmt.Println("Example07:")
+	// Example07()
 }

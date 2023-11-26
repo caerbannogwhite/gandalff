@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	preludiometa "github.com/caerbannogwhite/preludiometa"
+	"preludiometa"
 )
 
 const (

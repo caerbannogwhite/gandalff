@@ -2,4 +2,6 @@ module gen
 
 go 1.20
 
-require github.com/caerbannogwhite/preludiometa v0.0.0-20231018224909-5ea6906bfec2
+replace preludiometa => ../../preludiometa
+
+require preludiometa v0.0.0-00010101000000-000000000000
