@@ -166,41 +166,42 @@ a,b
 }
 
 func Example05() {
-
 	NewBaseDataFrame(NewContext()).
 		FromXpt().
-		// SetPath("../testdata/CDBRFS90.XPT").
-		SetPath("../testdata/xpt_test_mixed.xpt").
+		SetPath("../testdata/CDBRFS90.XPT").
+		// SetPath("../testdata/xpt_test_mixed.xpt").
 		SetVersion(XPT_VERSION_9).
 		// SetMaxObservations(10).
 		Read().
-		// Take(100).
+		// Select("_WTFORHT", "_FRTSERV", "_DRNKMO", "_GRAMFAT", "_POSTSTR").
+		Take(500).
 
 		// to SAS XPT
-		ToXpt().
-		SetPath("../testdata/mixed_out.XPT").
-		SetVersion(XPT_VERSION_9).
-		Write().
+		// ToXpt().
+		// SetPath("../testdata/mixed_out.XPT").
+		// SetVersion(XPT_VERSION_9).
+		// Write().
 
 		// to Excel
-		ToXlsx().
-		SetPath("../testdata/test.xlsx").
-		SetSheet("test").
-		SetNaText("").
-		Write().
+		// ToXlsx().
+		// SetPath("../testdata/test.xlsx").
+		// SetSheet("test").
+		// SetNaText("").
+		// Write().
 
 		// to HTML
 		ToHtml().
 		SetPath("../testdata/test.html").
+		// SetDatatables(tsrue).
 		SetNaText("-").
 		SetNewLine("\n").
 		SetIndent("  ").
 		Write().
 
 		// to JSON
-		ToJson().
-		SetPath("../testdata/test.json").
-		Write().
+		// ToJson().
+		// SetPath("../testdata/test.json").
+		// Write().
 
 		// Pretty print
 		PrettyPrint(
@@ -253,26 +254,12 @@ func main() {
 	// fmt.Println("Example04:")
 	// Example04()
 
-	// fmt.Println("Example05:")
-	// Example05()
+	fmt.Println("Example05:")
+	Example05()
 
 	// fmt.Println("Example06:")
 	// Example06()
 
-	fmt.Println("Example07:")
-	Example07()
-
-	// f, _ := os.Open("../testdata/test.json")
-	// tokens := json.NewDecoder(f)
-
-	// for {
-	// 	token, err := tokens.Token()
-	// 	fmt.Println(token)
-
-	// 	if err != nil {
-	// 		if err.Error() == "EOF" {
-	// 			break
-	// 		}
-	// 	}
-	// }
+	// fmt.Println("Example07:")
+	// Example07()
 }
