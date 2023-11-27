@@ -84,17 +84,17 @@ func Example02() {
 }
 
 func Example03() {
-	employees := NewBaseDataFrame(ctx).
+	df := NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	employees.Filter(
-		(employees.Series("age").Ge(30).(SeriesBool).
-			And(employees.Series("junior").(SeriesBool).
-				Or(employees.Series("department").Eq("Business")).(SeriesBool))).(SeriesBool)).
+	df.Filter(
+		df.Series("age").Ge(30).(SeriesBool).
+			And(df.Series("junior").(SeriesBool).
+				Or(df.Series("department").Eq("Business")))).
 		PrettyPrint(NewPrettyPrintParams())
 }
 

@@ -74,7 +74,7 @@ type DataFrame interface {
 
 	SelectAt(indices ...int) DataFrame
 
-	Filter(mask SeriesBool) DataFrame
+	Filter(mask any) DataFrame
 
 	GroupBy(by ...string) DataFrame
 

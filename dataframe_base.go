@@ -343,19 +343,33 @@ func (df BaseDataFrame) SelectAt(indices ...int) DataFrame {
 	return selected
 }
 
-func (df BaseDataFrame) Filter(mask SeriesBool) DataFrame {
+func (df BaseDataFrame) Filter(mask any) DataFrame {
 	if df.err != nil {
 		return df
 	}
 
-	if mask.Len() != df.NRows() {
-		df.err = fmt.Errorf("BaseDataFrame.Filter: mask length (%d) does not match dataframe length (%d)", mask.Len(), df.NRows())
+	var maskSeries SeriesBool
+	if _, ok := mask.(SeriesBool); ok {
+		maskSeries = mask.(SeriesBool)
+
+	} else {
+		s := NewSeries(mask, nil, false, false, df.ctx)
+		if _, ok := s.(SeriesBool); ok {
+			maskSeries = s.(SeriesBool)
+		} else {
+			df.err = fmt.Errorf("BaseDataFrame.Filter: mask is not a bool series")
+			return df
+		}
+	}
+
+	if maskSeries.Len() != df.NRows() {
+		df.err = fmt.Errorf("BaseDataFrame.Filter: mask length (%d) does not match dataframe length (%d)", maskSeries.Len(), df.NRows())
 		return df
 	}
 
 	seriesList := make([]Series, 0)
 	for _, series := range df.series {
-		seriesList = append(seriesList, series.Filter(mask))
+		seriesList = append(seriesList, series.Filter(maskSeries))
 	}
 
 	return BaseDataFrame{
