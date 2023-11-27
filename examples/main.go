@@ -8,76 +8,61 @@ import (
 
 const (
 	data1 = `
-name,age,weight,junior,department,salary band
-Alice C,29,75.0,F,HR,4
-John Doe,30,80.5,true,IT,2
-Bob,31,85.0,T,IT,4
-Jane H,25,60.0,false,IT,4
-Mary,28,70.0,false,IT,3
-Oliver,32,90.0,true,HR,1
-Ursula,27,65.0,f,Business,4
-Charlie,33,60.0,t,Business,2
+name,surname,age,junior,department,salary band
+Alice,C,29,F,HR,4
+John,Doe,30,true,IT,2
+Bob,Smith,31,F,IT,4
+Jane,H,25,false,IT,4
+Mary,Jane,28,false,IT,3
+Oliver,C,32,true,HR,1
+Ursula,Alle,27,f,Business,4
+Charlie,Brown,33,False,Business,2
+Eve,Black,26,F,Business,3
+Frank,White,34,T,Business,1
+Anna,Green,39,f,Operations,4
 `
 
 	data2 = `
 department,number of employees,budget
 IT,4,100000
 HR,2,50000
-Business,2,50000
-Operations,4,250000
+Business,4,100000
+Operations,5,250000
 `
 )
 
-func Example01() {
-	// f, _ := os.Create("test.csv")
+var ctx = NewContext()
 
-	NewBaseDataFrame(NewContext()).
+func Example01() {
+	NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read().
-		Select("department", "age", "weight", "junior").
+		Select("department", "age", "junior", "salary band").
 		GroupBy("department").
-		Agg(Min("age"), Max("weight"), Mean("junior"), Count()).
+		Agg(Max("age"), Min("salary band"), Mean("junior"), Count()).
 		PrettyPrint(
 			NewPrettyPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(130).
-				SetNRows(50)).
-		ToXlsx().
-		SetPath("../testdata/test.xlsx").
-		SetSheet("test").
-		Write()
-
-	// ToMarkdown().
-	// SetWriter(f).
-	// SetHeader(true).
-	// SetIndex(false).
-	// SetNullString("").
-	// Write()
-
-	// ToCsv().
-	// SetDelimiter('\t').
-	// SetWriter(f).
-	// Write()
+				SetNRows(50))
 
 	// Output:
-	// ╭────────────┬────────────┬────────────┬────────────┬────────────╮
-	// │ department │        age │     weight │     junior │          n │
-	// ├────────────┼────────────┼────────────┼────────────┼────────────┤
-	// │     String │    Float64 │    Float64 │    Float64 │      Int64 │
-	// ├────────────┼────────────┼────────────┼────────────┼────────────┤
-	// │         HR │         29 │         90 │        0.5 │          2 │
-	// │         IT │         25 │         85 │        0.5 │          4 │
-	// │   Business │         27 │         65 │        0.5 │          2 │
-	// ╰────────────┴────────────┴────────────┴────────────┴────────────╯
+	// ╭────────────┬─────────┬─────────────┬─────────┬───────╮
+	// │ department │ age     │ salary band │ junior  │ n     │
+	// ├────────────┼─────────┼─────────────┼─────────┼───────┤
+	// │ String     │ Float64 │ Float64     │ Float64 │ Int64 │
+	// ├────────────┼─────────┼─────────────┼─────────┼───────┤
+	// │ Business   │   34.00 │       1.000 │  0.2500 │ 4.000 │
+	// │ Operations │   39.00 │       4.000 │       0 │ 1.000 │
+	// │ HR         │   32.00 │       1.000 │  0.5000 │ 2.000 │
+	// │ IT         │   31.00 │       2.000 │  0.2500 │ 4.000 │
+	// ╰────────────┴─────────┴─────────────┴─────────┴───────╯
 }
 
 func Example02() {
-	ctx := NewContext()
-	ppp := NewPrettyPrintParams()
-
 	employees := NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
@@ -92,29 +77,26 @@ func Example02() {
 		SetHeader(true).
 		Read()
 
-	departments.PrettyPrint(ppp)
+	departments.PrettyPrint(NewPrettyPrintParams())
 
 	employees.Join(LEFT_JOIN, departments, "department").
-		PrettyPrint(ppp)
+		PrettyPrint(NewPrettyPrintParams())
 }
 
-// func Example03() {
-// 	s := NewSeriesInt64("nums", true, false, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}).
-// 		SetNullMask([]bool{true, false, false, true, false, false, true, false, false}).(SeriesInt64).
-// 		Mul(NewSeriesInt32("nums2", false, false, []int32{1, 2, 3, 4, 5, 6, 7, 8, 9})).(SeriesInt64).
-// 		Add(NewSeriesInt64("scalar", false, false, []int64{1})).
-// 		Gt(NewSeriesFloat64("nums", false, false, []float64{20}))
+func Example03() {
+	employees := NewBaseDataFrame(ctx).
+		FromCsv().
+		SetReader(strings.NewReader(data1)).
+		SetDelimiter(',').
+		SetHeader(true).
+		Read()
 
-// 	p := NewSeriesString("nums", true, []string{"a", "b", "c", "d", "e", "f", "g", "h", "i"}, NewStringPool()).
-// 		SetNullMask([]bool{true, false, false, true, false, false, true, false, false}).(SeriesString).
-// 		Add(NewSeriesString("nums2", false, []string{"a", "b", "c", "d", "e", "f", "g", "h", "i"}, NewStringPool()))
-
-// 	fmt.Println(s.Data())
-// 	fmt.Println(s.GetNullMask())
-
-// 	fmt.Println(p.Data())
-// 	fmt.Println(p.GetNullMask())
-// }
+	employees.Filter(
+		(employees.Series("age").Ge(30).(SeriesBool).
+			And(employees.Series("junior").(SeriesBool).
+				Or(employees.Series("department").Eq("Business")).(SeriesBool))).(SeriesBool)).
+		PrettyPrint(NewPrettyPrintParams())
+}
 
 func Example04() {
 	x := `
@@ -135,7 +117,6 @@ a,b
 4,4
 `
 
-	ctx := NewContext()
 	ppp := NewPrettyPrintParams()
 
 	dfX := NewBaseDataFrame(ctx).
@@ -173,8 +154,7 @@ func Example05() {
 		SetVersion(XPT_VERSION_9).
 		// SetMaxObservations(10).
 		Read().
-		// Select("_WTFORHT", "_FRTSERV", "_DRNKMO", "_GRAMFAT", "_POSTSTR").
-		Take(500).
+		Take(100).
 
 		// to SAS XPT
 		// ToXpt().
@@ -211,36 +191,6 @@ func Example05() {
 				SetNRows(20))
 }
 
-// Excel read and write
-func Example06() {
-	NewBaseDataFrame(NewContext()).
-		FromXlsx().
-		SetPath("").
-		SetSheet("").
-		SetHeader(3).
-		Read().
-		PrettyPrint(
-			NewPrettyPrintParams().
-				SetUseLipGloss(true).
-				SetWidth(200).
-				SetNRows(50))
-
-}
-
-// JSON read and write
-func Example07() {
-	NewBaseDataFrame(NewContext()).
-		FromJson().
-		SetPath("../testdata/test.json").
-		Read().
-		PrettyPrint(
-			NewPrettyPrintParams().
-				SetUseLipGloss(true).
-				SetWidth(200).
-				SetNRows(50))
-
-}
-
 func main() {
 	// fmt.Println("Example01:")
 	// Example01()
@@ -248,18 +198,12 @@ func main() {
 	// fmt.Println("Example02:")
 	// Example02()
 
-	// fmt.Println("Example03:")
-	// Example03()
+	fmt.Println("Example03:")
+	Example03()
 
 	// fmt.Println("Example04:")
 	// Example04()
 
-	fmt.Println("Example05:")
-	Example05()
-
-	// fmt.Println("Example06:")
-	// Example06()
-
-	// fmt.Println("Example07:")
-	// Example07()
+	// fmt.Println("Example05:")
+	// Example05()
 }
