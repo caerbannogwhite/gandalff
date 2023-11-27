@@ -197,52 +197,52 @@ func (s SeriesError) SortRev() Series {
 
 ////////////////////////			ARITHMETIC OPERATIONS
 
-func (s SeriesError) Mul(other Series) Series {
+func (s SeriesError) Mul(other any) Series {
 	return s
 }
 
-func (s SeriesError) Div(other Series) Series {
+func (s SeriesError) Div(other any) Series {
 	return s
 }
 
-func (s SeriesError) Mod(other Series) Series {
+func (s SeriesError) Mod(other any) Series {
 	return s
 }
 
-func (s SeriesError) Exp(other Series) Series {
+func (s SeriesError) Exp(other any) Series {
 	return s
 }
 
-func (s SeriesError) Add(other Series) Series {
+func (s SeriesError) Add(other any) Series {
 	return s
 }
 
-func (s SeriesError) Sub(other Series) Series {
+func (s SeriesError) Sub(other any) Series {
 	return s
 }
 
 ////////////////////////			LOGICAL OPERATIONS
 
-func (s SeriesError) Eq(other Series) Series {
+func (s SeriesError) Eq(other any) Series {
 	return s
 }
 
-func (s SeriesError) Ne(other Series) Series {
+func (s SeriesError) Ne(other any) Series {
 	return s
 }
 
-func (s SeriesError) Gt(other Series) Series {
+func (s SeriesError) Gt(other any) Series {
 	return s
 }
 
-func (s SeriesError) Ge(other Series) Series {
+func (s SeriesError) Ge(other any) Series {
 	return s
 }
 
-func (s SeriesError) Lt(other Series) Series {
+func (s SeriesError) Lt(other any) Series {
 	return s
 }
 
-func (s SeriesError) Le(other Series) Series {
+func (s SeriesError) Le(other any) Series {
 	return s
 }

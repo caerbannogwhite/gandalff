@@ -103,20 +103,20 @@ type Series interface {
 	SortRev() Series
 
 	// Arithmetic operations.
-	Mul(other Series) Series
-	Div(other Series) Series
-	Mod(other Series) Series
-	Exp(other Series) Series
-	Add(other Series) Series
-	Sub(other Series) Series
+	Mul(other any) Series
+	Div(other any) Series
+	Mod(other any) Series
+	Exp(other any) Series
+	Add(other any) Series
+	Sub(other any) Series
 
 	// Logical operations.
-	Eq(other Series) Series
-	Ne(other Series) Series
-	Gt(other Series) Series
-	Ge(other Series) Series
-	Lt(other Series) Series
-	Le(other Series) Series
+	Eq(other any) Series
+	Ne(other any) Series
+	Gt(other any) Series
+	Ge(other any) Series
+	Lt(other any) Series
+	Le(other any) Series
 }
 
 type SeriesPartition interface {

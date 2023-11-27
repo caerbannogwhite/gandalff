@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+// Build a Series from a generic interface.
+// The interface can be a single value, slice of values,
+// a nullable value, a slice of nullable values.
+// If nullMask is nil then the series is not nullable.
 func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ctx *Context) Series {
 	if ctx == nil {
 		return SeriesError{"NewSeries: context is nil"}
@@ -13,47 +17,153 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 	switch data := data.(type) {
 	case nil:
 		return NewSeriesNA(1, ctx)
+
+	case bool:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesBool([]bool{data}, nil, false, ctx)
 	case []bool:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesBool(data, nullMask, makeCopy, ctx)
+	case NullableBool:
+		return NewSeriesBool([]bool{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableBool:
+		values := make([]bool, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesBool(values, nulls, false, ctx)
 
+	case int:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesInt([]int{data}, nil, false, ctx)
 	case []int:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesInt(data, nullMask, makeCopy, ctx)
+	case NullableInt:
+		return NewSeriesInt([]int{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableInt:
+		values := make([]int, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesInt(values, nulls, false, ctx)
 
+	case int64:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesInt64([]int64{data}, nil, false, ctx)
 	case []int64:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesInt64(data, nullMask, makeCopy, ctx)
+	case NullableInt64:
+		return NewSeriesInt64([]int64{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableInt64:
+		values := make([]int64, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesInt64(values, nulls, false, ctx)
 
+	case float64:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesFloat64([]float64{data}, nil, false, ctx)
 	case []float64:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesFloat64(data, nullMask, makeCopy, ctx)
+	case NullableFloat64:
+		return NewSeriesFloat64([]float64{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableFloat64:
+		values := make([]float64, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesFloat64(values, nulls, false, ctx)
 
+	case string:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesString([]string{data}, nil, false, ctx)
 	case []string:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesString(data, nullMask, makeCopy, ctx)
+	case NullableString:
+		return NewSeriesString([]string{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableString:
+		values := make([]string, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesString(values, nulls, false, ctx)
 
+	case time.Time:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesTime([]time.Time{data}, nil, false, ctx)
 	case []time.Time:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesTime(data, nullMask, makeCopy, ctx)
+	case NullableTime:
+		return NewSeriesTime([]time.Time{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableTime:
+		values := make([]time.Time, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesTime(values, nulls, false, ctx)
 
+	case time.Duration:
+		if nullMask != nil && len(nullMask) != 1 {
+			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+		}
+		return NewSeriesDuration([]time.Duration{data}, nil, false, ctx)
 	case []time.Duration:
 		if nullMask != nil && len(nullMask) != len(data) {
 			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesDuration(data, nullMask, makeCopy, ctx)
+	case NullableDuration:
+		return NewSeriesDuration([]time.Duration{data.Value}, []bool{!data.Valid}, false, ctx)
+	case []NullableDuration:
+		values := make([]time.Duration, len(data))
+		nulls := make([]bool, len(data))
+		for i, v := range data {
+			values[i] = v.Value
+			nulls[i] = !v.Valid
+		}
+		return NewSeriesDuration(values, nulls, false, ctx)
 
 	default:
 		return SeriesError{fmt.Sprintf("NewSeries: unsupported type %T", data)}
