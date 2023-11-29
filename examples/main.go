@@ -43,8 +43,8 @@ func Example01() {
 		Select("department", "age", "junior", "salary band").
 		GroupBy("department").
 		Agg(Max("age"), Min("salary band"), Mean("junior"), Count()).
-		PrettyPrint(
-			NewPrettyPrintParams().
+		PPrint(
+			NewPPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(130).
 				SetNRows(50))
@@ -77,10 +77,10 @@ func Example02() {
 		SetHeader(true).
 		Read()
 
-	departments.PrettyPrint(NewPrettyPrintParams())
+	departments.PPrint(NewPPrintParams())
 
 	employees.Join(LEFT_JOIN, departments, "department").
-		PrettyPrint(NewPrettyPrintParams())
+		PPrint(NewPPrintParams())
 }
 
 func Example03() {
@@ -92,10 +92,10 @@ func Example03() {
 		Read()
 
 	df.Filter(
-		df.C("age").Ge(30).(SeriesBool).
-			And(df.C("junior").(SeriesBool).
+		df.C("age").Ge(30).
+			And(df.C("junior").
 				Or(df.C("department").Eq("Business")))).
-		PrettyPrint(NewPrettyPrintParams())
+		PPrint(NewPPrintParams())
 }
 
 func Example04() {
@@ -117,7 +117,7 @@ a,b
 4,4
 `
 
-	ppp := NewPrettyPrintParams()
+	ppp := NewPPrintParams()
 
 	dfX := NewBaseDataFrame(ctx).
 		FromCsv().
@@ -134,16 +134,16 @@ a,b
 		Read()
 
 	dfX.Join(INNER_JOIN, dfY, "a", "b").
-		PrettyPrint(ppp)
+		PPrint(ppp)
 
 	dfX.Join(LEFT_JOIN, dfY, "a", "b").
-		PrettyPrint(ppp)
+		PPrint(ppp)
 
 	dfX.Join(RIGHT_JOIN, dfY, "a", "b").
-		PrettyPrint(ppp)
+		PPrint(ppp)
 
 	dfX.Join(OUTER_JOIN, dfY, "a", "b").
-		PrettyPrint(ppp)
+		PPrint(ppp)
 }
 
 func Example05() {
@@ -184,8 +184,8 @@ func Example05() {
 		// Write().
 
 		// Pretty print
-		PrettyPrint(
-			NewPrettyPrintParams().
+		PPrint(
+			NewPPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(200).
 				SetNRows(20))

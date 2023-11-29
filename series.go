@@ -102,6 +102,10 @@ type Series interface {
 	Sort() Series
 	SortRev() Series
 
+	// Boolean operations.
+	And(other any) Series
+	Or(other any) Series
+
 	// Arithmetic operations.
 	Mul(other any) Series
 	Div(other any) Series

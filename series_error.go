@@ -197,6 +197,14 @@ func (s SeriesError) SortRev() Series {
 
 ////////////////////////			ARITHMETIC OPERATIONS
 
+func (s SeriesError) And(other any) Series {
+	return s
+}
+
+func (s SeriesError) Or(other any) Series {
+	return s
+}
+
 func (s SeriesError) Mul(other any) Series {
 	return s
 }

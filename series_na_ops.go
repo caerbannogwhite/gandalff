@@ -34,7 +34,7 @@ func (s SeriesNA) And(other any) Series {
 				resultSize := s.Len()
 				return SeriesNA{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot and %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	case SeriesBool:
 		if s.Len() == 1 {
@@ -53,10 +53,10 @@ func (s SeriesNA) And(other any) Series {
 				resultSize := s.Len()
 				return SeriesNA{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot and %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot and %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
@@ -89,7 +89,7 @@ func (s SeriesNA) Or(other any) Series {
 				resultSize := s.Len()
 				return SeriesNA{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot or %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	case SeriesBool:
 		if s.Len() == 1 {
@@ -148,10 +148,10 @@ func (s SeriesNA) Or(other any) Series {
 				}
 				return SeriesBool{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
-			return SeriesError{fmt.Sprintf("Cannot or %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot or %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }

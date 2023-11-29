@@ -735,6 +735,20 @@ func generateOperations() {
 		for i, decl := range fast.Decls {
 			if funcDecl, ok := decl.(*ast.FuncDecl); ok {
 				switch funcDecl.Name.Name {
+				case "And":
+					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
+						info.Operations["And"], info.SeriesName, info.SeriesType, "s", "other",
+						&ast.ReturnStmt{
+							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "AND"))},
+						})
+
+				case "Or":
+					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
+						info.Operations["Or"], info.SeriesName, info.SeriesType, "s", "other",
+						&ast.ReturnStmt{
+							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "OR"))},
+						})
+
 				case "Mul":
 					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
 						info.Operations["Mul"], info.SeriesName, info.SeriesType, "s", "other",
@@ -775,20 +789,6 @@ func generateOperations() {
 						info.Operations["Sub"], info.SeriesName, info.SeriesType, "s", "other",
 						&ast.ReturnStmt{
 							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "subtract"))},
-						})
-
-				case "And":
-					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
-						info.Operations["And"], info.SeriesName, info.SeriesType, "s", "other",
-						&ast.ReturnStmt{
-							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "and"))},
-						})
-
-				case "Or":
-					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
-						info.Operations["Or"], info.SeriesName, info.SeriesType, "s", "other",
-						&ast.ReturnStmt{
-							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "or"))},
 						})
 
 				case "Eq":
