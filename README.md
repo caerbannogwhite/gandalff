@@ -165,6 +165,7 @@ Built with:
 - [ ] Optimize XPT reader/writer with float32.
 - [ ] Add url resolver to each reader.
 - [ ] Add format option to each writer.
+- [ ] JSON reader by records.
 - [ ] Implement chunked series.
 - [ ] Implement OpenAI interface.
 - [ ] Implement Parquet reader and writer.

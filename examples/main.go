@@ -92,9 +92,9 @@ func Example03() {
 		Read()
 
 	df.Filter(
-		df.Series("age").Ge(30).(SeriesBool).
-			And(df.Series("junior").(SeriesBool).
-				Or(df.Series("department").Eq("Business")))).
+		df.C("age").Ge(30).(SeriesBool).
+			And(df.C("junior").(SeriesBool).
+				Or(df.C("department").Eq("Business")))).
 		PrettyPrint(NewPrettyPrintParams())
 }
 

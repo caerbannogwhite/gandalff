@@ -263,6 +263,17 @@ func (df BaseDataFrame) Replace(name string, s Series) DataFrame {
 	return df
 }
 
+// Returns the column with the given name.
+func (df BaseDataFrame) C(name string) Series {
+	for i, name_ := range df.names {
+		if name_ == name {
+			return df.series[i]
+		}
+	}
+
+	return SeriesError{msg: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
+}
+
 // Returns the series with the given name.
 func (df BaseDataFrame) Series(name string) Series {
 	for i, name_ := range df.names {
@@ -1299,7 +1310,8 @@ func (df BaseDataFrame) Records(header bool) [][]string {
 	return out
 }
 
-func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
+// Pretty print the dataframe.
+func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	if df.err != nil {
 		fmt.Println(df.err)
 		return df
@@ -1509,6 +1521,13 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		}
 	}
 	buffer += "╯\n"
+
+	// Non-displayed column names
+	if df.NCols() > nColsOut {
+		for i := nColsOut; i < df.NCols(); i++ {
+			buffer += df.names[i] + ", "
+		}
+	}
 
 	fmt.Println(buffer)
 
