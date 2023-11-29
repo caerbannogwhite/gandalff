@@ -214,7 +214,7 @@ func (w *CsvWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
