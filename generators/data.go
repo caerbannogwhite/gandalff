@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 
-	"github.com/caerbannogwhite/preludiometa"erbannogwhite/preludiometa"erbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/preludiometa"
 )
 
 type MakeOperationType func(res, resIndex, op1, op1Index, op2, op2Index string) ast.Expr
