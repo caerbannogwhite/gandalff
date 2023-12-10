@@ -263,15 +263,15 @@ func (df BaseDataFrame) Replace(name string, s Series) DataFrame {
 	return df
 }
 
-// Returns the series with the given name.
-func (df BaseDataFrame) Series(name string) Series {
+// Returns the column with the given name.
+func (df BaseDataFrame) C(name string) Series {
 	for i, name_ := range df.names {
 		if name_ == name {
 			return df.series[i]
 		}
 	}
 
-	return SeriesError{msg: fmt.Sprintf("BaseDataFrame.Series: series \"%s\" not found", name)}
+	return SeriesError{msg: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
 }
 
 // Returns the series with the given name.
@@ -287,7 +287,7 @@ func (df BaseDataFrame) __series(name string) Series {
 }
 
 // Returns the series at the given index.
-func (df BaseDataFrame) SeriesAt(index int) Series {
+func (df BaseDataFrame) At(index int) Series {
 	if index < 0 || index >= len(df.series) {
 		return SeriesError{msg: fmt.Sprintf("BaseDataFrame.SeriesAt: index %d out of bounds", index)}
 	}
@@ -343,19 +343,33 @@ func (df BaseDataFrame) SelectAt(indices ...int) DataFrame {
 	return selected
 }
 
-func (df BaseDataFrame) Filter(mask SeriesBool) DataFrame {
+func (df BaseDataFrame) Filter(mask any) DataFrame {
 	if df.err != nil {
 		return df
 	}
 
-	if mask.Len() != df.NRows() {
-		df.err = fmt.Errorf("BaseDataFrame.Filter: mask length (%d) does not match dataframe length (%d)", mask.Len(), df.NRows())
+	var maskSeries SeriesBool
+	if _, ok := mask.(SeriesBool); ok {
+		maskSeries = mask.(SeriesBool)
+
+	} else {
+		s := NewSeries(mask, nil, false, false, df.ctx)
+		if _, ok := s.(SeriesBool); ok {
+			maskSeries = s.(SeriesBool)
+		} else {
+			df.err = fmt.Errorf("BaseDataFrame.Filter: mask is not a bool series")
+			return df
+		}
+	}
+
+	if maskSeries.Len() != df.NRows() {
+		df.err = fmt.Errorf("BaseDataFrame.Filter: mask length (%d) does not match dataframe length (%d)", maskSeries.Len(), df.NRows())
 		return df
 	}
 
 	seriesList := make([]Series, 0)
 	for _, series := range df.series {
-		seriesList = append(seriesList, series.Filter(mask))
+		seriesList = append(seriesList, series.Filter(maskSeries))
 	}
 
 	return BaseDataFrame{
@@ -629,7 +643,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 	// CHECK: all columns in on must have the same type
 	for _, name := range on {
-		if df.Series(name).Type() != other.Series(name).Type() {
+		if df.C(name).Type() != other.C(name).Type() {
 			df.err = fmt.Errorf("BaseDataFrame.Join: columns \"%s\" have different types", name)
 			return df
 		}
@@ -750,13 +764,13 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// Join columns
 		for i, name := range on {
-			joined = joined.AddSeries(name, dfGrouped.Series(on[i]).Filter(indicesA))
+			joined = joined.AddSeries(name, dfGrouped.C(on[i]).Filter(indicesA))
 		}
 
 		// A columns
 		var ser_ Series
 		for _, name := range colsDiffA {
-			ser_ = df.Series(name).Filter(indicesA)
+			ser_ = df.C(name).Filter(indicesA)
 			if commonCols[name] {
 				name += "_x"
 			}
@@ -765,7 +779,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// B columns
 		for _, name := range colsDiffB {
-			ser_ = other.Series(name).Filter(indicesB)
+			ser_ = other.C(name).Filter(indicesB)
 			if commonCols[name] {
 				name += "_y"
 			}
@@ -791,13 +805,13 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// Join columns
 		for i, name := range on {
-			joined = joined.AddSeries(name, dfGrouped.Series(on[i]).Filter(indicesA))
+			joined = joined.AddSeries(name, dfGrouped.C(on[i]).Filter(indicesA))
 		}
 
 		// A columns
 		var ser_ Series
 		for _, name := range colsDiffA {
-			ser_ = df.Series(name).Filter(indicesA)
+			ser_ = df.C(name).Filter(indicesA)
 			if commonCols[name] {
 				name += "_x"
 			}
@@ -812,7 +826,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// B columns
 		for _, name := range colsDiffB {
-			ser_ = other.Series(name).Filter(indicesB)
+			ser_ = other.C(name).Filter(indicesB)
 			switch ser_.Type() {
 			case preludiometa.BoolType:
 				ser_ = NewSeriesBool(make([]bool, padBlen), nullMask, false, df.ctx).
@@ -868,7 +882,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// Join columns
 		for i, name := range on {
-			joined = joined.AddSeries(name, otherGrouped.Series(on[i]).Filter(indicesB))
+			joined = joined.AddSeries(name, otherGrouped.C(on[i]).Filter(indicesB))
 		}
 
 		padAlen := len(indicesB) - len(indicesA)
@@ -880,7 +894,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		// A columns
 		var ser_ Series
 		for _, name := range colsDiffA {
-			ser_ = df.Series(name).Filter(indicesA)
+			ser_ = df.C(name).Filter(indicesA)
 			switch ser_.Type() {
 			case preludiometa.BoolType:
 				ser_ = ser_.(SeriesBool).Append(NewSeriesBool(make([]bool, padAlen), nullMask, false, df.ctx))
@@ -912,7 +926,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// B columns
 		for _, name := range colsDiffB {
-			ser_ = other.Series(name).Filter(indicesB)
+			ser_ = other.C(name).Filter(indicesB)
 			if commonCols[name] {
 				name += "_y"
 			}
@@ -951,9 +965,9 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		indicesBOnly := indicesB[intersectionLen:]
 		for i, name := range on {
 			joined = joined.AddSeries(name,
-				dfGrouped.Series(on[i]).
+				dfGrouped.C(on[i]).
 					Filter(indicesA).Append(
-					otherGrouped.Series(on[i]).
+					otherGrouped.C(on[i]).
 						Filter(indicesBOnly)))
 		}
 
@@ -970,7 +984,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		// A columns
 		var ser_ Series
 		for _, name := range colsDiffA {
-			ser_ = df.Series(name).Filter(indicesA)
+			ser_ = df.C(name).Filter(indicesA)
 			switch ser_.Type() {
 			case preludiometa.BoolType:
 				ser_ = ser_.(SeriesBool).Append(NewSeriesBool(make([]bool, padAlen), nullMaskA, false, df.ctx))
@@ -1002,7 +1016,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 		// B columns
 		for _, name := range colsDiffB {
-			ser_ = other.Series(name).Filter(indicesB)
+			ser_ = other.C(name).Filter(indicesB)
 			switch ser_.Type() {
 			case preludiometa.BoolType:
 				ser_ = NewSeriesBool(make([]bool, padBlen), nullMaskB, false, df.ctx).
@@ -1285,7 +1299,8 @@ func (df BaseDataFrame) Records(header bool) [][]string {
 	return out
 }
 
-func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
+// Pretty print the dataframe.
+func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	if df.err != nil {
 		fmt.Println(df.err)
 		return df
@@ -1495,6 +1510,13 @@ func (df BaseDataFrame) PrettyPrint(params PrettyPrintParams) DataFrame {
 		}
 	}
 	buffer += "╯\n"
+
+	// Non-displayed column names
+	if df.NCols() > nColsOut {
+		for i := nColsOut; i < df.NCols(); i++ {
+			buffer += df.names[i] + ", "
+		}
+	}
 
 	fmt.Println(buffer)
 

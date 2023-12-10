@@ -590,17 +590,58 @@ func generateSwitchType(
 	operation Operation, op1SeriesType string, op1InnerType preludiometa.BaseType,
 	op1VarName, op2VarName string, defaultReturn ast.Stmt) []ast.Stmt {
 
+	// Generate the preliminary type check, to check the type of second operand
+	// is a Series or a raw value
+	otherSeriesDefiniton := &ast.DeclStmt{
+		Decl: &ast.GenDecl{
+			Tok: token.VAR,
+			Specs: []ast.Spec{
+				&ast.ValueSpec{
+					Names: []*ast.Ident{{Name: "otherSeries"}},
+					Type:  &ast.Ident{Name: "Series"},
+				},
+			},
+		},
+	}
+
+	typeCheck := &ast.IfStmt{
+		Init: &ast.AssignStmt{
+			Lhs: []ast.Expr{ast.NewIdent("_, ok")},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{ast.NewIdent("other.(Series)")},
+		},
+		Cond: &ast.Ident{Name: "ok"},
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{
+				&ast.AssignStmt{
+					Lhs: []ast.Expr{ast.NewIdent("otherSeries")},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{ast.NewIdent("other.(Series)")},
+				},
+			},
+		},
+		Else: &ast.BlockStmt{
+			List: []ast.Stmt{
+				&ast.AssignStmt{
+					Lhs: []ast.Expr{ast.NewIdent("otherSeries")},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{ast.NewIdent("NewSeries(other, nil, false, false, s.ctx)")},
+				},
+			},
+		},
+	}
+
 	// Generate the context check
 	contextCheck := &ast.IfStmt{
 		Cond: &ast.BinaryExpr{
 			X:  &ast.Ident{Name: fmt.Sprintf("%s.ctx", op1VarName)},
 			Op: token.NEQ,
-			Y:  &ast.Ident{Name: fmt.Sprintf("%s.GetContext()", op2VarName)},
+			Y:  &ast.Ident{Name: fmt.Sprintf("%s.GetContext()", "otherSeries")},
 		},
 		Body: &ast.BlockStmt{
 			List: []ast.Stmt{
 				&ast.ReturnStmt{
-					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("SeriesError{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.ctx, %s.GetContext())}", op2VarName))},
+					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("SeriesError{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.ctx, %s.GetContext())}", "otherSeries"))},
 				},
 			},
 		},
@@ -611,7 +652,7 @@ func generateSwitchType(
 		Assign: &ast.AssignStmt{
 			Lhs: []ast.Expr{ast.NewIdent(op2VarNameTyped)},
 			Tok: token.DEFINE,
-			Rhs: []ast.Expr{ast.NewIdent(fmt.Sprintf("%s.(type)", op2VarName))},
+			Rhs: []ast.Expr{ast.NewIdent(fmt.Sprintf("%s.(type)", "otherSeries"))},
 		},
 		Body: &ast.BlockStmt{
 			List: []ast.Stmt{},
@@ -645,7 +686,7 @@ func generateSwitchType(
 		Body: []ast.Stmt{defaultReturn},
 	})
 
-	return []ast.Stmt{contextCheck, bigSwitch}
+	return []ast.Stmt{otherSeriesDefiniton, typeCheck, contextCheck, bigSwitch}
 }
 
 func computeResSeriesType(opCode preludiometa.OPCODE, op1, op2 preludiometa.BaseType) string {
@@ -694,6 +735,20 @@ func generateOperations() {
 		for i, decl := range fast.Decls {
 			if funcDecl, ok := decl.(*ast.FuncDecl); ok {
 				switch funcDecl.Name.Name {
+				case "And":
+					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
+						info.Operations["And"], info.SeriesName, info.SeriesType, "s", "other",
+						&ast.ReturnStmt{
+							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "AND"))},
+						})
+
+				case "Or":
+					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
+						info.Operations["Or"], info.SeriesName, info.SeriesType, "s", "other",
+						&ast.ReturnStmt{
+							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "OR"))},
+						})
+
 				case "Mul":
 					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
 						info.Operations["Mul"], info.SeriesName, info.SeriesType, "s", "other",
@@ -734,20 +789,6 @@ func generateOperations() {
 						info.Operations["Sub"], info.SeriesName, info.SeriesType, "s", "other",
 						&ast.ReturnStmt{
 							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "subtract"))},
-						})
-
-				case "And":
-					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
-						info.Operations["And"], info.SeriesName, info.SeriesType, "s", "other",
-						&ast.ReturnStmt{
-							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "and"))},
-						})
-
-				case "Or":
-					fast.Decls[i].(*ast.FuncDecl).Body.List = generateSwitchType(
-						info.Operations["Or"], info.SeriesName, info.SeriesType, "s", "other",
-						&ast.ReturnStmt{
-							Results: []ast.Expr{ast.NewIdent(fmt.Sprintf(FINAL_RETURN_FMT, "or"))},
 						})
 
 				case "Eq":

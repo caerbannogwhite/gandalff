@@ -165,10 +165,9 @@ Built with:
 - [ ] Optimize XPT reader/writer with float32.
 - [ ] Add url resolver to each reader.
 - [ ] Add format option to each writer.
-- [ ] Add (DataTables)[https://datatables.net/] option to html writer.
+- [ ] JSON reader by records.
 - [ ] Implement chunked series.
 - [ ] Implement OpenAI interface.
-- [ ] Implement JSON reader and writer.
 - [ ] Implement Parquet reader and writer.
 - [ ] Implement SPSS reader and writer.
 - [ ] Implement SAS7BDAT reader and writer (https://cran.r-project.org/web/packages/sas7bdat/vignettes/sas7bdat.pdf)

@@ -129,7 +129,7 @@ func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string, d
 
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
-		series[i] = df.SeriesAt(i)
+		series[i] = df.At(i)
 	}
 
 	if writer == nil {
