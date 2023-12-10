@@ -1,6 +1,4 @@
-package main
-
-var TEMPLATE_BASIC_ACCESSORS = `package gandalff
+package gandalff
 
 import (
 	"fmt"
@@ -9,8 +7,8 @@ import (
 	"github.com/caerbannogwhite/preludiometa"
 )
 
-func (s {{.SeriesName}}) printInfo() {
-	fmt.Println("{{.SeriesName}}")
+func (s SeriesString) printInfo() {
+	fmt.Println("SeriesString")
 	fmt.Println("==========")
 	fmt.Println("IsNullable:", s.isNullable)
 	fmt.Println("Sorted:    ", s.sorted)
@@ -23,57 +21,57 @@ func (s {{.SeriesName}}) printInfo() {
 ////////////////////////			BASIC ACCESSORS
 
 // Return the context of the series.
-func (s {{.SeriesName}}) GetContext() *Context {
+func (s SeriesString) GetContext() *Context {
 	return s.ctx
 }
 
 // Return the number of elements in the series.
-func (s {{.SeriesName}}) Len() int {
+func (s SeriesString) Len() int {
 	return len(s.data)
 }
 
 // Return the type of the series.
-func (s {{.SeriesName}}) Type() preludiometa.BaseType {
-	return preludiometa.{{.SeriesTypeStr}}
+func (s SeriesString) Type() preludiometa.BaseType {
+	return preludiometa.StringType
 }
 
 // Return the type and cardinality of the series.
-func (s {{.SeriesName}}) TypeCard() preludiometa.BaseTypeCard {
-	return preludiometa.BaseTypeCard{Base: preludiometa.{{.SeriesTypeStr}}, Card: s.Len()}
+func (s SeriesString) TypeCard() preludiometa.BaseTypeCard {
+	return preludiometa.BaseTypeCard{Base: preludiometa.StringType, Card: s.Len()}
 }
 
 // Return if the series is grouped.
-func (s {{.SeriesName}}) IsGrouped() bool {
+func (s SeriesString) IsGrouped() bool {
 	return s.partition != nil
 }
 
 // Return if the series admits null values.
-func (s {{.SeriesName}}) IsNullable() bool {
+func (s SeriesString) IsNullable() bool {
 	return s.isNullable
 }
 
 // Return if the series is sorted.
-func (s {{.SeriesName}}) IsSorted() SeriesSortOrder {
+func (s SeriesString) IsSorted() SeriesSortOrder {
 	return s.sorted
 }
 
 // Return if the series is error.
-func (s {{.SeriesName}}) IsError() bool {
+func (s SeriesString) IsError() bool {
 	return false
 }
 
 // Return the error message of the series.
-func (s {{.SeriesName}}) GetError() string {
+func (s SeriesString) GetError() string {
 	return ""
 }
 
 // Return the partition of the series.
-func (s {{.SeriesName}}) GetPartition() SeriesPartition {
+func (s SeriesString) GetPartition() SeriesPartition {
 	return s.partition
 }
 
 // Return if the series has null values.
-func (s {{.SeriesName}}) HasNull() bool {
+func (s SeriesString) HasNull() bool {
 	for _, v := range s.nullMask {
 		if v != 0 {
 			return true
@@ -83,7 +81,7 @@ func (s {{.SeriesName}}) HasNull() bool {
 }
 
 // Return the number of null values in the series.
-func (s {{.SeriesName}}) NullCount() int {
+func (s SeriesString) NullCount() int {
 	count := 0
 	for _, x := range s.nullMask {
 		for ; x != 0; x >>= 1 {
@@ -94,7 +92,7 @@ func (s {{.SeriesName}}) NullCount() int {
 }
 
 // Return if the element at index i is null.
-func (s {{.SeriesName}}) IsNull(i int) bool {
+func (s SeriesString) IsNull(i int) bool {
 	if s.isNullable {
 		return s.nullMask[i>>3]&(1<<uint(i%8)) != 0
 	}
@@ -102,7 +100,7 @@ func (s {{.SeriesName}}) IsNull(i int) bool {
 }
 
 // Return the null mask of the series.
-func (s {{.SeriesName}}) GetNullMask() []bool {
+func (s SeriesString) GetNullMask() []bool {
 	mask := make([]bool, len(s.data))
 	idx := 0
 	for _, v := range s.nullMask {
@@ -115,9 +113,9 @@ func (s {{.SeriesName}}) GetNullMask() []bool {
 }
 
 // Set the null mask of the series.
-func (s {{.SeriesName}}) SetNullMask(mask []bool) Series {
+func (s SeriesString) SetNullMask(mask []bool) Series {
 	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.SetNullMask: cannot set values on a grouped series"}
+		return SeriesError{"SeriesString.SetNullMask: cannot set values on a grouped series"}
 	}
 
 	if s.isNullable {
@@ -147,7 +145,7 @@ func (s {{.SeriesName}}) SetNullMask(mask []bool) Series {
 }
 
 // Make the series nullable.
-func (s {{.SeriesName}}) MakeNullable() Series {
+func (s SeriesString) MakeNullable() Series {
 	if !s.isNullable {
 		s.isNullable = true
 		s.nullMask = __binVecInit(len(s.data), false)
@@ -156,7 +154,7 @@ func (s {{.SeriesName}}) MakeNullable() Series {
 }
 
 // Make the series non-nullable.
-func (s {{.SeriesName}}) MakeNonNullable() Series {
+func (s SeriesString) MakeNonNullable() Series {
 	if s.isNullable {
 		s.isNullable = false
 		s.nullMask = make([]uint8, 0)
@@ -165,20 +163,20 @@ func (s {{.SeriesName}}) MakeNonNullable() Series {
 }
 
 // Get the element at index i.
-func (s {{.SeriesName}}) Get(i int) any {
-	return {{if .IsGoTypePtr}}*{{end}}s.data[i]
+func (s SeriesString) Get(i int) any {
+	return *s.data[i]
 }
 
 // Append appends a value or a slice of values to the series.
-func (s {{.SeriesName}}) Append(v any) Series {
+func (s SeriesString) Append(v any) Series {
 	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.Append: cannot append values to a grouped series"}
+		return SeriesError{"SeriesString.Append: cannot append values to a grouped series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
-		s.data = append(s.data, {{.DefaultValue}})
-		s = s.MakeNullable().({{.SeriesName}})
+		s.data = append(s.data, s.ctx.stringPool.naTextPtr)
+		s = s.MakeNullable().(SeriesString)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
@@ -186,38 +184,26 @@ func (s {{.SeriesName}}) Append(v any) Series {
 
 	case SeriesNA:
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, v.Len(), true, __binVecInit(v.Len(), true))
-		s.data = append(s.data, make([]{{.SeriesGoTypeStr}}, v.Len())...)
+		s.data = append(s.data, make([]*string, v.Len())...)
 
-	case {{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+	case string:
 		s.data = append(s.data, s.ctx.stringPool.Put(v))
-		{{- else -}}
-		s.data = append(s.data, v)
-		{{- end}}
 		if s.isNullable && len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
 
-	case []{{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+	case []string:
 		s.data = append(s.data, make([]*string, len(v))...)
 		for i, str := range v {
 			s.data[len(s.data)-len(v)+i] = s.ctx.stringPool.Put(str)
 		}
-		{{- else -}}
-		s.data = append(s.data, v...)
-		{{- end}}
 		if s.isNullable && len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask))...)
 		}
 
-	case {{.SeriesNullableTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+	case NullableString:
 		s.data = append(s.data, s.ctx.stringPool.Put(v.Value))
-		{{- else -}}
-		s.data = append(s.data, v.Value)
-		{{- end}}
-		s = s.MakeNullable().({{.SeriesName}})
+		s = s.MakeNullable().(SeriesString)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
@@ -225,34 +211,30 @@ func (s {{.SeriesName}}) Append(v any) Series {
 			s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
 		}
 
-	case []{{.SeriesNullableTypeStr}}:
+	case []NullableString:
 		ssize := len(s.data)
-		s.data = append(s.data, make([]{{.SeriesGoTypeStr}}, len(v))...)
-		s = s.MakeNullable().({{.SeriesName}})
+		s.data = append(s.data, make([]*string, len(v))...)
+		s = s.MakeNullable().(SeriesString)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask)+1)...)
 		}
 		for i, b := range v {
-			{{if eq .SeriesName "SeriesString" -}}
 			s.data[ssize+i] = s.ctx.stringPool.Put(b.Value)
-			{{- else -}}
-			s.data[ssize+i] = b.Value
-			{{- end}}
 			if !b.Valid {
 				s.nullMask[(ssize+i)>>3] |= 1 << uint8((ssize+i)%8)
 			}
 		}
 
-	case {{.SeriesName}}:
+	case SeriesString:
 		if s.ctx != v.ctx {
-			return SeriesError{"{{.SeriesName}}.Append: cannot append {{.SeriesName}} from different contexts"}
+			return SeriesError{"SeriesString.Append: cannot append SeriesString from different contexts"}
 		}
 
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, len(v.data), v.isNullable, v.nullMask)
 		s.data = append(s.data, v.data...)
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Append: invalid type %T", v)}
+		return SeriesError{fmt.Sprintf("SeriesString.Append: invalid type %T", v)}
 	}
 
 	s.sorted = SORTED_NONE
@@ -260,8 +242,8 @@ func (s {{.SeriesName}}) Append(v any) Series {
 }
 
 // Take the elements according to the given interval.
-func (s {{.SeriesName}}) Take(params ...int) Series {
-	indeces, err := seriesTakePreprocess("{{.SeriesName}}", s.Len(), params...)
+func (s SeriesString) Take(params ...int) Series {
+	indeces, err := seriesTakePreprocess("SeriesString", s.Len(), params...)
 	if err != nil {
 		return SeriesError{err.Error()}
 	}
@@ -269,26 +251,22 @@ func (s {{.SeriesName}}) Take(params ...int) Series {
 }
 
 // Return the elements of the series as a slice.
-func (s {{.SeriesName}}) Data() any {
-	{{if eq .SeriesName "SeriesString" -}}
+func (s SeriesString) Data() any {
 	data := make([]string, len(s.data))
 	for i, v := range s.data {
 		data[i] = *v
 	}
 	return data
-	{{- else -}}
-	return s.data
-	{{- end}}
 }
 
 // Copy the series.
-func (s {{.SeriesName}}) Copy() Series {
-	data := make([]{{.SeriesGoTypeStr}}, len(s.data))
+func (s SeriesString) Copy() Series {
+	data := make([]*string, len(s.data))
 	copy(data, s.data)
 	nullMask := make([]uint8, len(s.nullMask))
 	copy(nullMask, s.nullMask)
 
-	return {{.SeriesName}}{
+	return SeriesString{
 		isNullable: s.isNullable,
 		sorted:     s.sorted,
 		data:       data,
@@ -298,23 +276,21 @@ func (s {{.SeriesName}}) Copy() Series {
 	}
 }
 
-func (s {{.SeriesName}}) getDataPtr() *[]{{.SeriesGoTypeStr}} {
+func (s SeriesString) getDataPtr() *[]*string {
 	return &s.data
 }
 
 // Ungroup the series.
-func (s {{.SeriesName}}) UnGroup() Series {
+func (s SeriesString) UnGroup() Series {
 	s.partition = nil
 	return s
 }
-`
 
-var TEMPLATE_FILTERS = `
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
 // Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
-func (s {{.SeriesName}}) Filter(mask any) Series {
+func (s SeriesString) Filter(mask any) Series {
 	switch mask := mask.(type) {
 	case SeriesBool:
 		return s.filterBoolSlice(mask.data)
@@ -325,13 +301,13 @@ func (s {{.SeriesName}}) Filter(mask any) Series {
 	case []int:
 		return s.filterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: invalid type %T", mask)}
+		return SeriesError{fmt.Sprintf("SeriesString.Filter: invalid type %T", mask)}
 	}
 }
 
-func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
+func (s SeriesString) filterBoolSlice(mask []bool) Series {
 	if len(mask) != len(s.data) {
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
+		return SeriesError{fmt.Sprintf("SeriesString.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
 	}
 
 	elementCount := 0
@@ -341,10 +317,10 @@ func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
 		}
 	}
 
-	var data []{{.SeriesGoTypeStr}}
+	var data []*string
 	var nullMask []uint8
 
-	data = make([]{{.SeriesGoTypeStr}}, elementCount)
+	data = make([]*string, elementCount)
 
 	if s.isNullable {
 		nullMask = __binVecInit(elementCount, false)
@@ -377,9 +353,9 @@ func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
 	return s
 }
 
-func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
+func (s SeriesString) filterIntSlice(indexes []int, check bool) Series {
 	if len(indexes) == 0 {
-		s.data = make([]{{.SeriesGoTypeStr}}, 0)
+		s.data = make([]*string, 0)
 		s.nullMask = make([]uint8, 0)
 		return s
 	}
@@ -388,16 +364,16 @@ func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
 	if check {
 		for _, v := range indexes {
 			if v < 0 || v >= len(s.data) {
-				return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: index %d is out of range", v)}
+				return SeriesError{fmt.Sprintf("SeriesString.Filter: index %d is out of range", v)}
 			}
 		}
 	}
 
-	var data []{{.SeriesGoTypeStr}}
+	var data []*string
 	var nullMask []uint8
 
 	size := len(indexes)
-	data = make([]{{.SeriesGoTypeStr}}, size)
+	data = make([]*string, size)
 
 	if s.isNullable {
 		nullMask = __binVecInit(size, false)
@@ -421,11 +397,9 @@ func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
 
 	return s
 }
-`
 
-var TEMPLATE_MAPS = `
 // Apply the given function to each element of the series.
-func (s {{.SeriesName}}) Map(f MapFunc) Series {
+func (s SeriesString) Map(f MapFunc) Series {
 	if len(s.data) == 0 {
 		return s
 	}
@@ -435,7 +409,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case bool:
 		data := make([]bool, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(bool)
+			data[i] = f(*s.data[i]).(bool)
 		}
 
 		return SeriesBool{
@@ -450,7 +424,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case int:
 		data := make([]int, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int)
+			data[i] = f(*s.data[i]).(int)
 		}
 
 		return SeriesInt{
@@ -465,7 +439,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case int64:
 		data := make([]int64, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int64)
+			data[i] = f(*s.data[i]).(int64)
 		}
 
 		return SeriesInt64{
@@ -480,7 +454,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case float64:
 		data := make([]float64, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(float64)
+			data[i] = f(*s.data[i]).(float64)
 		}
 
 		return SeriesFloat64{
@@ -495,7 +469,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case string:
 		data := make([]*string, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = s.ctx.stringPool.Put(f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(string))
+			data[i] = s.ctx.stringPool.Put(f(*s.data[i]).(string))
 		}
 
 		return SeriesString{
@@ -510,7 +484,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 	case time.Time:
 		data := make([]time.Time, len(s.data))
 		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(time.Time)
+			data[i] = f(*s.data[i]).(time.Time)
 		}
 
 		return SeriesTime{
@@ -538,18 +512,18 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Map: Unsupported type %T", v)}
+		return SeriesError{fmt.Sprintf("SeriesString.Map: Unsupported type %T", v)}
 	}
 }
 
 // Apply the given function to each element of the series.
-func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
+func (s SeriesString) MapNull(f MapFuncNull) Series {
 	if len(s.data) == 0 {
 		return s
 	}
 
 	if !s.isNullable {
-		return SeriesError{"{{.SeriesName}}.MapNull: series is not nullable"}
+		return SeriesError{"SeriesString.MapNull: series is not nullable"}
 	}
 
 	v, isNull := f(s.Get(0), s.IsNull(0))
@@ -558,7 +532,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]bool, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = v.(bool)
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -578,7 +552,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]int, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = v.(int)
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -598,7 +572,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]int64, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = v.(int64)
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -618,7 +592,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]float64, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = v.(float64)
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -638,7 +612,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]*string, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = s.ctx.stringPool.Put(v.(string))
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -658,7 +632,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		data := make([]time.Time, len(s.data))
 		nullMask := make([]uint8, len(s.nullMask))
 		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
+			v, isNull = f(*s.data[i], s.IsNull(i))
 			data[i] = v.(time.Time)
 			if isNull {
 				nullMask[i>>3] |= 1 << uint(i%8)
@@ -695,7 +669,6 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.MapNull: Unsupported type %T", v)}
+		return SeriesError{fmt.Sprintf("SeriesString.MapNull: Unsupported type %T", v)}
 	}
 }
-`
