@@ -75,7 +75,7 @@ func (w *HtmlWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}

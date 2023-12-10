@@ -206,7 +206,8 @@ func (w *XlsxWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		// make sure os.O_WRONLY arg is supplies so that file is not opened in read-only mode
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}

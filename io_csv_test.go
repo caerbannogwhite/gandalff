@@ -414,3 +414,26 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 		b.Error("Expected Int64, got", df.Types()[8].ToString())
 	}
 }
+
+func Test_IOCsv_ValidWrite(t *testing.T) {
+	df := NewBaseDataFrame(ctx).
+		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
+		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
+		ToXlsx().
+		SetPath("test.csv").
+		Write()
+
+	if df.IsErrored() {
+		t.Errorf(df.GetError().Error())
+	}
+
+	_, err := os.Stat("test.csv")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	err = os.Remove("test.csv")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}

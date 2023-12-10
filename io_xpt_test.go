@@ -2,7 +2,10 @@ package gandalff
 
 import (
 	"encoding/binary"
+	"os"
+
 	"math"
+
 	"testing"
 )
 
@@ -194,6 +197,25 @@ func Test_IOXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-// func Test_IOXpt_Genericv56(t *testing.T) {
-// 	ReadXPTv56("Z:\\Intertek\\2794 2 outcomes at 2 measures and 2-1distance\\Analysis\\Results + Reports\\XPT_data\\sp.xpt")
-// }
+func Test_IOXpt_ValidWrite(t *testing.T) {
+	df := NewBaseDataFrame(ctx).
+		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
+		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
+		ToXpt().
+		SetPath("test.xpt").
+		Write()
+
+	if df.IsErrored() {
+		t.Errorf(df.GetError().Error())
+	}
+
+	_, err := os.Stat("test.xpt")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	err = os.Remove("test.xpt")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
