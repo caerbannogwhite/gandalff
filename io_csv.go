@@ -214,7 +214,7 @@ func (w *CsvWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
@@ -237,7 +237,7 @@ func (w *CsvWriter) Write() DataFrame {
 func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
-		series[i] = df.SeriesAt(i)
+		series[i] = df.At(i)
 	}
 
 	if header {

@@ -2,7 +2,7 @@ package gandalff
 
 import "github.com/charmbracelet/lipgloss"
 
-type PrettyPrintParams struct {
+type PPrintParams struct {
 	useLipGloss bool
 	minColWidth int
 	maxColWidth int
@@ -15,8 +15,8 @@ type PrettyPrintParams struct {
 	styleTypes lipgloss.Style
 }
 
-func NewPrettyPrintParams() PrettyPrintParams {
-	return PrettyPrintParams{
+func NewPPrintParams() PPrintParams {
+	return PPrintParams{
 		minColWidth: 10,
 		maxColWidth: 20,
 		colWidth:    11,
@@ -29,32 +29,32 @@ func NewPrettyPrintParams() PrettyPrintParams {
 	}
 }
 
-func (ppp PrettyPrintParams) SetUseLipGloss(b bool) PrettyPrintParams {
+func (ppp PPrintParams) SetUseLipGloss(b bool) PPrintParams {
 	ppp.useLipGloss = b
 	return ppp
 }
 
-func (ppp PrettyPrintParams) SetMinColWidth(n int) PrettyPrintParams {
+func (ppp PPrintParams) SetMinColWidth(n int) PPrintParams {
 	ppp.minColWidth = n
 	return ppp
 }
 
-func (ppp PrettyPrintParams) SetMaxColWidth(n int) PrettyPrintParams {
+func (ppp PPrintParams) SetMaxColWidth(n int) PPrintParams {
 	ppp.maxColWidth = n
 	return ppp
 }
 
-func (ppp PrettyPrintParams) SetWidth(n int) PrettyPrintParams {
+func (ppp PPrintParams) SetWidth(n int) PPrintParams {
 	ppp.width = n
 	return ppp
 }
 
-func (ppp PrettyPrintParams) SetNRows(n int) PrettyPrintParams {
+func (ppp PPrintParams) SetNRows(n int) PPrintParams {
 	ppp.nrows = n
 	return ppp
 }
 
-func (ppp PrettyPrintParams) SetIndent(s string) PrettyPrintParams {
+func (ppp PPrintParams) SetIndent(s string) PPrintParams {
 	ppp.indent = s
 	return ppp
 }

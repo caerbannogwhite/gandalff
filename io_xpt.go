@@ -165,7 +165,7 @@ func (w *XptWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
@@ -951,7 +951,7 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 
 	var series Series
 	for i := 0; i < df.NCols(); i++ {
-		series = df.SeriesAt(i)
+		series = df.At(i)
 
 		namestr := NewNamestrV89()
 		namestr.npos = int32(offset)
@@ -1029,7 +1029,7 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 	offset = 0
 	for i := 0; i < df.NRows(); i++ {
 		for j := 0; j < df.NCols(); j++ {
-			series = df.SeriesAt(j)
+			series = df.At(j)
 
 			switch series.(type) {
 

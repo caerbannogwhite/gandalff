@@ -230,7 +230,7 @@ func (w *JsonWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
@@ -258,7 +258,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 	for i, name := range dataframe.Names() {
 		writer.Write([]byte(fmt.Sprintf("%s\"%s\": {%s", indent2, name, newLine)))
 
-		series := dataframe.SeriesAt(i)
+		series := dataframe.At(i)
 		switch ser := series.(type) {
 		case SeriesBool:
 			for j, b := range ser.Bools() {

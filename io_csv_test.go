@@ -183,68 +183,68 @@ Charlie,33,95.0,t
 	}
 
 	// Check the values.
-	if df.SeriesAt(0).Data().([]string)[0] != "Alice C" {
-		t.Error("Expected 'Alice C', got", df.SeriesAt(0).Data().([]string)[0])
+	if df.At(0).Data().([]string)[0] != "Alice C" {
+		t.Error("Expected 'Alice C', got", df.At(0).Data().([]string)[0])
 	}
 
-	if df.SeriesAt(0).Data().([]string)[1] != "John Doe" {
-		t.Error("Expected 'John Doe', got", df.SeriesAt(0).Data().([]string)[1])
+	if df.At(0).Data().([]string)[1] != "John Doe" {
+		t.Error("Expected 'John Doe', got", df.At(0).Data().([]string)[1])
 	}
 
-	if df.SeriesAt(0).Data().([]string)[2] != "Bob" {
-		t.Error("Expected 'Bob', got", df.SeriesAt(0).Data().([]string)[2])
+	if df.At(0).Data().([]string)[2] != "Bob" {
+		t.Error("Expected 'Bob', got", df.At(0).Data().([]string)[2])
 	}
 
-	if df.SeriesAt(0).Data().([]string)[3] != "Jane H" {
-		t.Error("Expected 'Jane H', got", df.SeriesAt(0).Data().([]string)[3])
+	if df.At(0).Data().([]string)[3] != "Jane H" {
+		t.Error("Expected 'Jane H', got", df.At(0).Data().([]string)[3])
 	}
 
-	if df.SeriesAt(1).Data().([]int64)[4] != 28 {
-		t.Error("Expected 28, got", df.SeriesAt(1).Data().([]int64)[4])
+	if df.At(1).Data().([]int64)[4] != 28 {
+		t.Error("Expected 28, got", df.At(1).Data().([]int64)[4])
 	}
 
-	if df.SeriesAt(1).Data().([]int64)[5] != 32 {
-		t.Error("Expected 32, got", df.SeriesAt(1).Data().([]int64)[5])
+	if df.At(1).Data().([]int64)[5] != 32 {
+		t.Error("Expected 32, got", df.At(1).Data().([]int64)[5])
 	}
 
-	if df.SeriesAt(1).Data().([]int64)[6] != 27 {
-		t.Error("Expected 27, got", df.SeriesAt(1).Data().([]int64)[6])
+	if df.At(1).Data().([]int64)[6] != 27 {
+		t.Error("Expected 27, got", df.At(1).Data().([]int64)[6])
 	}
 
-	if df.SeriesAt(1).Data().([]int64)[7] != 33 {
-		t.Error("Expected 33, got", df.SeriesAt(1).Data().([]int64)[7])
+	if df.At(1).Data().([]int64)[7] != 33 {
+		t.Error("Expected 33, got", df.At(1).Data().([]int64)[7])
 	}
 
-	if df.SeriesAt(2).Data().([]float64)[0] != 75.0 {
-		t.Error("Expected 75.0, got", df.SeriesAt(2).Data().([]float64)[0])
+	if df.At(2).Data().([]float64)[0] != 75.0 {
+		t.Error("Expected 75.0, got", df.At(2).Data().([]float64)[0])
 	}
 
-	if df.SeriesAt(2).Data().([]float64)[1] != 80.5 {
-		t.Error("Expected 80.5, got", df.SeriesAt(2).Data().([]float64)[1])
+	if df.At(2).Data().([]float64)[1] != 80.5 {
+		t.Error("Expected 80.5, got", df.At(2).Data().([]float64)[1])
 	}
 
-	if df.SeriesAt(2).Data().([]float64)[2] != 85.0 {
-		t.Error("Expected 85.0, got", df.SeriesAt(2).Data().([]float64)[2])
+	if df.At(2).Data().([]float64)[2] != 85.0 {
+		t.Error("Expected 85.0, got", df.At(2).Data().([]float64)[2])
 	}
 
-	if df.SeriesAt(2).Data().([]float64)[3] != 60.0 {
-		t.Error("Expected 60.0, got", df.SeriesAt(2).Data().([]float64)[3])
+	if df.At(2).Data().([]float64)[3] != 60.0 {
+		t.Error("Expected 60.0, got", df.At(2).Data().([]float64)[3])
 	}
 
-	if df.SeriesAt(3).Data().([]bool)[4] != false {
-		t.Error("Expected false, got", df.SeriesAt(3).Data().([]bool)[4])
+	if df.At(3).Data().([]bool)[4] != false {
+		t.Error("Expected false, got", df.At(3).Data().([]bool)[4])
 	}
 
-	if df.SeriesAt(3).Data().([]bool)[5] != true {
-		t.Error("Expected true, got", df.SeriesAt(3).Data().([]bool)[5])
+	if df.At(3).Data().([]bool)[5] != true {
+		t.Error("Expected true, got", df.At(3).Data().([]bool)[5])
 	}
 
-	if df.SeriesAt(3).Data().([]bool)[6] != false {
-		t.Error("Expected false, got", df.SeriesAt(3).Data().([]bool)[6])
+	if df.At(3).Data().([]bool)[6] != false {
+		t.Error("Expected false, got", df.At(3).Data().([]bool)[6])
 	}
 
-	if df.SeriesAt(3).Data().([]bool)[7] != true {
-		t.Error("Expected true, got", df.SeriesAt(3).Data().([]bool)[7])
+	if df.At(3).Data().([]bool)[7] != true {
+		t.Error("Expected true, got", df.At(3).Data().([]bool)[7])
 	}
 }
 
@@ -412,5 +412,28 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 
 	if df.Types()[8] != preludiometa.Int64Type {
 		b.Error("Expected Int64, got", df.Types()[8].ToString())
+	}
+}
+
+func Test_IOCsv_ValidWrite(t *testing.T) {
+	df := NewBaseDataFrame(ctx).
+		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
+		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
+		ToXlsx().
+		SetPath("test.csv").
+		Write()
+
+	if df.IsErrored() {
+		t.Errorf(df.GetError().Error())
+	}
+
+	_, err := os.Stat("test.csv")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	err = os.Remove("test.csv")
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }

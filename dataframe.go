@@ -61,11 +61,11 @@ type DataFrame interface {
 	// Replace the series with the given name.
 	Replace(name string, s Series) DataFrame
 
-	// Returns the series with the given name.
-	Series(name string) Series
+	// Returns the column with the given name.
+	C(name string) Series
 
 	// Returns the series at the given index.
-	SeriesAt(index int) Series
+	At(index int) Series
 
 	// Returns the series with the given name as a bool series.
 	NameAt(index int) string
@@ -74,7 +74,7 @@ type DataFrame interface {
 
 	SelectAt(indices ...int) DataFrame
 
-	Filter(mask SeriesBool) DataFrame
+	Filter(mask any) DataFrame
 
 	GroupBy(by ...string) DataFrame
 
@@ -98,7 +98,9 @@ type DataFrame interface {
 
 	Describe() string
 	Records(header bool) [][]string
-	PrettyPrint(params PrettyPrintParams) DataFrame
+
+	// Pretty print the dataframe.
+	PPrint(params PPrintParams) DataFrame
 
 	FromCsv() *CsvReader
 	ToCsv() *CsvWriter

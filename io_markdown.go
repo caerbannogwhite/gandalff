@@ -70,7 +70,7 @@ func (w *MarkDownWriter) Write() DataFrame {
 	}
 
 	if w.path != "" {
-		file, err := os.OpenFile(w.path, os.O_CREATE, 0666)
+		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
 		}
@@ -129,10 +129,10 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, na
 		}
 
 		for j := 0; j < dataframe.NCols(); j++ {
-			if dataframe.SeriesAt(j).IsNull(i) {
+			if dataframe.At(j).IsNull(i) {
 				buff += naText + "|"
 			} else {
-				buff += dataframe.SeriesAt(j).GetAsString(i) + "|"
+				buff += dataframe.At(j).GetAsString(i) + "|"
 			}
 		}
 		buff += "\n"
