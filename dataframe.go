@@ -63,11 +63,9 @@ type DataFrame interface {
 
 	// Returns the column with the given name.
 	C(name string) Series
-	// Returns the series with the given name.
-	Series(name string) Series
 
 	// Returns the series at the given index.
-	SeriesAt(index int) Series
+	At(index int) Series
 
 	// Returns the series with the given name as a bool series.
 	NameAt(index int) string

@@ -247,7 +247,7 @@ func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText s
 		for j := range dataframe.Names() {
 			cell := row.AddCell()
 
-			switch s := dataframe.SeriesAt(j).(type) {
+			switch s := dataframe.At(j).(type) {
 			case SeriesBool:
 				if s.IsNull(i) {
 					cell.Value = naText

@@ -237,7 +237,7 @@ func (w *CsvWriter) Write() DataFrame {
 func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
 	series := make([]Series, df.NCols())
 	for i := 0; i < df.NCols(); i++ {
-		series[i] = df.SeriesAt(i)
+		series[i] = df.At(i)
 	}
 
 	if header {

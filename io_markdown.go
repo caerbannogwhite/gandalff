@@ -128,10 +128,10 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, na
 		}
 
 		for j := 0; j < dataframe.NCols(); j++ {
-			if dataframe.SeriesAt(j).IsNull(i) {
+			if dataframe.At(j).IsNull(i) {
 				buff += naText + "|"
 			} else {
-				buff += dataframe.SeriesAt(j).GetAsString(i) + "|"
+				buff += dataframe.At(j).GetAsString(i) + "|"
 			}
 		}
 		buff += "\n"

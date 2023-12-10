@@ -257,7 +257,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 	for i, name := range dataframe.Names() {
 		writer.Write([]byte(fmt.Sprintf("%s\"%s\": {%s", indent2, name, newLine)))
 
-		series := dataframe.SeriesAt(i)
+		series := dataframe.At(i)
 		switch ser := series.(type) {
 		case SeriesBool:
 			for j, b := range ser.Bools() {
