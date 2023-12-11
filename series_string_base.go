@@ -276,8 +276,8 @@ func (s SeriesString) Copy() Series {
 	}
 }
 
-func (s SeriesString) getDataPtr() *[]*string {
-	return &s.data
+func (s SeriesString) getData() []*string {
+	return s.data
 }
 
 // Ungroup the series.

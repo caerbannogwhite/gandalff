@@ -269,8 +269,8 @@ func (s SeriesInt64) Copy() Series {
 	}
 }
 
-func (s SeriesInt64) getDataPtr() *[]int64 {
-	return &s.data
+func (s SeriesInt64) getData() []int64 {
+	return s.data
 }
 
 // Ungroup the series.

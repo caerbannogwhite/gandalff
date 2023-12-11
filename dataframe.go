@@ -1,6 +1,7 @@
 package gandalff
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/caerbannogwhite/preludiometa"
@@ -135,36 +136,37 @@ const (
 const DEFAULT_COUNT_NAME = "n"
 
 type aggregator struct {
-	name  string
-	type_ AggregateType
+	name    string
+	newName string
+	type_   AggregateType
 }
 
 func Count() aggregator {
-	return aggregator{DEFAULT_COUNT_NAME, AGGREGATE_COUNT}
+	return aggregator{DEFAULT_COUNT_NAME, DEFAULT_COUNT_NAME, AGGREGATE_COUNT}
 }
 
 func Sum(name string) aggregator {
-	return aggregator{name, AGGREGATE_SUM}
+	return aggregator{name, fmt.Sprintf("sum(%s)", name), AGGREGATE_SUM}
 }
 
 func Mean(name string) aggregator {
-	return aggregator{name, AGGREGATE_MEAN}
+	return aggregator{name, fmt.Sprintf("mean(%s)", name), AGGREGATE_MEAN}
 }
 
 func Median(name string) aggregator {
-	return aggregator{name, AGGREGATE_MEDIAN}
+	return aggregator{name, fmt.Sprintf("median(%s)", name), AGGREGATE_MEDIAN}
 }
 
 func Min(name string) aggregator {
-	return aggregator{name, AGGREGATE_MIN}
+	return aggregator{name, fmt.Sprintf("min(%s)", name), AGGREGATE_MIN}
 }
 
 func Max(name string) aggregator {
-	return aggregator{name, AGGREGATE_MAX}
+	return aggregator{name, fmt.Sprintf("max(%s)", name), AGGREGATE_MAX}
 }
 
 func Std(name string) aggregator {
-	return aggregator{name, AGGREGATE_STD}
+	return aggregator{name, fmt.Sprintf("std(%s)", name), AGGREGATE_STD}
 }
 
 ////////////////////////			SORT

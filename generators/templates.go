@@ -298,8 +298,8 @@ func (s {{.SeriesName}}) Copy() Series {
 	}
 }
 
-func (s {{.SeriesName}}) getDataPtr() *[]{{.SeriesGoTypeStr}} {
-	return &s.data
+func (s {{.SeriesName}}) getData() []{{.SeriesGoTypeStr}} {
+	return s.data
 }
 
 // Ungroup the series.

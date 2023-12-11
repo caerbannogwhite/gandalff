@@ -269,8 +269,8 @@ func (s SeriesBool) Copy() Series {
 	}
 }
 
-func (s SeriesBool) getDataPtr() *[]bool {
-	return &s.data
+func (s SeriesBool) getData() []bool {
+	return s.data
 }
 
 // Ungroup the series.

@@ -22,6 +22,7 @@ func read_G1_1e4_1e2_0_0() {
 		df := NewBaseDataFrame(ctx).
 			FromCsv().
 			SetDelimiter(',').
+			SetNullValues(false).
 			SetReader(f).
 			Read()
 
@@ -39,6 +40,7 @@ func read_G1_1e5_1e2_0_0() {
 		df := NewBaseDataFrame(ctx).
 			FromCsv().
 			SetDelimiter(',').
+			SetNullValues(false).
 			SetReader(f).
 			Read()
 
@@ -56,6 +58,7 @@ func read_G1_1e6_1e2_0_0() {
 		df := NewBaseDataFrame(ctx).
 			FromCsv().
 			SetDelimiter(',').
+			SetNullValues(false).
 			SetReader(f).
 			Read()
 
@@ -73,6 +76,7 @@ func read_G1_1e7_1e2_0_0() {
 		df := NewBaseDataFrame(ctx).
 			FromCsv().
 			SetDelimiter(',').
+			SetNullValues(false).
 			SetReader(f).
 			Read()
 
@@ -153,6 +157,8 @@ func read_G1_1e7_1e2_10_0() {
 }
 
 func init() {
+	ctx = NewContext()
+
 	read_G1_1e4_1e2_0_0()
 	read_G1_1e5_1e2_0_0()
 	read_G1_1e6_1e2_0_0()
@@ -364,7 +370,7 @@ func Test_GroupBy_Q1_1e4(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 30027 {
 		t.Errorf("Expected 30027, got %f", check)
 	}
@@ -387,7 +393,7 @@ func Test_GroupBy_Q1_1e5(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 300292 {
 		t.Errorf("Expected 300292, got %f", check)
 	}
@@ -410,7 +416,7 @@ func Test_GroupBy_Q1_1e6(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 3000297 {
 		t.Errorf("Expected 3000297, got %f", check)
 	}
@@ -433,7 +439,7 @@ func Test_GroupBy_Q1_1e7(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 29998789 {
 		t.Errorf("Expected 29998789, got %f", check)
 	}
@@ -456,7 +462,7 @@ func Test_GroupBy_Q1_1e4_10PercNAs(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 27044 {
 		t.Errorf("Expected 27044, got %f", check)
 	}
@@ -479,7 +485,7 @@ func Test_GroupBy_Q1_1e5_10PercNAs(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 270421 {
 		t.Errorf("Expected 270421, got %f", check)
 	}
@@ -502,7 +508,7 @@ func Test_GroupBy_Q1_1e6_10PercNAs(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 2700684 {
 		t.Errorf("Expected 2700684, got %f", check)
 	}
@@ -525,7 +531,7 @@ func Test_GroupBy_Q1_1e7_10PercNAs(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 26998588 {
 		t.Errorf("Expected 26998588, got %f", check)
 	}
@@ -548,7 +554,7 @@ func Test_GroupBy_Q2_1e4(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 30027 {
 		t.Errorf("Expected 30027, got %f", check)
 	}
@@ -571,7 +577,7 @@ func Test_GroupBy_Q2_1e5(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 300292 {
 		t.Errorf("Expected 300292, got %f", check)
 	}
@@ -594,7 +600,7 @@ func Test_GroupBy_Q2_1e6(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 3000297 {
 		t.Errorf("Expected 3000297, got %f", check)
 	}
@@ -617,7 +623,7 @@ func Test_GroupBy_Q2_1e7(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check != 29998789 {
 		t.Errorf("Expected 29998789, got %f", check)
 	}
@@ -640,7 +646,7 @@ func Test_GroupBy_Q3_1e4(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check1 != 30027 {
 		t.Errorf("Expected 30027, got %f", check1)
 	}
@@ -668,7 +674,7 @@ func Test_GroupBy_Q3_1e5(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check1 != 300292 {
 		t.Errorf("Expected 300292, got %f", check1)
 	}
@@ -696,7 +702,7 @@ func Test_GroupBy_Q3_1e6(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check1 != 3000297 {
 		t.Errorf("Expected 3000297, got %f", check1)
 	}
@@ -724,7 +730,7 @@ func Test_GroupBy_Q3_1e7(t *testing.T) {
 		t.Errorf("Expected 3 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if check1 != 29998789 {
 		t.Errorf("Expected 29998789, got %f", check1)
 	}
@@ -752,7 +758,7 @@ func Test_GroupBy_Q4_1e4(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 300.1460223942026, 10e-6) {
 		t.Errorf("Expected 300.1460223942026, got %f", check1)
 	}
@@ -785,7 +791,7 @@ func Test_GroupBy_Q4_1e5(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 300.29996127903826, 10e-6) {
 		t.Errorf("Expected 300.29996127903826, got %f", check1)
 	}
@@ -818,7 +824,7 @@ func Test_GroupBy_Q4_1e6(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 300.0300474405866, 10e-6) {
 		t.Errorf("Expected 300.0300474405866, got %f", check1)
 	}
@@ -851,7 +857,7 @@ func Test_GroupBy_Q4_1e7(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 299.9879818750654, 10e-6) {
 		t.Errorf("Expected 299.9879818750654, got %f", check1)
 	}
@@ -884,7 +890,7 @@ func Test_GroupBy_Q5_1e4(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 30027, 10e-6) {
 		t.Errorf("Expected 30027, got %f", check1)
 	}
@@ -917,7 +923,7 @@ func Test_GroupBy_Q5_1e5(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 300292, 10e-6) {
 		t.Errorf("Expected 300292, got %f", check1)
 	}
@@ -950,7 +956,7 @@ func Test_GroupBy_Q5_1e6(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 3000297, 10e-6) {
 		t.Errorf("Expected 3000297, got %f", check1)
 	}
@@ -983,7 +989,7 @@ func Test_GroupBy_Q5_1e7(t *testing.T) {
 		t.Errorf("Expected 4 columns, got %d", df.NCols())
 	}
 
-	check1 := df.Agg(Sum("v1")).C("v1").Get(0).(float64)
+	check1 := df.Agg(Sum("v1")).C("sum(v1)").Get(0).(float64)
 	if !equalFloats(check1, 29998789, 10e-6) {
 		t.Errorf("Expected 29998789, got %f", check1)
 	}

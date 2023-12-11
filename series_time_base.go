@@ -269,8 +269,8 @@ func (s SeriesTime) Copy() Series {
 	}
 }
 
-func (s SeriesTime) getDataPtr() *[]time.Time {
-	return &s.data
+func (s SeriesTime) getData() []time.Time {
+	return s.data
 }
 
 // Ungroup the series.

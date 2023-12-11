@@ -3,7 +3,6 @@ package gandalff
 import (
 	"fmt"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/caerbannogwhite/preludiometa"
@@ -461,7 +460,7 @@ func (df BaseDataFrame) getPartitions() []SeriesPartition {
 	}
 }
 
-func (df BaseDataFrame) groupHelper() (DataFrame, *[][]int, *[]int) {
+func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 
 	// Keep track of which series are not grouped
 	seriesIndices := make(map[int]bool)
@@ -561,7 +560,15 @@ func (df BaseDataFrame) groupHelper() (DataFrame, *[][]int, *[]int) {
 	// sort the indices
 	sort.Ints(ungroupedSeriesIndices)
 
-	return result, &indeces, &ungroupedSeriesIndices
+	// Flatten the indeces
+	flatIndeces := make([]int, df.NRows())
+	for i, group := range indeces {
+		for _, index := range group {
+			flatIndeces[index] = i
+		}
+	}
+
+	return result, indeces, flatIndeces, ungroupedSeriesIndices
 }
 
 func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...string) DataFrame {
@@ -1162,95 +1169,93 @@ func (df BaseDataFrame) Agg(aggregators ...aggregator) DataFrame {
 
 	var result DataFrame
 	if df.isGrouped {
-		var indeces *[][]int
-		result, indeces, _ = df.groupHelper()
-		if df.NRows() < MINIMUM_PARALLEL_SIZE_2 {
-			for _, agg := range aggregators {
-				series := df.__series(agg.name)
+		var indeces [][]int
+		var flatIndeces []int
+		result, indeces, flatIndeces, _ = df.groupHelper()
 
-				switch agg.type_ {
-				case AGGREGATE_COUNT:
-					counts := make([]int64, len(*indeces))
-					for i, group := range *indeces {
-						counts[i] = int64(len(group))
-					}
-					result = result.AddSeries(agg.name, NewSeriesInt64(counts, nil, false, df.ctx))
+		groupsNum := len(indeces)
 
-				case AGGREGATE_SUM:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_sum_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MIN:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_min_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MAX:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_max_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MEAN:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_mean_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MEDIAN:
-					// TODO: implement
-
-				case AGGREGATE_STD:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_std_grouped__(series, *indeces), nil, false, df.ctx))
-				}
-			}
-		} else {
-
-			var wg sync.WaitGroup
-			wg.Add(THREADS_NUMBER)
-
-			buffer := make(chan __stats_thread_data)
-			for i := 0; i < THREADS_NUMBER; i++ {
-				go __stats_worker(&wg, buffer)
-			}
-
-			for _, agg := range aggregators {
-				series := df.__series(agg.name)
-
-				resultData := make([]float64, len(*indeces))
-				result = result.AddSeries(agg.name, NewSeriesFloat64(resultData, nil, false, df.ctx))
-				for gi, group := range *indeces {
-					buffer <- __stats_thread_data{
-						op:      agg.type_,
-						gi:      gi,
-						indeces: group,
-						series:  series,
-						res:     resultData,
-					}
-				}
-			}
-
-			close(buffer)
-			wg.Wait()
-		}
-	} else {
-		result = NewBaseDataFrame(df.ctx)
-
+		var series Series
 		for _, agg := range aggregators {
-			series := df.__series(agg.name)
+			series = df.__series(agg.name)
 
 			switch agg.type_ {
 			case AGGREGATE_COUNT:
-				result = result.AddSeries(agg.name, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
+				counts := make([]int64, groupsNum)
+				for i, group := range indeces {
+					counts[i] = int64(len(group))
+				}
+				result = result.AddSeries(agg.newName, NewSeriesInt64(counts, nil, false, df.ctx))
 
 			case AGGREGATE_SUM:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_sum__(series)}, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(series, flatIndeces, groupsNum), nil, false, df.ctx))
 
 			case AGGREGATE_MIN:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_min__(series)}, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min_grouped__(series, indeces), nil, false, df.ctx))
 
 			case AGGREGATE_MAX:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_max__(series)}, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max_grouped__(series, indeces), nil, false, df.ctx))
 
 			case AGGREGATE_MEAN:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_mean__(series)}, nil, false, df.ctx))
-
-			case AGGREGATE_MEDIAN:
-				// TODO: implement
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean_grouped__(series, indeces), nil, false, df.ctx))
 
 			case AGGREGATE_STD:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_std__(series)}, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std_grouped__(series, indeces), nil, false, df.ctx))
+			}
+		}
+
+		// var wg sync.WaitGroup
+		// wg.Add(THREADS_NUMBER)
+
+		// buffer := make(chan __stats_thread_data)
+		// for i := 0; i < THREADS_NUMBER; i++ {
+		// 	go __stats_worker(&wg, buffer)
+		// }
+
+		// for _, agg := range aggregators {
+		// 	series := df.__series(agg.name)
+
+		// 	resultData := make([]float64, len(*indeces))
+		// 	result = result.AddSeries(agg.name, NewSeriesFloat64(resultData, nil, false, df.ctx))
+		// 	for gi, group := range *indeces {
+		// 		buffer <- __stats_thread_data{
+		// 			op:      agg.type_,
+		// 			gi:      gi,
+		// 			indeces: group,
+		// 			series:  series,
+		// 			res:     resultData,
+		// 		}
+		// 	}
+		// }
+
+		// close(buffer)
+		// wg.Wait()
+
+	} else {
+		result = NewBaseDataFrame(df.ctx)
+
+		var series Series
+		for _, agg := range aggregators {
+			series = df.__series(agg.name)
+
+			switch agg.type_ {
+			case AGGREGATE_COUNT:
+				result = result.AddSeries(agg.newName, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
+
+			case AGGREGATE_SUM:
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(series, nil, 1), nil, false, df.ctx))
+
+			case AGGREGATE_MIN:
+				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_min__(series)}, nil, false, df.ctx))
+
+			case AGGREGATE_MAX:
+				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_max__(series)}, nil, false, df.ctx))
+
+			case AGGREGATE_MEAN:
+				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_mean__(series)}, nil, false, df.ctx))
+
+			case AGGREGATE_STD:
+				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_std__(series)}, nil, false, df.ctx))
 			}
 		}
 	}
