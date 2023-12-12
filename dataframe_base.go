@@ -1486,19 +1486,19 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		for j, c := range df.series[:nColsOut] {
 			switch s := c.(type) {
 			case SeriesBool:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
 			case SeriesInt:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesInt64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesFloat64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesString:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesTime:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
 			case SeriesDuration:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			}
 		}
 		buffer += "\n"
