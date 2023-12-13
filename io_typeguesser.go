@@ -133,12 +133,20 @@ type RowDataProvider interface {
 	Read() ([]string, error)
 }
 
-func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]Series, error) {
+func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, maxLen int, schema *preludiometa.Schema, ctx *Context) ([]Series, error) {
 	var dataTypes []preludiometa.BaseType
 	var recordsForGuessing [][]string
 
 	// Initialize TypeGuesser
 	tg := newTypeGuesser(nullValues)
+
+	if maxLen < 0 {
+		maxLen = math.MaxInt32
+	} else if guessDataTypeLen > maxLen {
+		guessDataTypeLen = maxLen
+	}
+
+	counter := 0
 
 	// Guess data types
 	if schema == nil {
@@ -146,6 +154,8 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 
 		// Read first record to get length
 		record, err := reader.Read()
+		counter++
+
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
@@ -157,6 +167,8 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 			tg.guessTypesNulls(record)
 			for i := 1; i < guessDataTypeLen; i++ {
 				record, err := reader.Read()
+				counter++
+
 				if err != nil {
 					if err == io.EOF {
 						break
@@ -170,6 +182,8 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 			tg.guessTypes(record)
 			for i := 1; i < guessDataTypeLen; i++ {
 				record, err := reader.Read()
+				counter++
+
 				if err != nil {
 					if err == io.EOF {
 						break
@@ -301,7 +315,13 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 
 	if nullValues {
 		for {
+			if counter >= maxLen {
+				break
+			}
+
 			record, err := reader.Read()
+			counter++
+
 			if err != nil {
 				if err == io.EOF {
 					break
@@ -355,7 +375,13 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 		}
 	} else {
 		for {
+			if counter >= maxLen {
+				break
+			}
+
 			record, err := reader.Read()
+			counter++
+
 			if err != nil {
 				if err == io.EOF {
 					break
