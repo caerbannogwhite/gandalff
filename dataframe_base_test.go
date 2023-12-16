@@ -124,7 +124,7 @@ func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	}
 
 	// Group by department
-	res := df.GroupBy("department").Agg(Count())
+	res := df.GroupBy("department").Agg(Count()).Run()
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -149,7 +149,7 @@ func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	}
 
 	// Group by department and junior
-	res = df.Ungroup().GroupBy("junior", "department").Agg(Count())
+	res = df.Ungroup().GroupBy("junior", "department").Agg(Count()).Run()
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -182,7 +182,7 @@ func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	}
 
 	// Group by department and junior
-	res = df.Ungroup().GroupBy("department", "junior").Agg(Count())
+	res = df.Ungroup().GroupBy("department", "junior").Agg(Count()).Run()
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -217,7 +217,7 @@ func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	}
 
 	// Group by department and salary band
-	res = df.Ungroup().GroupBy("department", "salary band").Agg(Count())
+	res = df.Ungroup().GroupBy("department", "salary band").Agg(Count()).Run()
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -253,7 +253,7 @@ func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	}
 
 	// Group by weight
-	res = df.Ungroup().GroupBy("weight").Agg(Count())
+	res = df.Ungroup().GroupBy("weight").Agg(Count()).Run()
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -300,7 +300,7 @@ func Benchmark_100000Rows_GroupBy_Count(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		df.Ungroup().GroupBy("Country", "Industry").Agg(Count())
+		df.Ungroup().GroupBy("Country", "Industry").Agg(Count()).Run()
 	}
 	b.StopTimer()
 }
@@ -319,7 +319,8 @@ func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 	}
 
 	res := df.GroupBy("department").
-		Agg(Sum("age"), Sum("weight"), Sum("junior"), Sum("salary band"))
+		Agg(Sum("age"), Sum("weight"), Sum("junior"), Sum("salary band")).
+		Run()
 
 	if res.GetError() != nil {
 		t.Error(res.GetError())
@@ -337,10 +338,10 @@ func Test_BaseDataFrame_GroupBy_Sum(t *testing.T) {
 
 	for i := 0; i < res.NRows(); i++ {
 		dept := res.C("department").Get(i).(string)
-		age := res.C("age").Get(i).(float64)
-		weight := res.C("weight").Get(i).(float64)
-		junior := res.C("junior").Get(i).(float64)
-		salary := res.C("salary band").Get(i).(float64)
+		age := res.C("sum(age)").Get(i).(float64)
+		weight := res.C("sum(weight)").Get(i).(float64)
+		junior := res.C("sum(junior)").Get(i).(float64)
+		salary := res.C("sum(salary band)").Get(i).(float64)
 
 		if age != exp[dept][0] {
 			t.Errorf("Expected 'age' %f, got %f", exp[dept][0], age)
@@ -484,7 +485,8 @@ func Test_BaseDataFrame_GroupBy_Mean(t *testing.T) {
 	}
 
 	res := df.GroupBy("department").
-		Agg(Mean("age"), Mean("weight"), Mean("junior"), Mean("salary band"))
+		Agg(Mean("age"), Mean("weight"), Mean("junior"), Mean("salary band")).
+		Run()
 
 	if res.GetError() != nil {
 		t.Error(res.GetError())
@@ -502,10 +504,10 @@ func Test_BaseDataFrame_GroupBy_Mean(t *testing.T) {
 
 	for i := 0; i < res.NRows(); i++ {
 		dept := res.C("department").Get(i).(string)
-		age := res.C("age").Get(i).(float64)
-		weight := res.C("weight").Get(i).(float64)
-		junior := res.C("junior").Get(i).(float64)
-		salary := res.C("salary band").Get(i).(float64)
+		age := res.C("mean(age)").Get(i).(float64)
+		weight := res.C("mean(weight)").Get(i).(float64)
+		junior := res.C("mean(junior)").Get(i).(float64)
+		salary := res.C("mean(salary band)").Get(i).(float64)
 
 		if age != exp[dept][0] {
 			t.Errorf("Expected 'age' %f, got %f", exp[dept][0], age)

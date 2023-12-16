@@ -63,19 +63,24 @@ func (ab aggregatorBuilder) Run() DataFrame {
 				result = result.AddSeries(agg.newName, NewSeriesInt64(counts, nil, false, df.ctx))
 
 			case AGGREGATE_SUM:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(series, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MIN:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(series, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MAX:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max_grouped__(series, indeces), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MEAN:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean_grouped__(series, indeces), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_STD:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std_grouped__(series, indeces), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 			}
 		}
 
@@ -118,19 +123,24 @@ func (ab aggregatorBuilder) Run() DataFrame {
 				result = result.AddSeries(agg.newName, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
 
 			case AGGREGATE_SUM:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(series, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MIN:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(series, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MAX:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_max__(series)}, nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MEAN:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_mean__(series)}, nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_STD:
-				result = result.AddSeries(agg.newName, NewSeriesFloat64([]float64{__gdl_std__(series)}, nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(series)
+				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 			}
 		}
 	}
