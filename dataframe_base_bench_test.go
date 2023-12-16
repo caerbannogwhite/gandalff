@@ -1099,6 +1099,66 @@ func Benchmark_GroupBy_Q1_1e7(b *testing.B) {
 	b.StopTimer()
 }
 
+func Benchmark_GroupBy_Q1_1e4_10PercNAs(b *testing.B) {
+	if G1_1e4_1e2_10_0_df == nil {
+		b.Skip("G1_1e4_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e4_1e2_10_0_df).GroupBy("id1").
+			Agg(Sum("v1")).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q1_1e5_10PercNAs(b *testing.B) {
+	if G1_1e5_1e2_10_0_df == nil {
+		b.Skip("G1_1e5_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e5_1e2_10_0_df).GroupBy("id1").
+			Agg(Sum("v1")).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q1_1e6_10PercNAs(b *testing.B) {
+	if G1_1e6_1e2_10_0_df == nil {
+		b.Skip("G1_1e6_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e6_1e2_10_0_df).GroupBy("id1").
+			Agg(Sum("v1")).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q1_1e7_10PercNAs(b *testing.B) {
+	if G1_1e7_1e2_10_0_df == nil {
+		b.Skip("G1_1e7_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e7_1e2_10_0_df).GroupBy("id1").
+			Agg(Sum("v1")).Run()
+	}
+	b.StopTimer()
+}
+
 func Benchmark_GroupBy_Q2_1e4(b *testing.B) {
 	if G1_1e4_1e2_0_0_df == nil {
 		b.Skip("G1_1e4_1e2_0_0 dataframe not loaded")

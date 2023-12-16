@@ -309,19 +309,22 @@ func __gdl_mean(dataF64 []float64, flatGroupIndeces []int, groupsNum int, remove
 		}
 	} else {
 		mean_ := make([]float64, groupsNum)
+		counts_ := make([]int, groupsNum)
 		if removeNAs {
 			for idx, gi := range flatGroupIndeces {
 				if !math.IsNaN(dataF64[idx]) {
 					mean_[gi] += dataF64[idx]
+					counts_[gi]++
 				}
 			}
 		} else {
 			for idx, gi := range flatGroupIndeces {
 				mean_[gi] += dataF64[idx]
+				counts_[gi]++
 			}
 		}
 		for i, v := range mean_ {
-			mean_[i] = v / float64(len(flatGroupIndeces)/groupsNum)
+			mean_[i] = v / float64(counts_[i])
 		}
 		return mean_
 	}
