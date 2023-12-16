@@ -356,3 +356,25 @@ func toPrintable(s string) string {
 		return '.'
 	}, s)
 }
+
+func truncate(s string, n int) string {
+	if len(s) > n {
+		return s[:n-3] + "..."
+	}
+	return s
+}
+
+func center(s string, n int) string {
+	r := []rune(s)
+	l := len(r)
+	if l >= n {
+		return s
+	}
+
+	n += len(s) - l
+
+	left := (n + l) / 2
+	right := n - l - left - 1
+
+	return fmt.Sprintf("%*s%*s", left, string(s), right, "")
+}
