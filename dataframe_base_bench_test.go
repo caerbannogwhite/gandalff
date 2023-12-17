@@ -649,6 +649,106 @@ func Test_GroupBy_Q2_1e7(t *testing.T) {
 	}
 }
 
+func Test_GroupBy_Q2_1e4_10PercNAs(t *testing.T) {
+	if G1_1e4_1e2_10_0_df == nil {
+		t.Skip("G1_1e4_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e4_1e2_10_0_df).
+		GroupBy("id1", "id2").
+		Agg(Sum("v1")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 5276 {
+		t.Errorf("Expected 5276 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 3 {
+		t.Errorf("Expected 3 columns, got %d", df.NCols())
+	}
+
+	check := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if check != 27044 {
+		t.Errorf("Expected 27044, got %f", check)
+	}
+}
+
+func Test_GroupBy_Q2_1e5_10PercNAs(t *testing.T) {
+	if G1_1e5_1e2_10_0_df == nil {
+		t.Skip("G1_1e5_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e5_1e2_10_0_df).
+		GroupBy("id1", "id2").
+		Agg(Sum("v1")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 8280 {
+		t.Errorf("Expected 8280 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 3 {
+		t.Errorf("Expected 3 columns, got %d", df.NCols())
+	}
+
+	check := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if check != 270421 {
+		t.Errorf("Expected 270421, got %f", check)
+	}
+}
+
+func Test_GroupBy_Q2_1e6_10PercNAs(t *testing.T) {
+	if G1_1e6_1e2_10_0_df == nil {
+		t.Skip("G1_1e6_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e6_1e2_10_0_df).
+		GroupBy("id1", "id2").
+		Agg(Sum("v1")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 8281 {
+		t.Errorf("Expected 8281 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 3 {
+		t.Errorf("Expected 3 columns, got %d", df.NCols())
+	}
+
+	check := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if check != 2700684 {
+		t.Errorf("Expected 2700684, got %f", check)
+	}
+}
+
+func Test_GroupBy_Q2_1e7_10PercNAs(t *testing.T) {
+	if G1_1e7_1e2_10_0_df == nil {
+		t.Skip("G1_1e7_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e7_1e2_10_0_df).
+		GroupBy("id1", "id2").
+		Agg(Sum("v1")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 8281 {
+		t.Errorf("Expected 8281 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 3 {
+		t.Errorf("Expected 3 columns, got %d", df.NCols())
+	}
+
+	check := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if check != 26998588 {
+		t.Errorf("Expected 26998588, got %f", check)
+	}
+}
+
 func Test_GroupBy_Q3_1e4(t *testing.T) {
 	if G1_1e4_1e2_0_0_df == nil {
 		t.Skip("G1_1e4_1e2_0_0 dataframe not loaded")
@@ -1037,6 +1137,146 @@ func Test_GroupBy_Q5_1e7(t *testing.T) {
 	}
 }
 
+func Test_GroupBy_Q5_1e4_10PercNAs(t *testing.T) {
+	if G1_1e4_1e2_10_0_df == nil {
+		t.Skip("G1_1e4_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e4_1e2_10_0_df).
+		GroupBy("id6").
+		Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 91 {
+		t.Errorf("Expected 91 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 4 {
+		t.Errorf("Expected 4 columns, got %d", df.NCols())
+	}
+
+	check1 := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if !equalFloats(check1, 27044, 10e-6) {
+		t.Errorf("Expected 27044, got %f", check1)
+	}
+
+	check2 := df.Agg(Sum("sum(v2)")).Run().C("sum(sum(v2))").Get(0).(float64)
+	if !equalFloats(check2, 72373, 10e-6) {
+		t.Errorf("Expected 72373, got %f", check2)
+	}
+
+	check3 := df.Agg(Sum("sum(v3)")).Run().C("sum(sum(v3))").Get(0).(float64)
+	if !equalFloats(check3, 449477.651724, 10e-6) {
+		t.Errorf("Expected 449477.651724, got %f", check3)
+	}
+}
+
+func Test_GroupBy_Q5_1e5_10PercNAs(t *testing.T) {
+	if G1_1e5_1e2_10_0_df == nil {
+		t.Skip("G1_1e5_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e5_1e2_10_0_df).
+		GroupBy("id6").
+		Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 901 {
+		t.Errorf("Expected 901 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 4 {
+		t.Errorf("Expected 4 columns, got %d", df.NCols())
+	}
+
+	check1 := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if !equalFloats(check1, 270421, 10e-6) {
+		t.Errorf("Expected 270421, got %f", check1)
+	}
+
+	check2 := df.Agg(Sum("sum(v2)")).Run().C("sum(sum(v2))").Get(0).(float64)
+	if !equalFloats(check2, 720829, 10e-6) {
+		t.Errorf("Expected 720829, got %f", check2)
+	}
+
+	check3 := df.Agg(Sum("sum(v3)")).Run().C("sum(sum(v3))").Get(0).(float64)
+	if !equalFloats(check3, 4508009.682434, 10e-6) {
+		t.Errorf("Expected 4508009.682434, got %f", check3)
+	}
+}
+
+func Test_GroupBy_Q5_1e6_10PercNAs(t *testing.T) {
+	if G1_1e6_1e2_10_0_df == nil {
+		t.Skip("G1_1e6_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e6_1e2_10_0_df).
+		GroupBy("id6").
+		Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 9001 {
+		t.Errorf("Expected 9001 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 4 {
+		t.Errorf("Expected 4 columns, got %d", df.NCols())
+	}
+
+	check1 := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if !equalFloats(check1, 2700684, 10e-6) {
+		t.Errorf("Expected 2700684, got %f", check1)
+	}
+
+	check2 := df.Agg(Sum("sum(v2)")).Run().C("sum(sum(v2))").Get(0).(float64)
+	if !equalFloats(check2, 7198551, 10e-6) {
+		t.Errorf("Expected 7198551, got %f", check2)
+	}
+
+	check3 := df.Agg(Sum("sum(v3)")).Run().C("sum(sum(v3))").Get(0).(float64)
+	if !equalFloats(check3, 45036571.337614, 10e-6) {
+		t.Errorf("Expected 45036571.337614, got %f", check3)
+	}
+}
+
+func Test_GroupBy_Q5_1e7_10PercNAs(t *testing.T) {
+	if G1_1e7_1e2_10_0_df == nil {
+		t.Skip("G1_1e7_1e2_10_0 dataframe not loaded")
+	}
+
+	df := (*G1_1e7_1e2_10_0_df).
+		GroupBy("id6").
+		Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+		RemoveNAs(true).
+		Run()
+
+	if df.NRows() != 90001 {
+		t.Errorf("Expected 90001 rows, got %d", df.NRows())
+	}
+
+	if df.NCols() != 4 {
+		t.Errorf("Expected 4 columns, got %d", df.NCols())
+	}
+
+	check1 := df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))").Get(0).(float64)
+	if !equalFloats(check1, 26998588, 10e-6) {
+		t.Errorf("Expected 26998588, got %f", check1)
+	}
+
+	check2 := df.Agg(Sum("sum(v2)")).Run().C("sum(sum(v2))").Get(0).(float64)
+	if !equalFloats(check2, 71993788, 10e-6) {
+		t.Errorf("Expected 71993788, got %f", check2)
+	}
+
+	check3 := df.Agg(Sum("sum(v3)")).Run().C("sum(sum(v3))").Get(0).(float64)
+	if !equalFloats(check3, 449932870.447177, 10e-6) {
+		t.Errorf("Expected 449932870.447177, got %f", check3)
+	}
+}
+
 ////////////////////////			GROUP BY BENCHMARKS
 
 func Benchmark_GroupBy_Q1_1e4(b *testing.B) {
@@ -1109,7 +1349,7 @@ func Benchmark_GroupBy_Q1_1e4_10PercNAs(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		(*G1_1e4_1e2_10_0_df).GroupBy("id1").
-			Agg(Sum("v1")).Run()
+			Agg(Sum("v1")).RemoveNAs(true).Run()
 	}
 	b.StopTimer()
 }
@@ -1124,7 +1364,7 @@ func Benchmark_GroupBy_Q1_1e5_10PercNAs(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		(*G1_1e5_1e2_10_0_df).GroupBy("id1").
-			Agg(Sum("v1")).Run()
+			Agg(Sum("v1")).RemoveNAs(true).Run()
 	}
 	b.StopTimer()
 }
@@ -1139,7 +1379,7 @@ func Benchmark_GroupBy_Q1_1e6_10PercNAs(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		(*G1_1e6_1e2_10_0_df).GroupBy("id1").
-			Agg(Sum("v1")).Run()
+			Agg(Sum("v1")).RemoveNAs(true).Run()
 	}
 	b.StopTimer()
 }
@@ -1154,7 +1394,7 @@ func Benchmark_GroupBy_Q1_1e7_10PercNAs(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		(*G1_1e7_1e2_10_0_df).GroupBy("id1").
-			Agg(Sum("v1")).Run()
+			Agg(Sum("v1")).RemoveNAs(true).Run()
 	}
 	b.StopTimer()
 }
@@ -1215,6 +1455,66 @@ func Benchmark_GroupBy_Q2_1e7(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		(*G1_1e7_1e2_0_0_df).GroupBy("id1", "id2").
 			Agg(Sum("v1")).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q2_1e4_10PercNAs(b *testing.B) {
+	if G1_1e4_1e2_10_0_df == nil {
+		b.Skip("G1_1e4_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e4_1e2_10_0_df).GroupBy("id1", "id2").
+			Agg(Sum("v1")).RemoveNAs(true).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q2_1e5_10PercNAs(b *testing.B) {
+	if G1_1e5_1e2_10_0_df == nil {
+		b.Skip("G1_1e5_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e5_1e2_10_0_df).GroupBy("id1", "id2").
+			Agg(Sum("v1")).RemoveNAs(true).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q2_1e6_10PercNAs(b *testing.B) {
+	if G1_1e6_1e2_10_0_df == nil {
+		b.Skip("G1_1e6_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e6_1e2_10_0_df).GroupBy("id1", "id2").
+			Agg(Sum("v1")).RemoveNAs(true).Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q2_1e7_10PercNAs(b *testing.B) {
+	if G1_1e7_1e2_10_0_df == nil {
+		b.Skip("G1_1e7_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e7_1e2_10_0_df).GroupBy("id1", "id2").
+			Agg(Sum("v1")).RemoveNAs(true).Run()
 	}
 	b.StopTimer()
 }
@@ -1408,6 +1708,78 @@ func Benchmark_GroupBy_Q5_1e7(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		(*G1_1e7_1e2_0_0_df).GroupBy("id6").
 			Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+			Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q5_1e4_10PercNAs(b *testing.B) {
+	if G1_1e4_1e2_10_0_df == nil {
+		b.Skip("G1_1e4_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e4_1e2_10_0_df).
+			GroupBy("id6").
+			Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+			RemoveNAs(true).
+			Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q5_1e5_10PercNAs(b *testing.B) {
+	if G1_1e5_1e2_10_0_df == nil {
+		b.Skip("G1_1e5_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e5_1e2_10_0_df).
+			GroupBy("id6").
+			Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+			RemoveNAs(true).
+			Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q5_1e6_10PercNAs(b *testing.B) {
+	if G1_1e6_1e2_10_0_df == nil {
+		b.Skip("G1_1e6_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e6_1e2_10_0_df).
+			GroupBy("id6").
+			Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+			RemoveNAs(true).
+			Run()
+	}
+	b.StopTimer()
+}
+
+func Benchmark_GroupBy_Q5_1e7_10PercNAs(b *testing.B) {
+	if G1_1e7_1e2_10_0_df == nil {
+		b.Skip("G1_1e7_1e2_10_0 dataframe not loaded")
+	}
+
+	runtime.GC()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		(*G1_1e7_1e2_10_0_df).
+			GroupBy("id6").
+			Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+			RemoveNAs(true).
 			Run()
 	}
 	b.StopTimer()
