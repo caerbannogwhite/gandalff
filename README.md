@@ -1,6 +1,6 @@
-## GANDALFF: Golang, ANother DAta Library For Fun 🧙‍♂️
+## GANDALFF: Golang, ANother DatAframe Library For Fun 🧙‍♂️
 
-Or, for short, GDL: Golang Data Library
+Or, for short, GDL: Golang Dataframe Library
 
 ### What is it?
 
@@ -50,6 +50,7 @@ Megan,26,55.0,F,IT,3
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
 		Agg(gandalff.Min("age"), gandalff.Max("weight"), gandalff.Mean("junior"), gandalff.Count()).
+    Run().
 		PrettyPrint(
       gandalff.NewPrettyPrintParams().
 			  SetUseLipGloss(true))
