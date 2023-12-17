@@ -1257,6 +1257,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	}
 
 	addTail := false
+	fmt.Println(df.NRows(), nRowsOut, params.tailLen)
 	if df.NRows() > nRowsOut+params.tailLen {
 		addTail = true
 		nRowsOut -= params.tailLen
@@ -1457,35 +1458,37 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		buffer += "\n"
 	}
 
-	// separator (bottom)
-	buffer += params.indent + "┊"
-	for j, _ := range df.series[:nColsOut] {
-		buffer += center("⋮", widths[j]+2) + "┊"
-	}
-	buffer += "\n"
-
-	// tail
-	for i := df.NRows() - params.tailLen; i < df.NRows(); i++ {
-		buffer += params.indent + "│"
-		for j, c := range df.series[:nColsOut] {
-			switch s := c.(type) {
-			case SeriesBool:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-			case SeriesInt:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case SeriesInt64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case SeriesFloat64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case SeriesString:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case SeriesTime:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-			case SeriesDuration:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			}
+	if addTail {
+		// separator (bottom)
+		buffer += params.indent + "┊"
+		for j, _ := range df.series[:nColsOut] {
+			buffer += center("⋮", widths[j]+2) + "┊"
 		}
 		buffer += "\n"
+
+		// tail
+		for i := df.NRows() - params.tailLen; i < df.NRows(); i++ {
+			buffer += params.indent + "│"
+			for j, c := range df.series[:nColsOut] {
+				switch s := c.(type) {
+				case SeriesBool:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
+				case SeriesInt:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesInt64:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesFloat64:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesString:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesTime:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
+				case SeriesDuration:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				}
+			}
+			buffer += "\n"
+		}
 	}
 
 	// end
