@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	. "gandalff"
+	"path/filepath"
 	"strings"
 )
 
@@ -43,6 +44,7 @@ func Example01() {
 		Select("department", "age", "junior", "salary band").
 		GroupBy("department").
 		Agg(Max("age"), Min("salary band"), Mean("junior"), Count()).
+		Run().
 		PPrint(
 			NewPPrintParams().
 				SetUseLipGloss(true).
@@ -191,6 +193,25 @@ func Example05() {
 				SetNRows(20))
 }
 
+func Example06() {
+	df := NewBaseDataFrame(ctx).
+		FromCsv().
+		SetNullValues(true).
+		// SetRows(20).
+		SetPath(filepath.Join("..", "testdata", "G1_1e4_1e2_10_0.csv")).
+		Read()
+
+	df.PPrint(NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
+
+	df = df.GroupBy("id6").
+		Agg(Sum("v1"), Sum("v2"), Sum("v3")).
+		RemoveNAs(true).
+		Run().
+		PPrint(NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
+
+	fmt.Println(df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))"))
+}
+
 func main() {
 	// fmt.Println("Example01:")
 	// Example01()
@@ -198,13 +219,16 @@ func main() {
 	// fmt.Println("Example02:")
 	// Example02()
 
-	fmt.Println("Example03:")
-	Example03()
+	// fmt.Println("Example03:")
+	// Example03()
 
 	// fmt.Println("Example04:")
 	// Example04()
 
 	// fmt.Println("Example05:")
 	// Example05()
+
+	fmt.Println("Example06:")
+	Example06()
 
 }
