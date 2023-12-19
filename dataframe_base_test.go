@@ -110,12 +110,45 @@ func Benchmark_100000Rows_Filter(b *testing.B) {
 	b.StopTimer()
 }
 
+func Test_BaseDataFrame_GroupBy(t *testing.T) {
+	df := NewBaseDataFrame(ctx).FromCsv().
+		SetReader(strings.NewReader(data1)).
+		SetGuessDataTypeLen(3).
+		Read()
+
+	if df.GetError() != nil {
+		t.Error(df.GetError())
+	}
+
+	res := df.GroupBy("department").
+		Agg(Sum("age"), Count(), Sum("salary band").NewName("n")).
+		Run()
+
+	if res.GetError().Error() != "BaseDataFrame.Agg: aggregator names must be unique" {
+		t.Error(res.GetError())
+	}
+
+	res = df.GroupBy("department").
+		Agg(Sum("age"), Mean("age").NewName("sum(age)")).
+		Run()
+
+	if res.GetError().Error() != "BaseDataFrame.Agg: aggregator names must be unique" {
+		t.Error(res.GetError())
+	}
+
+	res = df.GroupBy("department").
+		Agg(Sum("age"), Mean("age")).
+		Run()
+
+	if res.GetError() != nil {
+		t.Error(res.GetError())
+	}
+}
+
 func Test_BaseDataFrame_GroupBy_Count(t *testing.T) {
 	// Create a new dataframe from the CSV data.
 	df := NewBaseDataFrame(ctx).FromCsv().
 		SetReader(strings.NewReader(data1)).
-		SetDelimiter(',').
-		SetHeader(true).
 		SetGuessDataTypeLen(3).
 		Read()
 

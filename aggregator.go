@@ -5,7 +5,7 @@ import "fmt"
 type aggregatorBuilder struct {
 	df          BaseDataFrame
 	removeNAs   bool
-	aggregators []aggregator
+	aggregators []Aggregator
 }
 
 func (ab aggregatorBuilder) RemoveNAs(b bool) aggregatorBuilder {
@@ -26,19 +26,23 @@ func (ab aggregatorBuilder) Run() DataFrame {
 	// CHECK: aggregators must have unique names and names must be valid
 	aggNames := make(map[string]bool)
 	for _, agg := range ab.aggregators {
+		if aggNames[agg.GetNewName()] {
+			df.err = fmt.Errorf("BaseDataFrame.Agg: aggregator names must be unique")
+			return df
+		}
+		aggNames[agg.GetNewName()] = true
 
 		// CASE: aggregator count has a default name
-		if agg.type_ != AGGREGATE_COUNT {
-			if aggNames[agg.name] {
-				df.err = fmt.Errorf("BaseDataFrame.Agg: aggregator names must be unique")
+		if df.__series(agg.GetColName()) == nil {
+			if agg_, ok := agg.(internalAggregator); ok && agg_.type_ == AGGREGATE_COUNT {
+			} else {
+				df.err = fmt.Errorf("BaseDataFrame.Agg: series \"%s\" not found", agg.GetColName())
 				return df
 			}
-			aggNames[agg.name] = true
+		}
 
-			if df.__series(agg.name) == nil {
-				df.err = fmt.Errorf("BaseDataFrame.Agg: series \"%s\" not found", agg.name)
-				return df
-			}
+		if ab.removeNAs {
+			agg.RemoveNAs(true)
 		}
 	}
 
@@ -52,35 +56,42 @@ func (ab aggregatorBuilder) Run() DataFrame {
 
 		var series Series
 		for _, agg := range ab.aggregators {
-			series = df.__series(agg.name)
+			series = df.__series(agg.GetColName())
 
-			switch agg.type_ {
-			case AGGREGATE_COUNT:
-				counts := make([]int64, groupsNum)
-				for i, group := range indeces {
-					counts[i] = int64(len(group))
+			// INTERNAL AGGREGATORS
+			if agg_, ok := agg.(internalAggregator); ok {
+				switch agg_.type_ {
+				case AGGREGATE_COUNT:
+					counts := make([]int64, groupsNum)
+					for i, group := range indeces {
+						counts[i] = int64(len(group))
+					}
+					result = result.AddSeries(agg_.newName, NewSeriesInt64(counts, nil, false, df.ctx))
+
+				case AGGREGATE_SUM:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_sum(dataF64, flatIndeces, groupsNum, agg_.removeNAs), nil, false, df.ctx))
+
+				case AGGREGATE_MIN:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_min(dataF64, flatIndeces, groupsNum, agg_.removeNAs), nil, false, df.ctx))
+
+				case AGGREGATE_MAX:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_max(dataF64, flatIndeces, groupsNum, agg_.removeNAs), nil, false, df.ctx))
+
+				case AGGREGATE_MEAN:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_mean(dataF64, flatIndeces, groupsNum, agg_.removeNAs), nil, false, df.ctx))
+
+				case AGGREGATE_STD:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_std(dataF64, flatIndeces, groupsNum, agg_.removeNAs), nil, false, df.ctx))
 				}
-				result = result.AddSeries(agg.newName, NewSeriesInt64(counts, nil, false, df.ctx))
+			} else
+			// CUSTOM AGGREGATORS
+			{
 
-			case AGGREGATE_SUM:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
-
-			case AGGREGATE_MIN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
-
-			case AGGREGATE_MAX:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
-
-			case AGGREGATE_MEAN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
-
-			case AGGREGATE_STD:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 			}
 		}
 
@@ -116,31 +127,37 @@ func (ab aggregatorBuilder) Run() DataFrame {
 
 		var series Series
 		for _, agg := range ab.aggregators {
-			series = df.__series(agg.name)
+			series = df.__series(agg.GetColName())
 
-			switch agg.type_ {
-			case AGGREGATE_COUNT:
-				result = result.AddSeries(agg.newName, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
+			// INTERNAL AGGREGATORS
+			if agg_, ok := agg.(internalAggregator); ok {
+				switch agg_.type_ {
+				case AGGREGATE_COUNT:
+					result = result.AddSeries(agg_.newName, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
 
-			case AGGREGATE_SUM:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				case AGGREGATE_SUM:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_sum(dataF64, nil, 1, agg_.removeNAs), nil, false, df.ctx))
 
-			case AGGREGATE_MIN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				case AGGREGATE_MIN:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_min(dataF64, nil, 1, agg_.removeNAs), nil, false, df.ctx))
 
-			case AGGREGATE_MAX:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				case AGGREGATE_MAX:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_max(dataF64, nil, 1, agg_.removeNAs), nil, false, df.ctx))
 
-			case AGGREGATE_MEAN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				case AGGREGATE_MEAN:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_mean(dataF64, nil, 1, agg_.removeNAs), nil, false, df.ctx))
 
-			case AGGREGATE_STD:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				case AGGREGATE_STD:
+					dataF64 := __gdl_stats_preprocess(series)
+					result = result.AddSeries(agg_.newName, NewSeriesFloat64(__gdl_std(dataF64, nil, 1, agg_.removeNAs), nil, false, df.ctx))
+				}
+			} else
+			// CUSTOM AGGREGATORS
+			{
 			}
 		}
 	}
@@ -148,10 +165,10 @@ func (ab aggregatorBuilder) Run() DataFrame {
 	return result
 }
 
-type AggregateType int8
+type internalAggregatorType int8
 
 const (
-	AGGREGATE_COUNT AggregateType = iota
+	AGGREGATE_COUNT internalAggregatorType = iota
 	AGGREGATE_SUM
 	AGGREGATE_MEAN
 	AGGREGATE_MEDIAN
@@ -162,52 +179,67 @@ const (
 
 const DEFAULT_COUNT_NAME = "n"
 
-type aggregator struct {
-	name    string
-	newName string
-	type_   AggregateType
+type Aggregator interface {
+	RemoveNAs(bool) Aggregator
+	GetColName() string
+	NewName(string) Aggregator
+	GetNewName() string
+	Reduce(group int, result, value interface{}, isNA bool)
 }
 
-func Count() aggregator {
-	return aggregator{DEFAULT_COUNT_NAME, DEFAULT_COUNT_NAME, AGGREGATE_COUNT}
+type internalAggregator struct {
+	removeNAs bool
+	colName   string
+	newName   string
+	type_     internalAggregatorType
 }
 
-func Sum(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("sum(%s)", name), AGGREGATE_SUM}
+func (agg internalAggregator) RemoveNAs(b bool) Aggregator {
+	agg.removeNAs = b
+	return agg
 }
 
-func Mean(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("mean(%s)", name), AGGREGATE_MEAN}
+func (agg internalAggregator) GetColName() string {
+	return agg.colName
 }
 
-func Median(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("median(%s)", name), AGGREGATE_MEDIAN}
+func (agg internalAggregator) NewName(name string) Aggregator {
+	agg.newName = name
+	return agg
 }
 
-func Min(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("min(%s)", name), AGGREGATE_MIN}
+func (agg internalAggregator) GetNewName() string {
+	return agg.newName
 }
 
-func Max(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("max(%s)", name), AGGREGATE_MAX}
+func (agg internalAggregator) Reduce(group int, result, value interface{}, isNA bool) {
+
 }
 
-func Std(name string) aggregator {
-	return aggregator{name, fmt.Sprintf("std(%s)", name), AGGREGATE_STD}
+func Count() Aggregator {
+	return internalAggregator{false, DEFAULT_COUNT_NAME, DEFAULT_COUNT_NAME, AGGREGATE_COUNT}
 }
 
-////////////////////////			SORT
-
-type SortParam struct {
-	asc    bool
-	name   string
-	series Series
+func Sum(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("sum(%s)", colName), AGGREGATE_SUM}
 }
 
-func Asc(name string) SortParam {
-	return SortParam{asc: true, name: name}
+func Mean(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("mean(%s)", colName), AGGREGATE_MEAN}
 }
 
-func Desc(name string) SortParam {
-	return SortParam{asc: false, name: name}
+func Median(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("median(%s)", colName), AGGREGATE_MEDIAN}
+}
+
+func Min(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("min(%s)", colName), AGGREGATE_MIN}
+}
+
+func Max(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("max(%s)", colName), AGGREGATE_MAX}
+}
+
+func Std(colName string) Aggregator {
+	return internalAggregator{false, colName, fmt.Sprintf("std(%s)", colName), AGGREGATE_STD}
 }

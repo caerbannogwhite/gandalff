@@ -86,7 +86,7 @@ type DataFrame interface {
 
 	Take(params ...int) DataFrame
 
-	Agg(aggregators ...aggregator) aggregatorBuilder
+	Agg(aggregators ...Aggregator) aggregatorBuilder
 
 	// Sort the dataframe.
 	Len() int
@@ -116,4 +116,20 @@ type DataFrame interface {
 
 	ToHtml() *HtmlWriter
 	ToMarkDown() *MarkDownWriter
+}
+
+////////////////////////			SORT
+
+type SortParam struct {
+	asc    bool
+	name   string
+	series Series
+}
+
+func Asc(name string) SortParam {
+	return SortParam{asc: true, name: name}
+}
+
+func Desc(name string) SortParam {
+	return SortParam{asc: false, name: name}
 }

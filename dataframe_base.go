@@ -1143,7 +1143,7 @@ func (df BaseDataFrame) OrderBy(params ...SortParam) DataFrame {
 
 ////////////////////////			SUMMARY
 
-func (df BaseDataFrame) Agg(aggregators ...aggregator) aggregatorBuilder {
+func (df BaseDataFrame) Agg(aggregators ...Aggregator) aggregatorBuilder {
 	return aggregatorBuilder{df, false, aggregators}
 }
 
@@ -1257,7 +1257,6 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	}
 
 	addTail := false
-	fmt.Println(df.NRows(), nRowsOut, params.tailLen)
 	if df.NRows() > nRowsOut+params.tailLen {
 		addTail = true
 		nRowsOut -= params.tailLen
