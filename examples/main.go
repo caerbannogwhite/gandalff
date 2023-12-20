@@ -212,6 +212,57 @@ func Example06() {
 	fmt.Println(df.Agg(Sum("sum(v1)")).Run().C("sum(sum(v1))"))
 }
 
+type Diff struct {
+	ColName string
+
+	min_ float64
+	max_ float64
+}
+
+func GetDiff(colName string) Aggregator {
+	return Diff{ColName: colName}
+}
+
+func (d Diff) NewName(string) Aggregator {
+	return d
+}
+
+func (d Diff) GetNewName() string {
+	return "diff"
+}
+
+func (d Diff) GetColName() string {
+	return d.ColName
+}
+
+func (d Diff) RemoveNAs(bool) Aggregator {
+	return d
+}
+
+func (d Diff) Reduce(group int, result, value interface{}, isNA bool) {
+	fmt.Println("reduce", group, result, value, isNA)
+}
+
+func Example07() {
+
+	NewBaseDataFrame(ctx).
+		FromCsv().
+		SetReader(strings.NewReader(data1)).
+		SetDelimiter(',').
+		SetHeader(true).
+		Read().
+		Select("department", "age", "salary band").
+		GroupBy("department").
+		Agg(GetDiff("age"), Min("salary band"), Count()).
+		Run().
+		PPrint(
+			NewPPrintParams().
+				SetUseLipGloss(true).
+				SetWidth(130).
+				SetNRows(50))
+
+}
+
 func main() {
 	// fmt.Println("Example01:")
 	// Example01()
@@ -228,7 +279,10 @@ func main() {
 	// fmt.Println("Example05:")
 	// Example05()
 
-	fmt.Println("Example06:")
-	Example06()
+	// fmt.Println("Example06:")
+	// Example06()
+
+	fmt.Println("Example07:")
+	Example07()
 
 }

@@ -1,6 +1,8 @@
 package gandalff
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type aggregatorBuilder struct {
 	df          BaseDataFrame
@@ -91,7 +93,10 @@ func (ab aggregatorBuilder) Run() DataFrame {
 			} else
 			// CUSTOM AGGREGATORS
 			{
-
+				dataF64 := __gdl_stats_preprocess(series)
+				for i, idx := range flatIndeces {
+					agg.Reduce(idx, nil, dataF64[i], false)
+				}
 			}
 		}
 
