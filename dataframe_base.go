@@ -2,6 +2,7 @@ package gandalff
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"time"
 
@@ -301,19 +302,35 @@ func (df BaseDataFrame) NameAt(index int) string {
 	return df.names[index]
 }
 
-func (df BaseDataFrame) Select(names ...string) DataFrame {
+func (df BaseDataFrame) Select(selectors ...string) DataFrame {
 	if df.err != nil {
 		return df
 	}
 
+	regexes := make([]*regexp.Regexp, len(selectors))
+	for i, selector := range selectors {
+		regex, err := regexp.Compile(selector)
+		if err != nil {
+			df.err = fmt.Errorf("BaseDataFrame.Select: invalid selector \"%s\"", selector)
+			return df
+		}
+		regexes[i] = regex
+	}
+
+	selected := make(map[string]bool)
+	for _, name := range df.names {
+		selected[name] = false
+	}
+
+	names := make([]string, 0)
 	seriesList := make([]Series, 0)
-	for _, name := range names {
-		series := df.__series(name)
-		if series != nil {
-			seriesList = append(seriesList, series)
-		} else {
-			return BaseDataFrame{
-				err: fmt.Errorf("BaseDataFrame.Select: series \"%s\" not found", name),
+
+	for _, regex := range regexes {
+		for _, name := range df.names {
+			if !selected[name] && regex.MatchString(name) {
+				selected[name] = true
+				names = append(names, name)
+				seriesList = append(seriesList, df.C(name))
 			}
 		}
 	}

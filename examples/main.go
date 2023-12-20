@@ -172,13 +172,13 @@ func Example05() {
 		// Write().
 
 		// to HTML
-		ToHtml().
-		SetPath("../testdata/test.html").
-		// SetDatatables(tsrue).
-		SetNaText("-").
-		SetNewLine("\n").
-		SetIndent("  ").
-		Write().
+		// ToHtml().
+		// SetPath("../testdata/test.html").
+		// SetDataTable(true).
+		// SetNaText("-").
+		// SetNewLine("\n").
+		// SetIndent("  ").
+		// Write().
 
 		// to JSON
 		// ToJson().
@@ -190,7 +190,7 @@ func Example05() {
 			NewPPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(200).
-				SetNRows(20))
+				SetNRows(10))
 }
 
 func Example06() {
@@ -230,5 +230,4 @@ func main() {
 
 	fmt.Println("Example06:")
 	Example06()
-
 }

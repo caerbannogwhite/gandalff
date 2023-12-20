@@ -38,6 +38,52 @@ func Test_BaseDataFrame_Base(t *testing.T) {
 
 }
 
+func Test_BaseDataFrame_Select(t *testing.T) {
+	names := []string{
+		"NUMMEN", "NUMWOMEN", "NUMPHONS", "AGE", "ORACE", "HISPANIC", "RACE", "EDUCA", "EMPLOY", "MARITAL",
+		"INCOME", "WEIGHT", "HEIGHT", "HTF", "HTI", "SEX", "SEATBELT", "BPHIGH", "HIGHGT1", "BPTREAT",
+		"USETREAT", "EXERANY", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "EXEROTH2", "EXERACT2",
+		"EXERDIS2", "EXEROFT2", "EXERHMM2", "_TOTINDX", "SMOKE100", "SMOKENOW", "SMOKENUM", "STOPSMOK",
+		"WHENSTOP", "LONGSTOP", "LASTSMOK", "_SMOKER", "DRINKANY", "ALCOHOL", "NALCOCC", "DRINKGE5",
+		"DRINKDRI", "CHECKUP", "TYPEDR", "BLOODCHO", "CHOLCHK", "TOLDLEV", "LEVEL", "TOLDHI", "REDCHOL",
+		"CHOLMED", "CHOLDIET", "CHOLHELP", "_CHOL", "DIABETES", "HADMAM", "HOWLONG", "NOTDONE", "WHYDONE",
+		"MAMMIDEA", "PROFEXAM", "LENGEXAM", "REASEXAM", "PREGNANT", "WHENDUE", "AIDSHIV", "MEDSAIDS",
+		"HLTHYAID", "BLOODAID", "MOSQAIDS", "YOUNGCLD", "SCHLAIDS", "EDUCAIDS", "COOKAIDS", "WORKAIDS",
+		"TEST1AID", "TEST2AID", "CONDOM", "CTYCODE", "USEEVER", "USENOW", "_SMKLESS", "PAPTEST", "HADPAP",
+		"LASTPAP", "HADHYST", "DIGRECTL", "HADRECTL", "LASTEXAM", "BLDSTOOL", "HADBSTES", "LASTBST", "PROCEXAM",
+		"HADPROCT", "LASTPROC", "DETECTOR", "TESTH2O", "YOUNGAGE", "POISON", "IPECAC", "BUCKLEUP", "LOSEWT",
+		"TRYLOSE", "WHATWGT", "WTDESIRE", "MAINTAIN", "FEWCAL", "COUNTCAL", "CALORIES", "PHYACT", "DIETPILL",
+		"SUPPLEMT", "FASTING", "PROGRAM", "VOMIT", "DRADVICE", "CONSIDWT", "_BMI", "RADONGAS", "TESTAIR",
+		"HOWTEST", "PLANTEST", "OPINION", "HEADACHE", "ASTHMA", "ARTHRIT", "LUNGCAN", "CANCERS", "RESIDE",
+		"HOTDOGS", "BACON", "PORK", "HAMBURG", "BEEF", "FRIEDCHI", "FRENCHFR", "CHEESE", "DOUGHNUT", "SNACKS",
+		"BUTTER", "EGGS", "MILK", "_FATINDX", "FRUITJUI", "FRUIT", "GREENSAL", "POTATOES", "CARROTS", "VEGETABL",
+		"_FRTINDX", "_RFSEATB", "_RFSEAT2", "_RFHYPE2", "_RFHYPE4", "_RFOBESE", "_RFSMOKE", "_RFDRACU", "_RFDRDRI",
+		"_RFDRCHR", "_RFLIFES", "_RFTOBAC", "_RFWHBMI", "_RAW", "_CSA", "_WT1", "_AGEG_", "_AGEG", "_AGEG5YR",
+		"_RACEG", "_RACEGR", "_RFCHOL",
+	}
+
+	df := NewBaseDataFrame(ctx)
+
+	for _, name := range names {
+		df = df.AddSeries(name, NewSeriesFloat64([]float64{1.0}, nil, false, ctx))
+	}
+
+	names = df.Select("^_.*_$", "NUMMEN").Names()
+	if !checkEqSlice(names, []string{"_AGEG_", "NUMMEN"}, nil, "") {
+		t.Errorf("Expected %v, got %v", []string{"_AGEG_", "NUMMEN"}, names)
+	}
+
+	names = df.Select(".*BL[O]*D.*").Names()
+	if !checkEqSlice(names, []string{"BLOODCHO", "BLOODAID", "BLDSTOOL"}, nil, "") {
+		t.Errorf("Expected %v, got %v", []string{"BLOODCHO", "BLOODAID", "BLDSTOOL"}, names)
+	}
+
+	names = df.Select("_RAW", "^EX.*1$", "HOWLONG", "EDUCA$").Names()
+	if !checkEqSlice(names, []string{"_RAW", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "HOWLONG", "EDUCA"}, nil, "") {
+		t.Errorf("Expected %v, got %v", []string{"_RAW", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "HOWLONG", "EDUCA"}, names)
+	}
+}
+
 func Test_BaseDataFrame_Filter(t *testing.T) {
 	// Create a new dataframe from the CSV data.
 	df := NewBaseDataFrame(ctx).FromCsv().

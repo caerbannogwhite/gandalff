@@ -70,7 +70,7 @@ type DataFrame interface {
 	// Returns the series with the given name as a bool series.
 	NameAt(index int) string
 
-	Select(names ...string) DataFrame
+	Select(selectors ...string) DataFrame
 
 	SelectAt(indices ...int) DataFrame
 
