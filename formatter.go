@@ -14,7 +14,7 @@ type Formatter interface {
 	Compute()
 	GetMaxWidth() int
 	Push(val any)
-	Format(width int, val any) string
+	Format(width int, val any, isNa bool) string
 }
 
 const (
@@ -139,7 +139,7 @@ func (f *NumericFormatter) Compute() {
 
 	var s string
 	for _, val := range f.values {
-		s = f.Format(1, val)
+		s = f.Format(1, val, false)
 		f.maxWidth = max(f.maxWidth, len(s))
 	}
 
@@ -215,7 +215,7 @@ func (f *NumericFormatter) Push(val any) {
 	}
 }
 
-func (f *NumericFormatter) Format(width int, val any) string {
+func (f *NumericFormatter) Format(width int, val any, isNa bool) string {
 	var num float64
 	switch val.(type) {
 	case int:
@@ -234,7 +234,7 @@ func (f *NumericFormatter) Format(width int, val any) string {
 	if math.IsInf(num, 1) {
 		return f.render(width, f.infText, f.styleNum)
 	}
-	if math.IsNaN(num) {
+	if math.IsNaN(num) || isNa {
 		return f.render(width, f.naText, f.styleNa)
 	}
 
@@ -336,8 +336,8 @@ func (f *StringFormatter) Push(val any) {
 	}
 }
 
-func (f *StringFormatter) Format(width int, val any) string {
-	if s, ok := val.(string); ok {
+func (f *StringFormatter) Format(width int, val any, isNa bool) string {
+	if s, ok := val.(string); ok && !isNa {
 		s = toPrintable(s)
 		if f.useLipGloss {
 			return f.styleString.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
@@ -355,4 +355,26 @@ func toPrintable(s string) string {
 		}
 		return '.'
 	}, s)
+}
+
+func truncate(s string, n int) string {
+	if len(s) > n {
+		return s[:n-3] + "..."
+	}
+	return s
+}
+
+func center(s string, n int) string {
+	r := []rune(s)
+	l := len(r)
+	if l >= n {
+		return s
+	}
+
+	n += len(s) - l
+
+	left := (n + l) / 2
+	right := n - l - left - 1
+
+	return fmt.Sprintf("%*s%*s", left, string(s), right, "")
 }

@@ -269,8 +269,8 @@ func (s SeriesDuration) Copy() Series {
 	}
 }
 
-func (s SeriesDuration) getDataPtr() *[]time.Duration {
-	return &s.data
+func (s SeriesDuration) getData() []time.Duration {
+	return s.data
 }
 
 // Ungroup the series.

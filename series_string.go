@@ -117,7 +117,7 @@ func (s SeriesString) Cast(t preludiometa.BaseType) Series {
 			copy(nullMask, s.nullMask)
 		}
 
-		typeGuesser := newTypeGuesser()
+		typeGuesser := newTypeGuesser(s.isNullable)
 		if s.isNullable {
 			for i, v := range s.data {
 				if !s.IsNull(i) {

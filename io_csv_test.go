@@ -9,107 +9,130 @@ import (
 )
 
 func Test_TypeGuesser(t *testing.T) {
-
 	// Create a new type guesser.
-	guesser := newTypeGuesser()
+	tg := newTypeGuesser(false)
 
 	// Test the bool type.
-	if guesser.guessType("true") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("true").ToString())
+	if tg.guessType("true") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("true").ToString())
 	}
 
-	if guesser.guessType("false") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("false").ToString())
+	if tg.guessType("false") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("false").ToString())
 	}
 
-	if guesser.guessType("True") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("True").ToString())
+	if tg.guessType("True") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("True").ToString())
 	}
 
-	if guesser.guessType("False") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("False").ToString())
+	if tg.guessType("False") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("False").ToString())
 	}
 
-	if guesser.guessType("TRUE") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("TRUE").ToString())
+	if tg.guessType("TRUE") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("TRUE").ToString())
 	}
 
-	if guesser.guessType("FALSE") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("FALSE").ToString())
+	if tg.guessType("FALSE") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("FALSE").ToString())
 	}
 
-	if guesser.guessType("t") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("t").ToString())
+	if tg.guessType("t") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("t").ToString())
 	}
 
-	if guesser.guessType("f") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("f").ToString())
+	if tg.guessType("f") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("f").ToString())
 	}
 
-	if guesser.guessType("T") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("T").ToString())
+	if tg.guessType("T") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("T").ToString())
 	}
 
-	if guesser.guessType("F") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("F").ToString())
+	if tg.guessType("F") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("F").ToString())
 	}
 
-	if guesser.guessType("TrUe") != preludiometa.BoolType {
-		t.Error("Expected Bool, got", guesser.guessType("TrUe").ToString())
+	if tg.guessType("TrUe") != preludiometa.BoolType {
+		t.Error("Expected Bool, got", tg.guessType("TrUe").ToString())
 	}
 
 	// Test the int type.
-	if guesser.guessType("0") != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", guesser.guessType("0").ToString())
+	if tg.guessType("0") != preludiometa.Int64Type {
+		t.Error("Expected Int64, got", tg.guessType("0").ToString())
 	}
 
-	if guesser.guessType("1") != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", guesser.guessType("1").ToString())
+	if tg.guessType("1") != preludiometa.Int64Type {
+		t.Error("Expected Int64, got", tg.guessType("1").ToString())
 	}
 
-	if guesser.guessType("10000") != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", guesser.guessType("10000").ToString())
+	if tg.guessType("10000") != preludiometa.Int64Type {
+		t.Error("Expected Int64, got", tg.guessType("10000").ToString())
 	}
 
-	if guesser.guessType("-1") != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", guesser.guessType("-1").ToString())
+	if tg.guessType("-1") != preludiometa.Int64Type {
+		t.Error("Expected Int64, got", tg.guessType("-1").ToString())
 	}
 
-	if guesser.guessType("-10000") != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", guesser.guessType("-10000").ToString())
+	if tg.guessType("-10000") != preludiometa.Int64Type {
+		t.Error("Expected Int64, got", tg.guessType("-10000").ToString())
 	}
 
 	// Test the float type.
-	if guesser.guessType("0.0") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("0.0").ToString())
+	if tg.guessType("0.0") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("0.0").ToString())
 	}
 
-	if guesser.guessType("1.0") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("1.0").ToString())
+	if tg.guessType("1.0") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("1.0").ToString())
 	}
 
-	if guesser.guessType("10000.0") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("10000.0").ToString())
+	if tg.guessType("10000.0") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("10000.0").ToString())
 	}
 
-	if guesser.guessType("-1.0") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("-1.0").ToString())
+	if tg.guessType("-1.0") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("-1.0").ToString())
 	}
 
-	if guesser.guessType("-1e3") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("-1e3").ToString())
+	if tg.guessType("-1e3") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("-1e3").ToString())
 	}
 
-	if guesser.guessType("-1e-3") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("-1e-3").ToString())
+	if tg.guessType("-1e-3") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("-1e-3").ToString())
 	}
 
-	if guesser.guessType("2.0E4") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("2.0E4").ToString())
+	if tg.guessType("2.0E4") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("2.0E4").ToString())
 	}
 
-	if guesser.guessType("2.0e4") != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", guesser.guessType("2.0e4").ToString())
+	if tg.guessType("2.0e4") != preludiometa.Float64Type {
+		t.Error("Expected Float64, got", tg.guessType("2.0e4").ToString())
+	}
+}
+
+func Test_TypeGuesserWithNAs(t *testing.T) {
+	// Create a new type guesser.
+	tg := newTypeGuesser(true)
+
+	tg.setLength(4)
+
+	tg.guessTypes([]string{"t", "-1", "-1e-1", "a"})
+	tg.guessTypes([]string{"f", "0", "1E+1", "b"})
+	tg.guessTypes([]string{"", "", "", ""})
+	tg.guessTypes([]string{"true", "1", "1.23e2", "c"})
+	tg.guessTypes([]string{"false", "2", "1.23e-2", "d"})
+	tg.guessTypes([]string{"na", "null", "n/a", "e"})
+
+	if tg.typeBuckets[0].boolCount != 4 && tg.typeBuckets[0].nullCount != 2 {
+		t.Error("Expected 4 bools and 2 nulls, got", tg.typeBuckets[0].boolCount, tg.typeBuckets[0].nullCount)
+	}
+	if tg.typeBuckets[1].intCount != 4 && tg.typeBuckets[1].nullCount != 2 {
+		t.Error("Expected 4 ints and 2 nulls, got", tg.typeBuckets[1].intCount, tg.typeBuckets[1].nullCount)
+	}
+	if tg.typeBuckets[2].floatCount != 4 && tg.typeBuckets[2].nullCount != 2 {
+		t.Error("Expected 4 floats and 2 nulls, got", tg.typeBuckets[2].floatCount, tg.typeBuckets[2].nullCount)
 	}
 }
 

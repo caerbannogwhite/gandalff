@@ -119,7 +119,10 @@ func (r *xlsxRowReader) Read() ([]string, error) {
 	return values, nil
 }
 
-func readXlsx(path string, sheet string, header, rows int, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
+func readXlsx(
+	path string, sheet string, header, rows int, nullValues bool,
+	guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context,
+) ([]string, []Series, error) {
 	wb, err := xlsx.OpenFile(path)
 	if err != nil {
 		return nil, nil, err
@@ -146,7 +149,7 @@ func readXlsx(path string, sheet string, header, rows int, nullValues bool, gues
 		cells: nil,
 	}
 
-	series, err := readRowData(xlsxRowReader, nullValues, guessDataTypeLen, schema, ctx)
+	series, err := readRowData(xlsxRowReader, nullValues, guessDataTypeLen, sh.MaxRow, schema, ctx)
 	if err != nil {
 		return nil, nil, err
 	}

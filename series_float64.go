@@ -425,3 +425,20 @@ func (s SeriesFloat64) SortRev() Series {
 	}
 	return s
 }
+
+////////////////////////			NUMERIC OPERATIONS
+
+func (s SeriesFloat64) Min() any {
+	if s.isNullable {
+		return NullableFloat64{Valid: false, Value: 0}
+	}
+
+	min := s.data[0]
+	for _, v := range s.data {
+		if v < min {
+			min = v
+		}
+	}
+
+	return min
+}

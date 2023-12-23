@@ -2,8 +2,8 @@ package gandalff
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/caerbannogwhite/preludiometa"
@@ -302,19 +302,35 @@ func (df BaseDataFrame) NameAt(index int) string {
 	return df.names[index]
 }
 
-func (df BaseDataFrame) Select(names ...string) DataFrame {
+func (df BaseDataFrame) Select(selectors ...string) DataFrame {
 	if df.err != nil {
 		return df
 	}
 
+	regexes := make([]*regexp.Regexp, len(selectors))
+	for i, selector := range selectors {
+		regex, err := regexp.Compile(selector)
+		if err != nil {
+			df.err = fmt.Errorf("BaseDataFrame.Select: invalid selector \"%s\"", selector)
+			return df
+		}
+		regexes[i] = regex
+	}
+
+	selected := make(map[string]bool)
+	for _, name := range df.names {
+		selected[name] = false
+	}
+
+	names := make([]string, 0)
 	seriesList := make([]Series, 0)
-	for _, name := range names {
-		series := df.__series(name)
-		if series != nil {
-			seriesList = append(seriesList, series)
-		} else {
-			return BaseDataFrame{
-				err: fmt.Errorf("BaseDataFrame.Select: series \"%s\" not found", name),
+
+	for _, regex := range regexes {
+		for _, name := range df.names {
+			if !selected[name] && regex.MatchString(name) {
+				selected[name] = true
+				names = append(names, name)
+				seriesList = append(seriesList, df.C(name))
 			}
 		}
 	}
@@ -461,7 +477,7 @@ func (df BaseDataFrame) getPartitions() []SeriesPartition {
 	}
 }
 
-func (df BaseDataFrame) groupHelper() (DataFrame, *[][]int, *[]int) {
+func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 
 	// Keep track of which series are not grouped
 	seriesIndices := make(map[int]bool)
@@ -561,7 +577,15 @@ func (df BaseDataFrame) groupHelper() (DataFrame, *[][]int, *[]int) {
 	// sort the indices
 	sort.Ints(ungroupedSeriesIndices)
 
-	return result, &indeces, &ungroupedSeriesIndices
+	// Flatten the indeces
+	flatIndeces := make([]int, df.NRows())
+	for i, group := range indeces {
+		for _, index := range group {
+			flatIndeces[index] = i
+		}
+	}
+
+	return result, indeces, flatIndeces, ungroupedSeriesIndices
 }
 
 func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...string) DataFrame {
@@ -1136,139 +1160,14 @@ func (df BaseDataFrame) OrderBy(params ...SortParam) DataFrame {
 
 ////////////////////////			SUMMARY
 
-func (df BaseDataFrame) Agg(aggregators ...aggregator) DataFrame {
-	if df.err != nil {
-		return df
-	}
-
-	// CHECK: aggregators must have unique names and names must be valid
-	aggNames := make(map[string]bool)
-	for _, agg := range aggregators {
-
-		// CASE: aggregator count has a default name
-		if agg.type_ != AGGREGATE_COUNT {
-			if aggNames[agg.name] {
-				df.err = fmt.Errorf("BaseDataFrame.Agg: aggregator names must be unique")
-				return df
-			}
-			aggNames[agg.name] = true
-
-			if df.__series(agg.name) == nil {
-				df.err = fmt.Errorf("BaseDataFrame.Agg: series \"%s\" not found", agg.name)
-				return df
-			}
-		}
-	}
-
-	var result DataFrame
-	if df.isGrouped {
-		var indeces *[][]int
-		result, indeces, _ = df.groupHelper()
-		if df.NRows() < MINIMUM_PARALLEL_SIZE_2 {
-			for _, agg := range aggregators {
-				series := df.__series(agg.name)
-
-				switch agg.type_ {
-				case AGGREGATE_COUNT:
-					counts := make([]int64, len(*indeces))
-					for i, group := range *indeces {
-						counts[i] = int64(len(group))
-					}
-					result = result.AddSeries(agg.name, NewSeriesInt64(counts, nil, false, df.ctx))
-
-				case AGGREGATE_SUM:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_sum_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MIN:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_min_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MAX:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_max_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MEAN:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_mean_grouped__(series, *indeces), nil, false, df.ctx))
-
-				case AGGREGATE_MEDIAN:
-					// TODO: implement
-
-				case AGGREGATE_STD:
-					result = result.AddSeries(agg.name, NewSeriesFloat64(__gdl_std_grouped__(series, *indeces), nil, false, df.ctx))
-				}
-			}
-		} else {
-
-			var wg sync.WaitGroup
-			wg.Add(THREADS_NUMBER)
-
-			buffer := make(chan __stats_thread_data)
-			for i := 0; i < THREADS_NUMBER; i++ {
-				go __stats_worker(&wg, buffer)
-			}
-
-			for _, agg := range aggregators {
-				series := df.__series(agg.name)
-
-				resultData := make([]float64, len(*indeces))
-				result = result.AddSeries(agg.name, NewSeriesFloat64(resultData, nil, false, df.ctx))
-				for gi, group := range *indeces {
-					buffer <- __stats_thread_data{
-						op:      agg.type_,
-						gi:      gi,
-						indeces: group,
-						series:  series,
-						res:     resultData,
-					}
-				}
-			}
-
-			close(buffer)
-			wg.Wait()
-		}
-	} else {
-		result = NewBaseDataFrame(df.ctx)
-
-		for _, agg := range aggregators {
-			series := df.__series(agg.name)
-
-			switch agg.type_ {
-			case AGGREGATE_COUNT:
-				result = result.AddSeries(agg.name, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
-
-			case AGGREGATE_SUM:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_sum__(series)}, nil, false, df.ctx))
-
-			case AGGREGATE_MIN:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_min__(series)}, nil, false, df.ctx))
-
-			case AGGREGATE_MAX:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_max__(series)}, nil, false, df.ctx))
-
-			case AGGREGATE_MEAN:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_mean__(series)}, nil, false, df.ctx))
-
-			case AGGREGATE_MEDIAN:
-				// TODO: implement
-
-			case AGGREGATE_STD:
-				result = result.AddSeries(agg.name, NewSeriesFloat64([]float64{__gdl_std__(series)}, nil, false, df.ctx))
-			}
-		}
-	}
-
-	return result
+func (df BaseDataFrame) Agg(aggregators ...aggregator) aggregatorBuilder {
+	return aggregatorBuilder{df, false, aggregators}
 }
 
 ////////////////////////			PRINTING
 
 func (df BaseDataFrame) Describe() string {
 	return ""
-}
-
-func truncate(s string, n int) string {
-	if len(s) > n {
-		return s[:n-3] + "..."
-	}
-	return s
 }
 
 func (df BaseDataFrame) Records(header bool) [][]string {
@@ -1308,22 +1207,50 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 
 	buffer := ""
 
-	if df.isGrouped {
-		buffer += "GROUP BY: "
-		for i, p := range df.partitions {
-			if i > 0 {
-				buffer += ", "
-			}
-			buffer += p.name
-		}
-		buffer += "\n"
-	}
-
-	// check the data and collect records
+	// check if the dataframe is empty
 	if df.NRows() == 0 {
-		buffer += "Empty DataFrame\n"
+		buffer += params.indent
+		if params.useLipGloss {
+			params.styleNames.Render("  Empty DataFrame\n")
+		} else {
+			buffer += "  Empty DataFrame\n"
+		}
 		fmt.Println(buffer)
 		return df
+	}
+
+	// print the shape
+	buffer += params.indent
+	if params.useLipGloss {
+		buffer += params.styleTypes.Render(fmt.Sprintf("  BaseDataFrame: %d rows, %d columns", df.NRows(), df.NCols()))
+	} else {
+		buffer += fmt.Sprintf("  BaseDataFrame: %d rows, %d columns", df.NRows(), df.NCols())
+	}
+	buffer += "\n"
+
+	// print the group by columns
+	if df.isGrouped {
+		buffer += params.indent
+		if params.useLipGloss {
+			buffer += params.styleTypes.Render("  Grouped by: ")
+		} else {
+			buffer += "  Grouped by: "
+		}
+		for i, partition := range df.partitions {
+			if params.useLipGloss {
+				buffer += params.styleTypes.Render(fmt.Sprintf("%s", partition.name))
+			} else {
+				buffer += fmt.Sprintf("%s", partition.name)
+			}
+			if i < len(df.partitions)-1 {
+				if params.useLipGloss {
+					buffer += params.styleTypes.Render(",")
+				} else {
+					buffer += ","
+				}
+			}
+		}
+		buffer += "\n"
 	}
 
 	// check how many variables can fit in the screen
@@ -1346,6 +1273,13 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		nRowsOut = min(params.nrows, df.NRows())
 	}
 
+	addTail := false
+	fmt.Println(df.NRows(), nRowsOut, params.tailLen)
+	if df.NRows() > nRowsOut+params.tailLen {
+		addTail = true
+		nRowsOut -= params.tailLen
+	}
+
 	formatters := make([]Formatter, nColsOut)
 	for i := 0; i < nColsOut; i++ {
 		switch df.series[i].Type() {
@@ -1365,9 +1299,21 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				formatters[i].Push(v)
 			}
 
+			if addTail {
+				for _, v := range s.DataAsString()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
+			}
+
 		case SeriesInt:
 			for _, v := range s.Ints()[:nRowsOut] {
 				formatters[i].Push(v)
+			}
+
+			if addTail {
+				for _, v := range s.Ints()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
 			}
 
 		case SeriesInt64:
@@ -1375,9 +1321,21 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				formatters[i].Push(v)
 			}
 
+			if addTail {
+				for _, v := range s.Int64s()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
+			}
+
 		case SeriesFloat64:
 			for _, v := range s.Float64s()[:nRowsOut] {
 				formatters[i].Push(v)
+			}
+
+			if addTail {
+				for _, v := range s.Float64s()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
 			}
 
 		case SeriesString:
@@ -1385,14 +1343,32 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				formatters[i].Push(v)
 			}
 
+			if addTail {
+				for _, v := range s.Strings()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
+			}
+
 		case SeriesTime:
 			for _, v := range s.DataAsString()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
 
+			if addTail {
+				for _, v := range s.DataAsString()[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
+			}
+
 		case SeriesDuration:
 			for _, v := range s.Data().([]time.Duration)[:nRowsOut] {
 				formatters[i].Push(v)
+			}
+
+			if addTail {
+				for _, v := range s.Data().([]time.Duration)[df.NRows()-params.tailLen:] {
+					formatters[i].Push(v)
+				}
 			}
 		}
 	}
@@ -1481,22 +1457,55 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		for j, c := range df.series[:nColsOut] {
 			switch s := c.(type) {
 			case SeriesBool:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
 			case SeriesInt:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesInt64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesFloat64:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesString:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			case SeriesTime:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
 			case SeriesDuration:
-				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i))) + "│"
+				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			}
 		}
 		buffer += "\n"
+	}
+
+	if addTail {
+		// separator (bottom)
+		buffer += params.indent + "┊"
+		for j, _ := range df.series[:nColsOut] {
+			buffer += center("⋮", widths[j]+2) + "┊"
+		}
+		buffer += "\n"
+
+		// tail
+		for i := df.NRows() - params.tailLen; i < df.NRows(); i++ {
+			buffer += params.indent + "│"
+			for j, c := range df.series[:nColsOut] {
+				switch s := c.(type) {
+				case SeriesBool:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
+				case SeriesInt:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesInt64:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesFloat64:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesString:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				case SeriesTime:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
+				case SeriesDuration:
+					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
+				}
+			}
+			buffer += "\n"
+		}
 	}
 
 	// end

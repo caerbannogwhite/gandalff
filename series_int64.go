@@ -296,19 +296,19 @@ func (s SeriesInt64) group() Series {
 
 	// If the number of elements is small,
 	// look for the minimum and maximum values
-	if len(s.data) < MINIMUM_PARALLEL_SIZE_2 {
-		useDenseMap = true
-		max = s.data[0]
-		min = s.data[0]
-		for _, v := range s.data {
-			if v > max {
-				max = v
-			}
-			if v < min {
-				min = v
-			}
-		}
-	}
+	// if len(s.data) < MINIMUM_PARALLEL_SIZE_2 {
+	// 	useDenseMap = true
+	// 	max = s.data[0]
+	// 	min = s.data[0]
+	// 	for _, v := range s.data {
+	// 		if v > max {
+	// 			max = v
+	// 		}
+	// 		if v < min {
+	// 			min = v
+	// 		}
+	// 	}
+	// }
 
 	// If the difference between the maximum and minimum values is acceptable,
 	// then we can use a dense map, otherwise we use a sparse map
@@ -316,36 +316,36 @@ func (s SeriesInt64) group() Series {
 		useDenseMap = false
 	}
 
-	// DENSE MAP
-	if useDenseMap {
-		var nulls []int
-		map_ := make([][]int, max-min+1)
-		for i := 0; i < len(map_); i++ {
-			map_[i] = make([]int, 0, DEFAULT_DENSE_MAP_ARRAY_INITIAL_CAPACITY)
-		}
+	// TODO: FIX DENSE MAP
+	// if useDenseMap {
+	// 	var nulls []int
+	// 	map_ := make([][]int, max-min+1)
+	// 	for i := 0; i < len(map_); i++ {
+	// 		map_[i] = make([]int, 0, DEFAULT_DENSE_MAP_ARRAY_INITIAL_CAPACITY)
+	// 	}
 
-		if s.HasNull() {
-			nulls = make([]int, 0, DEFAULT_DENSE_MAP_ARRAY_INITIAL_CAPACITY)
-			for i, v := range s.data {
-				if s.IsNull(i) {
-					nulls = append(nulls, i)
-				} else {
-					map_[v-min] = append(map_[v-min], i)
-				}
-			}
-		} else {
-			for i, v := range s.data {
-				map_[v-min] = append(map_[v-min], i)
-			}
-		}
+	// 	if s.HasNull() {
+	// 		nulls = make([]int, 0, DEFAULT_DENSE_MAP_ARRAY_INITIAL_CAPACITY)
+	// 		for i, v := range s.data {
+	// 			if s.IsNull(i) {
+	// 				nulls = append(nulls, i)
+	// 			} else {
+	// 				map_[v-min] = append(map_[v-min], i)
+	// 			}
+	// 		}
+	// 	} else {
+	// 		for i, v := range s.data {
+	// 			map_[v-min] = append(map_[v-min], i)
+	// 		}
+	// 	}
 
-		partition = SeriesInt64Partition{
-			isDense:             true,
-			partitionDenseMin:   min,
-			partitionDense:      map_,
-			partitionDenseNulls: nulls,
-		}
-	} else
+	// 	partition = SeriesInt64Partition{
+	// 		isDense:             true,
+	// 		partitionDenseMin:   min,
+	// 		partitionDense:      map_,
+	// 		partitionDenseNulls: nulls,
+	// 	}
+	// } else
 
 	// SPARSE MAP
 	{

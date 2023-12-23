@@ -12,6 +12,7 @@ import (
 
 type CsvReader struct {
 	header           bool
+	rows             int
 	delimiter        rune
 	guessDataTypeLen int
 	path             string
@@ -24,6 +25,7 @@ type CsvReader struct {
 func NewCsvReader(ctx *Context) *CsvReader {
 	return &CsvReader{
 		header:           CSV_READER_DEFAULT_HEADER,
+		rows:             -1,
 		delimiter:        CSV_READER_DEFAULT_DELIMITER,
 		guessDataTypeLen: CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
 		path:             "",
@@ -46,6 +48,11 @@ func (r *CsvReader) SetDelimiter(delimiter rune) *CsvReader {
 
 func (r *CsvReader) SetGuessDataTypeLen(guessDataTypeLen int) *CsvReader {
 	r.guessDataTypeLen = guessDataTypeLen
+	return r
+}
+
+func (r *CsvReader) SetRows(rows int) *CsvReader {
+	r.rows = rows
 	return r
 }
 
@@ -92,7 +99,7 @@ func (r *CsvReader) Read() DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("CsvReader: no context specified"), ctx: r.ctx}
 	}
 
-	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
+	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 	if err != nil {
 		return BaseDataFrame{err: err, ctx: r.ctx}
 	}
@@ -106,7 +113,10 @@ func (r *CsvReader) Read() DataFrame {
 }
 
 // ReadCsv reads a CSV file and returns a GDLDataFrame.
-func readCsv(reader io.Reader, delimiter rune, header bool, nullValues bool, guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context) ([]string, []Series, error) {
+func readCsv(
+	reader io.Reader, delimiter rune, header bool, rows int, nullValues bool,
+	guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context,
+) ([]string, []Series, error) {
 
 	// TODO: Add support for Time and Duration types (defined in a schema)
 	// TODO: Optimize null masks (use bit vectors)?
@@ -132,7 +142,7 @@ func readCsv(reader io.Reader, delimiter rune, header bool, nullValues bool, gue
 		}
 	}
 
-	series, err := readRowData(csvReader, nullValues, guessDataTypeLen, schema, ctx)
+	series, err := readRowData(csvReader, nullValues, guessDataTypeLen, rows, schema, ctx)
 	if err != nil {
 		return nil, nil, err
 	}

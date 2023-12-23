@@ -70,7 +70,7 @@ type DataFrame interface {
 	// Returns the series with the given name as a bool series.
 	NameAt(index int) string
 
-	Select(names ...string) DataFrame
+	Select(selectors ...string) DataFrame
 
 	SelectAt(indices ...int) DataFrame
 
@@ -86,7 +86,7 @@ type DataFrame interface {
 
 	Take(params ...int) DataFrame
 
-	Agg(...aggregator) DataFrame
+	Agg(aggregators ...aggregator) aggregatorBuilder
 
 	// Sort the dataframe.
 	Len() int
@@ -116,69 +116,4 @@ type DataFrame interface {
 
 	ToHtml() *HtmlWriter
 	ToMarkDown() *MarkDownWriter
-}
-
-////////////////////////			AGGREGATORS
-
-type AggregateType int8
-
-const (
-	AGGREGATE_COUNT AggregateType = iota
-	AGGREGATE_SUM
-	AGGREGATE_MEAN
-	AGGREGATE_MEDIAN
-	AGGREGATE_MIN
-	AGGREGATE_MAX
-	AGGREGATE_STD
-)
-
-const DEFAULT_COUNT_NAME = "n"
-
-type aggregator struct {
-	name  string
-	type_ AggregateType
-}
-
-func Count() aggregator {
-	return aggregator{DEFAULT_COUNT_NAME, AGGREGATE_COUNT}
-}
-
-func Sum(name string) aggregator {
-	return aggregator{name, AGGREGATE_SUM}
-}
-
-func Mean(name string) aggregator {
-	return aggregator{name, AGGREGATE_MEAN}
-}
-
-func Median(name string) aggregator {
-	return aggregator{name, AGGREGATE_MEDIAN}
-}
-
-func Min(name string) aggregator {
-	return aggregator{name, AGGREGATE_MIN}
-}
-
-func Max(name string) aggregator {
-	return aggregator{name, AGGREGATE_MAX}
-}
-
-func Std(name string) aggregator {
-	return aggregator{name, AGGREGATE_STD}
-}
-
-////////////////////////			SORT
-
-type SortParam struct {
-	asc    bool
-	name   string
-	series Series
-}
-
-func Asc(name string) SortParam {
-	return SortParam{asc: true, name: name}
-}
-
-func Desc(name string) SortParam {
-	return SortParam{asc: false, name: name}
 }
