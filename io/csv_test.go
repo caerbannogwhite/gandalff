@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/dataframe"
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 func Test_TypeGuesser(t *testing.T) {
@@ -14,101 +14,101 @@ func Test_TypeGuesser(t *testing.T) {
 	tg := newTypeGuesser(false)
 
 	// Test the bool type.
-	if tg.guessType("true") != preludiometa.BoolType {
+	if tg.guessType("true") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("true").ToString())
 	}
 
-	if tg.guessType("false") != preludiometa.BoolType {
+	if tg.guessType("false") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("false").ToString())
 	}
 
-	if tg.guessType("True") != preludiometa.BoolType {
+	if tg.guessType("True") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("True").ToString())
 	}
 
-	if tg.guessType("False") != preludiometa.BoolType {
+	if tg.guessType("False") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("False").ToString())
 	}
 
-	if tg.guessType("TRUE") != preludiometa.BoolType {
+	if tg.guessType("TRUE") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("TRUE").ToString())
 	}
 
-	if tg.guessType("FALSE") != preludiometa.BoolType {
+	if tg.guessType("FALSE") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("FALSE").ToString())
 	}
 
-	if tg.guessType("t") != preludiometa.BoolType {
+	if tg.guessType("t") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("t").ToString())
 	}
 
-	if tg.guessType("f") != preludiometa.BoolType {
+	if tg.guessType("f") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("f").ToString())
 	}
 
-	if tg.guessType("T") != preludiometa.BoolType {
+	if tg.guessType("T") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("T").ToString())
 	}
 
-	if tg.guessType("F") != preludiometa.BoolType {
+	if tg.guessType("F") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("F").ToString())
 	}
 
-	if tg.guessType("TrUe") != preludiometa.BoolType {
+	if tg.guessType("TrUe") != meta.BoolType {
 		t.Error("Expected Bool, got", tg.guessType("TrUe").ToString())
 	}
 
 	// Test the int type.
-	if tg.guessType("0") != preludiometa.Int64Type {
+	if tg.guessType("0") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("0").ToString())
 	}
 
-	if tg.guessType("1") != preludiometa.Int64Type {
+	if tg.guessType("1") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("1").ToString())
 	}
 
-	if tg.guessType("10000") != preludiometa.Int64Type {
+	if tg.guessType("10000") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("10000").ToString())
 	}
 
-	if tg.guessType("-1") != preludiometa.Int64Type {
+	if tg.guessType("-1") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("-1").ToString())
 	}
 
-	if tg.guessType("-10000") != preludiometa.Int64Type {
+	if tg.guessType("-10000") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("-10000").ToString())
 	}
 
 	// Test the float type.
-	if tg.guessType("0.0") != preludiometa.Float64Type {
+	if tg.guessType("0.0") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("0.0").ToString())
 	}
 
-	if tg.guessType("1.0") != preludiometa.Float64Type {
+	if tg.guessType("1.0") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("1.0").ToString())
 	}
 
-	if tg.guessType("10000.0") != preludiometa.Float64Type {
+	if tg.guessType("10000.0") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("10000.0").ToString())
 	}
 
-	if tg.guessType("-1.0") != preludiometa.Float64Type {
+	if tg.guessType("-1.0") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("-1.0").ToString())
 	}
 
-	if tg.guessType("-1e3") != preludiometa.Float64Type {
+	if tg.guessType("-1e3") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("-1e3").ToString())
 	}
 
-	if tg.guessType("-1e-3") != preludiometa.Float64Type {
+	if tg.guessType("-1e-3") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("-1e-3").ToString())
 	}
 
-	if tg.guessType("2.0E4") != preludiometa.Float64Type {
+	if tg.guessType("2.0E4") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("2.0E4").ToString())
 	}
 
-	if tg.guessType("2.0e4") != preludiometa.Float64Type {
+	if tg.guessType("2.0e4") != meta.Float64Type {
 		t.Error("Expected Float64, got", tg.guessType("2.0e4").ToString())
 	}
 }
@@ -151,131 +151,132 @@ Charlie,33,95.0,t
 `
 
 	// Create a new dataframe from the CSV data.
-	df := dataframe.NewBaseDataFrame(ctx).FromCsv().
+	iod, err := FromCsv(ctx).
 		SetReader(strings.NewReader(data)).
 		SetDelimiter(',').
 		SetHeader(true).
 		SetGuessDataTypeLen(3).
 		Read()
 
-	if df.GetError() != nil {
-		t.Error(df.GetError())
+	if err != nil {
+		t.Error(err)
 	}
 
 	// Check the number of rows.
-	if df.NRows() != 8 {
-		t.Error("Expected 8 rows, got", df.NRows())
+	if iod.NRows() != 8 {
+		t.Error("Expected 8 rows, got", iod.NRows())
 	}
 
 	// Check the number of columns.
-	if df.NCols() != 4 {
-		t.Error("Expected 4 columns, got", df.NCols())
+	if iod.NCols() != 4 {
+		t.Error("Expected 4 columns, got", iod.NCols())
 	}
 
 	// Check the column names.
-	if df.Names()[0] != "name" {
-		t.Error("Expected 'name', got", df.Names()[0])
+	if iod.SeriesMetaAt(0).Name != "name" {
+		t.Error("Expected 'name', got", iod.SeriesMetaAt(0).Name)
 	}
 
-	if df.Names()[1] != "age" {
-		t.Error("Expected 'age', got", df.Names()[1])
+	if iod.SeriesMetaAt(1).Name != "age" {
+		t.Error("Expected 'age', got", iod.SeriesMetaAt(1).Name)
 	}
 
-	if df.Names()[2] != "weight" {
-		t.Error("Expected 'weight', got", df.Names()[2])
+	if iod.SeriesMetaAt(2).Name != "weight" {
+		t.Error("Expected 'weight', got", iod.SeriesMetaAt(2).Name)
 	}
 
-	if df.Names()[3] != "junior" {
-		t.Error("Expected 'junior', got", df.Names()[3])
+	if iod.SeriesMetaAt(3).Name != "junior" {
+		t.Error("Expected 'junior', got", iod.SeriesMetaAt(3).Name)
 	}
 
 	// Check the column types.
-	if df.Types()[0] != preludiometa.StringType {
-		t.Error("Expected String, got", df.Types()[0].ToString())
+	if iod.Types()[0] != meta.StringType {
+		t.Error("Expected String, got", iod.Types()[0].ToString())
 	}
 
-	if df.Types()[1] != preludiometa.Int64Type {
-		t.Error("Expected Int64, got", df.Types()[1].ToString())
+	if iod.Types()[1] != meta.Int64Type {
+		t.Error("Expected Int64, got", iod.Types()[1].ToString())
 	}
 
-	if df.Types()[2] != preludiometa.Float64Type {
-		t.Error("Expected Float64, got", df.Types()[2].ToString())
+	if iod.Types()[2] != meta.Float64Type {
+		t.Error("Expected Float64, got", iod.Types()[2].ToString())
 	}
 
-	if df.Types()[3] != preludiometa.BoolType {
-		t.Error("Expected Bool, got", df.Types()[3].ToString())
+	if iod.Types()[3] != meta.BoolType {
+		t.Error("Expected Bool, got", iod.Types()[3].ToString())
 	}
 
 	// Check the values.
-	if df.At(0).Data().([]string)[0] != "Alice C" {
-		t.Error("Expected 'Alice C', got", df.At(0).Data().([]string)[0])
+	if iod.At(0).Data().([]string)[0] != "Alice C" {
+		t.Error("Expected 'Alice C', got", iod.At(0).Data().([]string)[0])
 	}
 
-	if df.At(0).Data().([]string)[1] != "John Doe" {
-		t.Error("Expected 'John Doe', got", df.At(0).Data().([]string)[1])
+	if iod.At(0).Data().([]string)[1] != "John Doe" {
+		t.Error("Expected 'John Doe', got", iod.At(0).Data().([]string)[1])
 	}
 
-	if df.At(0).Data().([]string)[2] != "Bob" {
-		t.Error("Expected 'Bob', got", df.At(0).Data().([]string)[2])
+	if iod.At(0).Data().([]string)[2] != "Bob" {
+		t.Error("Expected 'Bob', got", iod.At(0).Data().([]string)[2])
 	}
 
-	if df.At(0).Data().([]string)[3] != "Jane H" {
-		t.Error("Expected 'Jane H', got", df.At(0).Data().([]string)[3])
+	if iod.At(0).Data().([]string)[3] != "Jane H" {
+		t.Error("Expected 'Jane H', got", iod.At(0).Data().([]string)[3])
 	}
 
-	if df.At(1).Data().([]int64)[4] != 28 {
-		t.Error("Expected 28, got", df.At(1).Data().([]int64)[4])
+	if iod.At(1).Data().([]int64)[4] != 28 {
+		t.Error("Expected 28, got", iod.At(1).Data().([]int64)[4])
 	}
 
-	if df.At(1).Data().([]int64)[5] != 32 {
-		t.Error("Expected 32, got", df.At(1).Data().([]int64)[5])
+	if iod.At(1).Data().([]int64)[5] != 32 {
+		t.Error("Expected 32, got", iod.At(1).Data().([]int64)[5])
 	}
 
-	if df.At(1).Data().([]int64)[6] != 27 {
-		t.Error("Expected 27, got", df.At(1).Data().([]int64)[6])
+	if iod.At(1).Data().([]int64)[6] != 27 {
+		t.Error("Expected 27, got", iod.At(1).Data().([]int64)[6])
 	}
 
-	if df.At(1).Data().([]int64)[7] != 33 {
-		t.Error("Expected 33, got", df.At(1).Data().([]int64)[7])
+	if iod.At(1).Data().([]int64)[7] != 33 {
+		t.Error("Expected 33, got", iod.At(1).Data().([]int64)[7])
 	}
 
-	if df.At(2).Data().([]float64)[0] != 75.0 {
-		t.Error("Expected 75.0, got", df.At(2).Data().([]float64)[0])
+	if iod.At(2).Data().([]float64)[0] != 75.0 {
+		t.Error("Expected 75.0, got", iod.At(2).Data().([]float64)[0])
 	}
 
-	if df.At(2).Data().([]float64)[1] != 80.5 {
-		t.Error("Expected 80.5, got", df.At(2).Data().([]float64)[1])
+	if iod.At(2).Data().([]float64)[1] != 80.5 {
+		t.Error("Expected 80.5, got", iod.At(2).Data().([]float64)[1])
 	}
 
-	if df.At(2).Data().([]float64)[2] != 85.0 {
-		t.Error("Expected 85.0, got", df.At(2).Data().([]float64)[2])
+	if iod.At(2).Data().([]float64)[2] != 85.0 {
+		t.Error("Expected 85.0, got", iod.At(2).Data().([]float64)[2])
 	}
 
-	if df.At(2).Data().([]float64)[3] != 60.0 {
-		t.Error("Expected 60.0, got", df.At(2).Data().([]float64)[3])
+	if iod.At(2).Data().([]float64)[3] != 60.0 {
+		t.Error("Expected 60.0, got", iod.At(2).Data().([]float64)[3])
 	}
 
-	if df.At(3).Data().([]bool)[4] != false {
-		t.Error("Expected false, got", df.At(3).Data().([]bool)[4])
+	if iod.At(3).Data().([]bool)[4] != false {
+		t.Error("Expected false, got", iod.At(3).Data().([]bool)[4])
 	}
 
-	if df.At(3).Data().([]bool)[5] != true {
-		t.Error("Expected true, got", df.At(3).Data().([]bool)[5])
+	if iod.At(3).Data().([]bool)[5] != true {
+		t.Error("Expected true, got", iod.At(3).Data().([]bool)[5])
 	}
 
-	if df.At(3).Data().([]bool)[6] != false {
-		t.Error("Expected false, got", df.At(3).Data().([]bool)[6])
+	if iod.At(3).Data().([]bool)[6] != false {
+		t.Error("Expected false, got", iod.At(3).Data().([]bool)[6])
 	}
 
-	if df.At(3).Data().([]bool)[7] != true {
-		t.Error("Expected true, got", df.At(3).Data().([]bool)[7])
+	if iod.At(3).Data().([]bool)[7] != true {
+		t.Error("Expected true, got", iod.At(3).Data().([]bool)[7])
 	}
 }
 
 func Benchmark_FromCsv_100000Rows(b *testing.B) {
 
 	// Create a new dataframe from the CSV data.
-	var df DataFrame
+	var err error
+	var iod *IoData
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -284,7 +285,7 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		df = NewBaseDataFrame(ctx).FromCsv().
+		iod, err = FromCsv(ctx).
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).
@@ -295,70 +296,71 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 	}
 	b.StopTimer()
 
-	if df.GetError() != nil {
-		b.Error(df.GetError())
+	if err != nil {
+		b.Error(err)
 	}
 
 	// Check the number of rows.
-	if df.NRows() != 100000 {
-		b.Error("Expected 100000 rows, got", df.NRows())
+	if iod.NRows() != 100000 {
+		b.Error("Expected 100000 rows, got", iod.NRows())
 	}
 
 	// Check the number of columns.
-	if df.NCols() != 9 {
-		b.Error("Expected 9 columns, got", df.NCols())
+	if iod.NCols() != 9 {
+		b.Error("Expected 9 columns, got", iod.NCols())
 	}
 
 	names := []string{"Index", "Organization Id", "Name", "Website", "Country", "Description", "Founded", "Industry", "Number of employees"}
 
 	// Check the column names.
 	for i := 0; i < len(names); i++ {
-		if df.Names()[i] != names[i] {
-			b.Error("Expected ", names[i], ", got", df.Names()[i])
+		if iod.SeriesMetaAt(i).Name != names[i] {
+			b.Error("Expected ", names[i], ", got", iod.SeriesMetaAt(i).Name)
 		}
 	}
 
 	// Check the column types.
-	if df.Types()[0] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[0].ToString())
+	if iod.Types()[0] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[0].ToString())
 	}
 
-	if df.Types()[1] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[1].ToString())
+	if iod.Types()[1] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[1].ToString())
 	}
 
-	if df.Types()[2] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[2].ToString())
+	if iod.Types()[2] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[2].ToString())
 	}
 
-	if df.Types()[3] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[3].ToString())
+	if iod.Types()[3] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[3].ToString())
 	}
 
-	if df.Types()[4] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[4].ToString())
+	if iod.Types()[4] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[4].ToString())
 	}
 
-	if df.Types()[5] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[5].ToString())
+	if iod.Types()[5] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[5].ToString())
 	}
 
-	if df.Types()[6] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[6].ToString())
+	if iod.Types()[6] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[6].ToString())
 	}
 
-	if df.Types()[7] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[7].ToString())
+	if iod.Types()[7] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[7].ToString())
 	}
 
-	if df.Types()[8] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[8].ToString())
+	if iod.Types()[8] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[8].ToString())
 	}
 }
 
 func Benchmark_FromCsv_500000Rows(b *testing.B) {
 	// Create a new dataframe from the CSV data.
-	var df DataFrame
+	var err error
+	var iod *IoData
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -367,7 +369,7 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		df = NewBaseDataFrame(ctx).FromCsv().
+		iod, err = FromCsv(ctx).
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).
@@ -378,80 +380,82 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 	}
 	b.StopTimer()
 
-	if df.GetError() != nil {
-		b.Error(df.GetError())
+	if err != nil {
+		b.Error(err)
 	}
 
 	// Check the number of rows.
-	if df.NRows() != 500000 {
-		b.Error("Expected 100000 rows, got", df.NRows())
+	if iod.NRows() != 500000 {
+		b.Error("Expected 100000 rows, got", iod.NRows())
 	}
 
 	// Check the number of columns.
-	if df.NCols() != 9 {
-		b.Error("Expected 9 columns, got", df.NCols())
+	if iod.NCols() != 9 {
+		b.Error("Expected 9 columns, got", iod.NCols())
 	}
 
 	names := []string{"Index", "Organization Id", "Name", "Website", "Country", "Description", "Founded", "Industry", "Number of employees"}
 
 	// Check the column names.
 	for i := 0; i < len(names); i++ {
-		if df.Names()[i] != names[i] {
-			b.Error("Expected ", names[i], ", got", df.Names()[i])
+		if iod.SeriesMetaAt(i).Name != names[i] {
+			b.Error("Expected ", names[i], ", got", iod.SeriesMetaAt(i).Name)
 		}
 	}
 
 	// Check the column types.
-	if df.Types()[0] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[0].ToString())
+	if iod.Types()[0] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[0].ToString())
 	}
 
-	if df.Types()[1] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[1].ToString())
+	if iod.Types()[1] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[1].ToString())
 	}
 
-	if df.Types()[2] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[2].ToString())
+	if iod.Types()[2] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[2].ToString())
 	}
 
-	if df.Types()[3] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[3].ToString())
+	if iod.Types()[3] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[3].ToString())
 	}
 
-	if df.Types()[4] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[4].ToString())
+	if iod.Types()[4] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[4].ToString())
 	}
 
-	if df.Types()[5] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[5].ToString())
+	if iod.Types()[5] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[5].ToString())
 	}
 
-	if df.Types()[6] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[6].ToString())
+	if iod.Types()[6] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[6].ToString())
 	}
 
-	if df.Types()[7] != preludiometa.StringType {
-		b.Error("Expected String, got", df.Types()[7].ToString())
+	if iod.Types()[7] != meta.StringType {
+		b.Error("Expected String, got", iod.Types()[7].ToString())
 	}
 
-	if df.Types()[8] != preludiometa.Int64Type {
-		b.Error("Expected Int64, got", df.Types()[8].ToString())
+	if iod.Types()[8] != meta.Int64Type {
+		b.Error("Expected Int64, got", iod.Types()[8].ToString())
 	}
 }
 
 func Test_IOCsv_ValidWrite(t *testing.T) {
-	df := NewBaseDataFrame(ctx).
-		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
-		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
-		ToXlsx().
+	iod := NewIoData(ctx)
+
+	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, []bool{true, false, true}, false, ctx), SeriesMeta{Name: "a"})
+	iod.AddSeries(series.NewSeriesString([]string{"a", "b", "c"}, []bool{true, false, true}, false, ctx), SeriesMeta{Name: "b"})
+
+	err := iod.ToCsv().
 		SetPath("test.csv").
 		Write()
 
-	if df.IsErrored() {
-		t.Errorf(df.GetError().Error())
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
-	_, err := os.Stat("test.csv")
+	_, err = os.Stat("test.csv")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

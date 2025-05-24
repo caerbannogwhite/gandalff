@@ -5,27 +5,28 @@ import (
 	"io"
 	"os"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/meta"
 )
 
 type MarkDownWriter struct {
-	header    bool
-	index     bool
-	types     bool
-	path      string
-	naText    string
-	writer    io.Writer
-	dataframe DataFrame
+	header bool
+	index  bool
+	types  bool
+	path   string
+	naText string
+	writer io.Writer
+	ioData *IoData
 }
 
 func NewMarkDownWriter() *MarkDownWriter {
 	return &MarkDownWriter{
-		header:    true,
-		index:     false,
-		path:      "",
-		naText:    NA_TEXT,
-		writer:    nil,
-		dataframe: nil,
+		header: true,
+		index:  false,
+		path:   "",
+		naText: gandalff.NA_TEXT,
+		writer: nil,
+		ioData: nil,
 	}
 }
 
@@ -54,44 +55,38 @@ func (w *MarkDownWriter) SetWriter(writer io.Writer) *MarkDownWriter {
 	return w
 }
 
-func (w *MarkDownWriter) SetDataFrame(dataframe DataFrame) *MarkDownWriter {
-	w.dataframe = dataframe
+func (w *MarkDownWriter) SetIoData(ioData *IoData) *MarkDownWriter {
+	w.ioData = ioData
 	return w
 }
 
-func (w *MarkDownWriter) Write() DataFrame {
-	if w.dataframe == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeMarkDown: no dataframe specified"), ctx: w.dataframe.GetContext()}
-		return w.dataframe
-	}
-
-	if w.dataframe.IsErrored() {
-		return w.dataframe
+func (w *MarkDownWriter) Write() error {
+	if w.ioData == nil {
+		return fmt.Errorf("writeMarkDown: no ioData specified")
 	}
 
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+			return err
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeMarkDown: no writer specified"), ctx: w.dataframe.GetContext()}
-		return w.dataframe
+		return fmt.Errorf("writeMarkDown: no writer specified")
 	}
 
-	err := writeMarkDown(w.dataframe, w.writer, w.header, w.index, w.naText)
+	err := writeMarkDown(w.ioData, w.writer, w.header, w.index, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+		return err
 	}
 
-	return w.dataframe
+	return nil
 }
 
-func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, naText string) error {
+func writeMarkDown(ioData *IoData, writer io.Writer, header, index bool, naText string) error {
 	buff := ""
 	if header {
 		buff += "|"
@@ -99,8 +94,8 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, na
 			buff += " |"
 		}
 
-		for _, col := range dataframe.Names() {
-			buff += "**" + col + "**|"
+		for _, col := range ioData.SeriesMeta {
+			buff += "**" + col.Name + "**|"
 		}
 		buff += "\n"
 	}
@@ -110,29 +105,29 @@ func writeMarkDown(dataframe DataFrame, writer io.Writer, header, index bool, na
 		buff += "----:|"
 	}
 
-	for i := range dataframe.Names() {
-		switch dataframe.Types()[i].GetDefaultJustification() {
-		case preludiometa.JUSTIFY_LEFT:
+	for i := range ioData.SeriesMeta {
+		switch ioData.Types()[i].GetDefaultJustification() {
+		case meta.JUSTIFY_LEFT:
 			buff += ":----|"
-		case preludiometa.JUSTIFY_RIGHT:
+		case meta.JUSTIFY_RIGHT:
 			buff += "----:|"
-		case preludiometa.JUSTIFY_CENTER:
+		case meta.JUSTIFY_CENTER:
 			buff += ":---:|"
 		}
 	}
 	buff += "\n"
 
-	for i := 0; i < dataframe.NRows(); i++ {
+	for i := 0; i < ioData.NRows(); i++ {
 		buff += "|"
 		if index {
 			buff += fmt.Sprintf("%d|", i)
 		}
 
-		for j := 0; j < dataframe.NCols(); j++ {
-			if dataframe.At(j).IsNull(i) {
+		for j := 0; j < ioData.NCols(); j++ {
+			if ioData.At(j).IsNull(i) {
 				buff += naText + "|"
 			} else {
-				buff += dataframe.At(j).GetAsString(i) + "|"
+				buff += ioData.At(j).GetAsString(i) + "|"
 			}
 		}
 		buff += "\n"

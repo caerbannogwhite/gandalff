@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/dataframe"
 	"github.com/caerbannogwhite/gandalff/series"
 )
 
@@ -73,22 +72,22 @@ func (r *XptReader) SetReader(reader io.Reader) *XptReader {
 	return r
 }
 
-func (r *XptReader) Read() dataframe.DataFrame {
+func (r *XptReader) Read() (*IoData, error) {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return dataframe.BaseDataFrame{err: err, ctx: r.ctx}
+			return nil, err
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return dataframe.BaseDataFrame{err: fmt.Errorf("XptReader: no reader specified"), ctx: r.ctx}
+		return nil, fmt.Errorf("XptReader: no reader specified")
 	}
 
 	if r.ctx == nil {
-		return dataframe.BaseDataFrame{err: fmt.Errorf("XptReader: no context specified"), ctx: r.ctx}
+		return nil, fmt.Errorf("XptReader: no context specified")
 	}
 
 	var err error
@@ -101,19 +100,19 @@ func (r *XptReader) Read() dataframe.DataFrame {
 	case XPT_VERSION_8, XPT_VERSION_9:
 		names, series, err = readXPTv89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	default:
-		return dataframe.BaseDataFrame{err: fmt.Errorf("XptReader: unknown version"), ctx: r.ctx}
+		return nil, fmt.Errorf("XptReader: unknown version")
 	}
 
 	if err != nil {
-		return dataframe.BaseDataFrame{err: err, ctx: r.ctx}
+		return nil, err
 	}
 
-	df := dataframe.NewBaseDataFrame(r.ctx)
+	ioData := NewIoData(r.ctx)
 	for i, name := range names {
-		df = df.AddSeries(name, series[i])
+		ioData.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
-	return df
+	return ioData, nil
 }
 
 type XptWriter struct {
@@ -121,7 +120,7 @@ type XptWriter struct {
 	byteOrder binary.ByteOrder
 	path      string
 	writer    io.Writer
-	dataframe dataframe.DataFrame
+	ioData    *IoData
 }
 
 func NewXptWriter() *XptWriter {
@@ -130,7 +129,7 @@ func NewXptWriter() *XptWriter {
 		byteOrder: binary.BigEndian,
 		path:      "",
 		writer:    nil,
-		dataframe: nil,
+		ioData:    nil,
 	}
 }
 
@@ -154,48 +153,44 @@ func (w *XptWriter) SetWriter(writer io.Writer) *XptWriter {
 	return w
 }
 
-func (w *XptWriter) SetDataFrame(dataframe dataframe.DataFrame) *XptWriter {
-	w.dataframe = dataframe
+func (w *XptWriter) SetIoData(ioData *IoData) *XptWriter {
+	w.ioData = ioData
 	return w
 }
 
-func (w *XptWriter) Write() dataframe.DataFrame {
-	if w.dataframe == nil {
-		return dataframe.BaseDataFrame{err: fmt.Errorf("XptWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
-	}
-
-	if w.dataframe.IsErrored() {
-		return w.dataframe
+func (w *XptWriter) Write() error {
+	if w.ioData == nil {
+		return fmt.Errorf("XptWriter: no ioData specified")
 	}
 
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return dataframe.BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+			return err
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("XptWriter: no writer specified"), ctx: w.dataframe.GetContext()}
+		return fmt.Errorf("XptWriter: no writer specified")
 	}
 
 	var err error
 	switch w.version {
 	case XPT_VERSION_5, XPT_VERSION_6:
-		err = writeXPTv56(w.dataframe, w.writer, w.byteOrder)
+		err = writeXPTv56(w.ioData, w.writer, w.byteOrder)
 	case XPT_VERSION_8, XPT_VERSION_9:
-		err = writeXPTv89(w.dataframe, w.writer, w.byteOrder)
+		err = writeXPTv89(w.ioData, w.writer, w.byteOrder)
 	default:
-		return BaseDataFrame{err: fmt.Errorf("XptWriter: unknown SAS version '%d'", w.version), ctx: w.dataframe.GetContext()}
+		return fmt.Errorf("XptWriter: unknown SAS version '%d'", w.version)
 	}
 
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+		return err
 	}
 
-	return w.dataframe
+	return nil
 }
 
 const (
@@ -337,7 +332,7 @@ func (nms *__NAMESTRv56) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 5/6).
-func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *Context) ([]string, []Series, error) {
+func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) ([]string, []series.Series, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("readXPTv56: no context specified")
 	}
@@ -527,21 +522,21 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
-	series := make([]series.Series, varsNum)
+	_series := make([]series.Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
 		case []float64:
-			series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
+			_series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
 		case []string:
-			series[i] = series.NewSeriesString(t, nulls[i], false, ctx)
+			_series[i] = series.NewSeriesString(t, nulls[i], false, ctx)
 		}
 	}
 
-	return names, series, nil
+	return names, _series, nil
 }
 
 // This functions writes a SAS XPT file (versions 5/6).
-func writeXPTv56(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) error {
+func writeXPTv56(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) error {
 	// TODO: implement
 	return nil
 }
@@ -896,24 +891,24 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
-	series := make([]Series, varsNum)
+	_series := make([]series.Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
 		// TODO: waiting for float32 support
 		// case []float32:
 		// 	series[i] = NewSeriesFloat32(t, nulls[i], false, ctx)
 		case []float64:
-			series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
+			_series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
 		case []string:
-			series[i] = series.NewSeriesString(t, nulls[i], false, ctx)
+			_series[i] = series.NewSeriesString(t, nulls[i], false, ctx)
 		}
 	}
 
-	return names, series, nil
+	return names, _series, nil
 }
 
 // This functions writes a SAS XPT file (versions 8/9).
-func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) error {
+func writeXPTv89(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) error {
 
 	const xptV89Template = "" +
 		"HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000  " +
@@ -944,23 +939,23 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 		Vrs:         "9.4     ",
 		Ops:         "X64_10HO",
 		SasCreateDt: formatDateTimeSAS(time.Now()),
-		VarsN:       fmt.Sprintf("%010d", df.NCols()),
+		VarsN:       fmt.Sprintf("%010d", ioData.NCols()),
 	})
 	if err != nil {
 		return err
 	}
 
 	offset := 0
-	stringVarLengths := make([]int, df.NCols())
+	stringVarLengths := make([]int, ioData.NCols())
 
-	var series series.Series
-	for i := 0; i < df.NCols(); i++ {
-		series = df.At(i)
+	var _series series.Series
+	for i := 0; i < ioData.NCols(); i++ {
+		_series = ioData.At(i)
 
 		namestr := NewNamestrV89()
 		namestr.npos = int32(offset)
 
-		switch s := series.(type) {
+		switch s := _series.(type) {
 		case series.Bools:
 			namestr.ntype = 1
 			namestr.nlng = 8
@@ -981,7 +976,7 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 			namestr.nlng = 8
 			offset += 8
 
-		case series.String:
+		case series.Strings:
 			for _, v := range s.Data().([]string) {
 				if len(v) > stringVarLengths[i] {
 					stringVarLengths[i] = len(v)
@@ -998,17 +993,17 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 		// 	namestr.nlng = 0
 		// 	offset += 0
 
-		case series.Duration:
+		case series.Durations:
 			namestr.ntype = 1
 			namestr.nlng = 8
 			offset += 8
 
 		default:
-			return fmt.Errorf("writeXPTv89: invalid variable type '%v'", series.Type())
+			return fmt.Errorf("writeXPTv89: invalid variable type '%v'", _series.Type())
 		}
 
 		namestr.nvar0 = int16(i + 1)
-		copy(namestr.nname[:], []byte(fmt.Sprintf("%-8s", df.NameAt(i))[0:8])) // TODO: check if are repeated names
+		copy(namestr.nname[:], []byte(fmt.Sprintf("%-8s", ioData.SeriesMeta[i].Name)[0:8])) // TODO: check if are repeated names
 		// copy(namestr.nlabel[:], []byte(df.NameAt(i))[0:40]) // TODO: add labels to writer
 
 		_, err = writer.Write(namestr.ToBinary(byteOrder))
@@ -1018,7 +1013,7 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 	}
 
 	// add padding
-	if p := ((140 * df.NCols()) % 80); p != 0 {
+	if p := ((140 * ioData.NCols()) % 80); p != 0 {
 		_, err = writer.Write(bytes.Repeat([]byte{0x20}, 80-p))
 		if err != nil {
 			return err
@@ -1031,31 +1026,31 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 	}
 
 	offset = 0
-	for i := 0; i < df.NRows(); i++ {
-		for j := 0; j < df.NCols(); j++ {
-			series = df.At(j)
+	for i := 0; i < ioData.NRows(); i++ {
+		for j := 0; j < ioData.NCols(); j++ {
+			_series = ioData.At(j)
 
-			switch series.(type) {
+			switch _series.(type) {
 
 			// Numeric types
-			case series.Bool, series.Int, series.Int64, series.Float64:
+			case series.Bools, series.Ints, series.Int64s, series.Float64s:
 				var val float64
-				if series.IsNull(i) {
+				if _series.IsNull(i) {
 					val = math.NaN()
 				} else {
-					switch s := series.(type) {
-					case series.Bool:
+					switch s := _series.(type) {
+					case series.Bools:
 						val = 0
 						if s.Get(i).(bool) {
 							val = 1
 						}
-					case series.Int:
+					case series.Ints:
 						val = float64(s.Get(i).(int))
-					case series.Int64:
+					case series.Int64s:
 						val = float64(s.Get(i).(int64))
-					case series.Float64:
+					case series.Float64s:
 						val = s.Get(i).(float64)
-					case series.Duration:
+					case series.Durations:
 						val = float64(s.Get(i).(time.Duration))
 					}
 				}
@@ -1074,10 +1069,10 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 				offset += 8
 
 			// String types
-			case series.String:
+			case series.Strings:
 				val := ""
-				if !series.IsNull(i) {
-					val = series.Get(i).(string)
+				if !_series.IsNull(i) {
+					val = _series.Get(i).(string)
 				}
 
 				_, err = writer.Write([]byte(fmt.Sprintf("%-*s", stringVarLengths[j], val)))

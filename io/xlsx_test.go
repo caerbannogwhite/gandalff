@@ -4,21 +4,25 @@ import (
 	"os"
 
 	"testing"
+
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 func Test_IOXlsx_ValidWrite(t *testing.T) {
-	df := NewBaseDataFrame(ctx).
-		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
-		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
-		ToXlsx().
+	iod := NewIoData(ctx)
+
+	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, nil, false, ctx), SeriesMeta{Name: "a"})
+	iod.AddSeries(series.NewSeriesString([]string{"a", "b", "c"}, nil, false, ctx), SeriesMeta{Name: "b"})
+
+	err := iod.ToXlsx().
 		SetPath("test.xlsx").
 		Write()
 
-	if df.IsErrored() {
-		t.Errorf(df.GetError().Error())
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
-	_, err := os.Stat("test.xlsx")
+	_, err = os.Stat("test.xlsx")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

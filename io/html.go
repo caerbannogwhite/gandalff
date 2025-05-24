@@ -5,6 +5,9 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 type HtmlWriter struct {
@@ -13,18 +16,18 @@ type HtmlWriter struct {
 	newLine    string
 	indent     string
 	writer     io.Writer
-	dataframe  DataFrame
+	ioData     *IoData
 	datatables bool
 }
 
 func NewHtmlWriter() *HtmlWriter {
 	return &HtmlWriter{
 		path:       "",
-		naText:     NA_TEXT,
+		naText:     gandalff.NA_TEXT,
 		newLine:    "\n",
 		indent:     "\t",
 		writer:     nil,
-		dataframe:  nil,
+		ioData:     nil,
 		datatables: false,
 	}
 }
@@ -54,8 +57,8 @@ func (w *HtmlWriter) SetWriter(writer io.Writer) *HtmlWriter {
 	return w
 }
 
-func (w *HtmlWriter) SetDataFrame(dataframe DataFrame) *HtmlWriter {
-	w.dataframe = dataframe
+func (w *HtmlWriter) SetIoData(ioData *IoData) *HtmlWriter {
+	w.ioData = ioData
 	return w
 }
 
@@ -64,39 +67,33 @@ func (w *HtmlWriter) SetDatatables(datatables bool) *HtmlWriter {
 	return w
 }
 
-func (w *HtmlWriter) Write() DataFrame {
-	if w.dataframe == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no dataframe specified"), ctx: w.dataframe.GetContext()}
-		return w.dataframe
-	}
-
-	if w.dataframe.IsErrored() {
-		return w.dataframe
+func (w *HtmlWriter) Write() error {
+	if w.ioData == nil {
+		return fmt.Errorf("writeHtml: no ioData specified")
 	}
 
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+			return err
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		w.dataframe = BaseDataFrame{err: fmt.Errorf("writeHtml: no writer specified"), ctx: w.dataframe.GetContext()}
-		return w.dataframe
+		return fmt.Errorf("writeHtml: no writer specified")
 	}
 
-	err := writeHtml(w.dataframe, w.writer, w.naText, w.newLine, w.indent, w.datatables)
+	err := writeHtml(w.ioData, w.writer, w.naText, w.newLine, w.indent, w.datatables)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+		return err
 	}
 
-	return w.dataframe
+	return nil
 }
 
-func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string, datatables bool) error {
+func writeHtml(ioData *IoData, writer io.Writer, naText, newLine, indent string, datatables bool) error {
 	head := ""
 	if datatables {
 		head = `
@@ -127,9 +124,9 @@ func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string, d
 		`
 	}
 
-	series := make([]Series, df.NCols())
-	for i := 0; i < df.NCols(); i++ {
-		series[i] = df.At(i)
+	series := make([]series.Series, ioData.NCols())
+	for i := 0; i < ioData.NCols(); i++ {
+		series[i] = ioData.At(i)
 	}
 
 	if writer == nil {
@@ -163,8 +160,8 @@ func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string, d
 		return err
 	}
 
-	for _, name := range df.Names() {
-		_, err = writer.Write([]byte(fmt.Sprintf("%s<th>%s</th>%s", indent5, name, newLine)))
+	for _, meta := range ioData.SeriesMeta {
+		_, err = writer.Write([]byte(fmt.Sprintf("%s<th>%s</th>%s", indent5, meta.Name, newLine)))
 		if err != nil {
 			return err
 		}
@@ -175,7 +172,7 @@ func writeHtml(df DataFrame, writer io.Writer, naText, newLine, indent string, d
 	rowBuffer.WriteString(indent3 + "</thead>" + newLine + indent3 + "<tbody>" + newLine)
 
 	// Table body
-	for i := 0; i < df.NRows(); i++ {
+	for i := 0; i < ioData.NRows(); i++ {
 
 		rowBuffer.WriteString(indent3 + "<tr>" + newLine)
 		for _, s := range series {

@@ -7,7 +7,9 @@ import (
 
 	"io"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 type CsvReader struct {
@@ -18,16 +20,16 @@ type CsvReader struct {
 	path             string
 	nullValues       bool
 	reader           io.Reader
-	schema           *preludiometa.Schema
-	ctx              *Context
+	schema           *meta.Schema
+	ctx              *gandalff.Context
 }
 
-func NewCsvReader(ctx *Context) *CsvReader {
+func NewCsvReader(ctx *gandalff.Context) *CsvReader {
 	return &CsvReader{
-		header:           CSV_READER_DEFAULT_HEADER,
+		header:           gandalff.CSV_READER_DEFAULT_HEADER,
 		rows:             -1,
-		delimiter:        CSV_READER_DEFAULT_DELIMITER,
-		guessDataTypeLen: CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
+		delimiter:        gandalff.CSV_READER_DEFAULT_DELIMITER,
+		guessDataTypeLen: gandalff.CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
 		path:             "",
 		nullValues:       false,
 		reader:           nil,
@@ -71,52 +73,60 @@ func (r *CsvReader) SetReader(reader io.Reader) *CsvReader {
 	return r
 }
 
-func (r *CsvReader) SetSchema(schema *preludiometa.Schema) *CsvReader {
+func (r *CsvReader) SetSchema(schema *meta.Schema) *CsvReader {
 	r.schema = schema
 	return r
 }
 
-func (r *CsvReader) SetContext(ctx *Context) *CsvReader {
+func (r *CsvReader) SetContext(ctx *gandalff.Context) *CsvReader {
 	r.ctx = ctx
 	return r
 }
 
-func (r *CsvReader) Read() DataFrame {
+func (r *CsvReader) Read() (*IoData, error) {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err, ctx: r.ctx}
+			return nil, err
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvReader: no reader specified"), ctx: r.ctx}
+		return nil, fmt.Errorf("CsvReader: no reader specified")
 	}
 
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvReader: no context specified"), ctx: r.ctx}
+		return nil, fmt.Errorf("CsvReader: no context specified")
 	}
 
 	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 	if err != nil {
-		return BaseDataFrame{err: err, ctx: r.ctx}
+		return nil, err
 	}
 
-	df := NewBaseDataFrame(r.ctx)
+	iod := IoData{
+		FileMeta: FileMeta{
+			FileName: r.path,
+			FilePath: r.path,
+		},
+	}
+
 	for i, name := range names {
-		df = df.AddSeries(name, series[i])
+		iod.AddSeries(series[i], SeriesMeta{
+			Name: name,
+		})
 	}
 
-	return df
+	return &iod, nil
 }
 
 // ReadCsv reads a CSV file and returns a GDLDataFrame.
 func readCsv(
 	reader io.Reader, delimiter rune, header bool, rows int, nullValues bool,
-	guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context,
-) ([]string, []Series, error) {
+	guessDataTypeLen int, schema *meta.Schema, ctx *gandalff.Context,
+) ([]string, []series.Series, error) {
 
 	// TODO: Add support for Time and Duration types (defined in a schema)
 	// TODO: Optimize null masks (use bit vectors)?
@@ -164,18 +174,18 @@ type CsvWriter struct {
 	path      string
 	naText    string
 	writer    io.Writer
-	dataframe DataFrame
+	ioData    *IoData
 }
 
 func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
-		delimiter: CSV_READER_DEFAULT_DELIMITER,
-		header:    CSV_READER_DEFAULT_HEADER,
+		delimiter: gandalff.CSV_READER_DEFAULT_DELIMITER,
+		header:    gandalff.CSV_READER_DEFAULT_HEADER,
 		format:    true,
 		path:      "",
-		naText:    NA_TEXT,
+		naText:    gandalff.NA_TEXT,
 		writer:    nil,
-		dataframe: nil,
+		ioData:    nil,
 	}
 }
 
@@ -209,49 +219,45 @@ func (w *CsvWriter) SetWriter(writer io.Writer) *CsvWriter {
 	return w
 }
 
-func (w *CsvWriter) SetDataFrame(dataframe DataFrame) *CsvWriter {
-	w.dataframe = dataframe
+func (w *CsvWriter) SetIoData(ioData *IoData) *CsvWriter {
+	w.ioData = ioData
 	return w
 }
 
-func (w *CsvWriter) Write() DataFrame {
-	if w.dataframe == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
-	}
-
-	if w.dataframe.IsErrored() {
-		return w.dataframe
+func (w *CsvWriter) Write() error {
+	if w.ioData == nil {
+		return fmt.Errorf("CsvWriter: no ioData specified")
 	}
 
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+			return err
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("CsvWriter: no writer specified"), ctx: w.dataframe.GetContext()}
+		return fmt.Errorf("CsvWriter: no writer specified")
 	}
 
-	err := writeCsv(w.dataframe, w.writer, w.delimiter, w.header, w.format, w.naText)
+	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+		return err
 	}
 
-	return w.dataframe
+	return nil
 }
 
-func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
-	series := make([]Series, df.NCols())
-	for i := 0; i < df.NCols(); i++ {
-		series[i] = df.At(i)
+func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
+	series := make([]series.Series, len(ioData.Series))
+	for i := 0; i < len(ioData.Series); i++ {
+		series[i] = ioData.Series[i]
 	}
 
 	if header {
-		for i, name := range df.Names() {
+		for i, name := range ioData.SeriesMeta {
 			if i > 0 {
 				fmt.Fprintf(writer, "%c", delimiter)
 			}
@@ -261,7 +267,7 @@ func writeCsv(df DataFrame, writer io.Writer, delimiter rune, header bool, forma
 		fmt.Fprintf(writer, "\n")
 	}
 
-	for i := 0; i < df.NRows(); i++ {
+	for i := 0; i < ioData.NRows(); i++ {
 		for j, s := range series {
 			if j > 0 {
 				fmt.Fprintf(writer, "%c", delimiter)

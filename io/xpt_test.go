@@ -7,6 +7,8 @@ import (
 	"math"
 
 	"testing"
+
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 const DELTA = 10e-16
@@ -198,18 +200,19 @@ func Test_IOXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 }
 
 func Test_IOXpt_ValidWrite(t *testing.T) {
-	df := NewBaseDataFrame(ctx).
-		AddSeriesFromFloat64s("a", []float64{1, 2, 3}, nil, false).
-		AddSeriesFromStrings("b", []string{"a", "b", "c"}, nil, false).
-		ToXpt().
+	iod := NewIoData(ctx)
+	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, nil, false, ctx), SeriesMeta{Name: "a"})
+	iod.AddSeries(series.NewSeriesString([]string{"a", "b", "c"}, nil, false, ctx), SeriesMeta{Name: "b"})
+
+	err := iod.ToXpt().
 		SetPath("test.xpt").
 		Write()
 
-	if df.IsErrored() {
-		t.Errorf(df.GetError().Error())
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
-	_, err := os.Stat("test.xpt")
+	_, err = os.Stat("test.xpt")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

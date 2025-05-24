@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/series"
 
 	"github.com/tealeg/xlsx"
 )
@@ -18,17 +20,17 @@ type XlsxReader struct {
 	rows             int
 	guessDataTypeLen int
 	nullValues       bool
-	schema           *preludiometa.Schema
-	ctx              *Context
+	schema           *meta.Schema
+	ctx              *gandalff.Context
 }
 
-func NewXlsxReader(ctx *Context) *XlsxReader {
+func NewXlsxReader(ctx *gandalff.Context) *XlsxReader {
 	return &XlsxReader{
 		path:             "",
 		sheet:            "",
 		header:           0,
 		rows:             -1,
-		guessDataTypeLen: XLSX_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
+		guessDataTypeLen: gandalff.XLSX_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
 		nullValues:       false,
 		schema:           nil,
 		ctx:              ctx,
@@ -65,28 +67,28 @@ func (r *XlsxReader) SetNullValues(nullValues bool) *XlsxReader {
 	return r
 }
 
-func (r *XlsxReader) SetSchema(schema *preludiometa.Schema) *XlsxReader {
+func (r *XlsxReader) SetSchema(schema *meta.Schema) *XlsxReader {
 	r.schema = schema
 	return r
 }
 
-func (r *XlsxReader) Read() DataFrame {
+func (r *XlsxReader) Read() (*IoData, error) {
 	if r.ctx == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxReader: no context specified"), ctx: r.ctx}
+		return nil, fmt.Errorf("XlsxReader: no context specified")
 	}
 
 	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 
 	if err != nil {
-		return BaseDataFrame{err: err, ctx: r.ctx}
+		return nil, err
 	}
 
-	df := NewBaseDataFrame(r.ctx)
+	iod := NewIoData(r.ctx)
 	for i, name := range names {
-		df = df.AddSeries(name, series[i])
+		iod.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
-	return df
+	return iod, nil
 }
 
 type xlsxRowReader struct {
@@ -121,8 +123,8 @@ func (r *xlsxRowReader) Read() ([]string, error) {
 
 func readXlsx(
 	path string, sheet string, header, rows int, nullValues bool,
-	guessDataTypeLen int, schema *preludiometa.Schema, ctx *Context,
-) ([]string, []Series, error) {
+	guessDataTypeLen int, schema *meta.Schema, ctx *gandalff.Context,
+) ([]string, []series.Series, error) {
 	wb, err := xlsx.OpenFile(path)
 	if err != nil {
 		return nil, nil, err
@@ -158,19 +160,19 @@ func readXlsx(
 }
 
 type XlsxWriter struct {
-	path      string
-	sheet     string
-	naText    string
-	writer    io.Writer
-	dataframe DataFrame
+	path   string
+	sheet  string
+	naText string
+	writer io.Writer
+	ioData *IoData
 }
 
 func NewXlsxWriter() *XlsxWriter {
 	return &XlsxWriter{
-		path:      "",
-		sheet:     "Sheet1",
-		writer:    nil,
-		dataframe: nil,
+		path:   "",
+		sheet:  "Sheet1",
+		writer: nil,
+		ioData: nil,
 	}
 }
 
@@ -194,43 +196,39 @@ func (w *XlsxWriter) SetWriter(writer io.Writer) *XlsxWriter {
 	return w
 }
 
-func (w *XlsxWriter) SetDataFrame(dataframe DataFrame) *XlsxWriter {
-	w.dataframe = dataframe
+func (w *XlsxWriter) SetIoData(ioData *IoData) *XlsxWriter {
+	w.ioData = ioData
 	return w
 }
 
-func (w *XlsxWriter) Write() DataFrame {
-	if w.dataframe == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no dataframe specified"), ctx: w.dataframe.GetContext()}
-	}
-
-	if w.dataframe.IsErrored() {
-		return w.dataframe
+func (w *XlsxWriter) Write() error {
+	if w.ioData == nil {
+		return fmt.Errorf("XlsxWriter: no ioData specified")
 	}
 
 	if w.path != "" {
 		// make sure os.O_WRONLY arg is supplies so that file is not opened in read-only mode
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+			return err
 		}
 		defer file.Close()
 		w.writer = file
 	}
 
 	if w.writer == nil {
-		return BaseDataFrame{err: fmt.Errorf("XlsxWriter: no writer specified"), ctx: w.dataframe.GetContext()}
+		return fmt.Errorf("XlsxWriter: no writer specified")
 	}
 
-	err := writeXlsx(w.dataframe, w.writer, w.sheet, w.naText)
+	err := writeXlsx(w.ioData, w.writer, w.sheet, w.naText)
 	if err != nil {
-		w.dataframe = BaseDataFrame{err: err, ctx: w.dataframe.GetContext()}
+		return err
 	}
 
-	return w.dataframe
+	return nil
 }
 
-func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText string) error {
+func writeXlsx(ioData *IoData, writer io.Writer, sheetName string, naText string) error {
 
 	file := xlsx.NewFile()
 
@@ -241,61 +239,61 @@ func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText s
 
 	// write header
 	row := sheet.AddRow()
-	for _, name := range dataframe.Names() {
+	for _, meta := range ioData.SeriesMeta {
 		cell := row.AddCell()
-		cell.Value = name
+		cell.Value = meta.Name
 	}
 
 	// write data
-	for i := 0; i < dataframe.NRows(); i++ {
+	for i := 0; i < ioData.NRows(); i++ {
 		row := sheet.AddRow()
-		for j := range dataframe.Names() {
+		for j := range ioData.SeriesMeta {
 			cell := row.AddCell()
 
-			switch s := dataframe.At(j).(type) {
-			case Bools:
+			switch s := ioData.At(j).(type) {
+			case series.Bools:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetBool(s.Get(i).(bool))
 
-			case Ints:
+			case series.Ints:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetInt(s.Get(i).(int))
 
-			case Int64s:
+			case series.Int64s:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetInt64(s.Get(i).(int64))
 
-			case Float64s:
+			case series.Float64s:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetFloat(s.Get(i).(float64))
 
-			case Strings:
+			case series.Strings:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.Value = s.Get(i).(string)
 
-			case Times:
+			case series.Times:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetDateTime(s.Get(i).(time.Time))
 
-			case Durations:
+			case series.Durations:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
