@@ -50,8 +50,6 @@ const (
 	SORTED_DESC
 )
 
-type any interface{}
-
 type MapFunc func(v any) any
 type MapFuncNull func(v any, isNull bool) (any, bool)
 
