@@ -1,4 +1,4 @@
-package gandalff
+package formatter
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/caerbannogwhite/gandalff"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -24,8 +25,8 @@ const (
 	defaultScientificThreshold = 9
 	defaultMaxDigits           = 11
 	defaultMovingDigits        = 3
-	defaultNaText              = NA_TEXT
-	defaultInfText             = INF_TEXT
+	defaultNaText              = gandalff.NA_TEXT
+	defaultInfText             = gandalff.INF_TEXT
 )
 
 type NumericFormatter struct {
@@ -345,7 +346,7 @@ func (f *StringFormatter) Format(width int, val any, isNa bool) string {
 			return fmt.Sprintf("%-*s", width, truncate(s, width))
 		}
 	}
-	return NA_TEXT
+	return gandalff.NA_TEXT
 }
 
 func toPrintable(s string) string {
