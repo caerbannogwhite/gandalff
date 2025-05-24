@@ -8,7 +8,7 @@ import (
 	"github.com/caerbannogwhite/gandalff/series"
 )
 
-func Test_IOHtml_ValidWrite(t *testing.T) {
+func Test_IoHtml_ValidWrite(t *testing.T) {
 	iod := NewIoData(ctx)
 
 	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, nil, false, ctx), SeriesMeta{Name: "a"})

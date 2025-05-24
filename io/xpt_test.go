@@ -32,7 +32,7 @@ func Roundtrip(n float64) (float64, error) {
 	return ieee, nil
 }
 
-func Test_IOXpt_Overflow(t *testing.T) {
+func Test_IoXpt_Overflow(t *testing.T) {
 	ibm := SasFloat{}
 	err := ibm.FromIeee(math.Pow(16, 63), binary.BigEndian)
 	if err == nil || err.Error() != "cannot store magnitude more than ~ 16 ** 63 as IBM-format" {
@@ -40,7 +40,7 @@ func Test_IOXpt_Overflow(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_Underflow(t *testing.T) {
+func Test_IoXpt_Underflow(t *testing.T) {
 	ibm := SasFloat{}
 	err := ibm.FromIeee(math.Pow(16, -66), binary.BigEndian)
 	if err == nil || err.Error() != "cannot store magnitude less than ~ 16 ** -65 as IBM-format" {
@@ -48,7 +48,7 @@ func Test_IOXpt_Underflow(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_Nan(t *testing.T) {
+func Test_IoXpt_Nan(t *testing.T) {
 	res, err := Roundtrip(math.NaN())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -61,7 +61,7 @@ func Test_IOXpt_Nan(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_SpecialMissingValues(t *testing.T) {
+func Test_IoXpt_SpecialMissingValues(t *testing.T) {
 
 	// From A to Z
 	for i := byte('A'); i <= byte('Z'); i++ {
@@ -90,7 +90,7 @@ func Test_IOXpt_SpecialMissingValues(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_Zero(t *testing.T) {
+func Test_IoXpt_Zero(t *testing.T) {
 	res, err := Roundtrip(0)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -103,7 +103,7 @@ func Test_IOXpt_Zero(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_SmallMagnitudeIntegers(t *testing.T) {
+func Test_IoXpt_SmallMagnitudeIntegers(t *testing.T) {
 	for i := -1000; i < 1000; i++ {
 		res, err := Roundtrip(float64(i))
 		if err != nil {
@@ -118,7 +118,7 @@ func Test_IOXpt_SmallMagnitudeIntegers(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_LargeMagnitudeFloats(t *testing.T) {
+func Test_IoXpt_LargeMagnitudeFloats(t *testing.T) {
 	n := int(1e9)
 	for i := n; i < n+100; i++ {
 		res, err := Roundtrip(float64(i))
@@ -134,7 +134,7 @@ func Test_IOXpt_LargeMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_LargeMagnitudeFloatsWithFraction(t *testing.T) {
+func Test_IoXpt_LargeMagnitudeFloatsWithFraction(t *testing.T) {
 	offset := 1e9
 	for i := 0; i < 100; i++ {
 		x := (float64(i) / 1e9) + offset
@@ -151,7 +151,7 @@ func Test_IOXpt_LargeMagnitudeFloatsWithFraction(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_SmallMagnitudeFloats(t *testing.T) {
+func Test_IoXpt_SmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e3
 		res, err := Roundtrip(v)
@@ -167,7 +167,7 @@ func Test_IOXpt_SmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_VerySmallMagnitudeFloats(t *testing.T) {
+func Test_IoXpt_VerySmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e6
 		res, err := Roundtrip(v)
@@ -183,7 +183,7 @@ func Test_IOXpt_VerySmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
+func Test_IoXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 	for i := -20; i < 20; i++ {
 		v := float64(i) / 1.0e9
 		res, err := Roundtrip(v)
@@ -199,7 +199,7 @@ func Test_IOXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 	}
 }
 
-func Test_IOXpt_ValidWrite(t *testing.T) {
+func Test_IoXpt_ValidWrite(t *testing.T) {
 	iod := NewIoData(ctx)
 	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, nil, false, ctx), SeriesMeta{Name: "a"})
 	iod.AddSeries(series.NewSeriesString([]string{"a", "b", "c"}, nil, false, ctx), SeriesMeta{Name: "b"})

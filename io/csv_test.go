@@ -441,7 +441,7 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 	}
 }
 
-func Test_IOCsv_ValidWrite(t *testing.T) {
+func Test_IoCsv_ValidWrite(t *testing.T) {
 	iod := NewIoData(ctx)
 
 	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, []bool{true, false, true}, false, ctx), SeriesMeta{Name: "a"})

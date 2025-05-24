@@ -8,7 +8,7 @@ import (
 	"github.com/caerbannogwhite/gandalff/series"
 )
 
-func Test_IOAll(t *testing.T) {
+func Test_IoAll(t *testing.T) {
 	var err error
 	var iod *IoData
 
@@ -26,6 +26,10 @@ func Test_IOAll(t *testing.T) {
 		SetPath(filepath.Join(testDataFolder, "test.json")).
 		Write()
 
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 	// From JSON
 	iod, err = FromJson(ctx).
 		SetPath(filepath.Join(testDataFolder, "test.json")).
@@ -41,6 +45,10 @@ func Test_IOAll(t *testing.T) {
 		SetNaText("").
 		SetDelimiter(',').
 		Write()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	// From CSV
 	iod, err = FromCsv(ctx).
@@ -59,6 +67,10 @@ func Test_IOAll(t *testing.T) {
 		SetSheet("test").
 		SetNaText("").
 		Write()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	// From Excel
 	iod, err = FromXlsx(ctx).
@@ -113,19 +125,27 @@ func Test_IOAll(t *testing.T) {
 		1.23e-4,  // 1.2345e-4
 	}, nil, false, ctx)
 
-	if _series := iod.ByName("CHARVAR1"); !_series.Eq(charvar1).(series.Bools).All() {
+	if _series := iod.ByName("CHARVAR1"); _series == nil {
+		t.Error("expected series, got nil")
+	} else if !_series.Eq(charvar1).(series.Bools).All() {
 		t.Errorf("expected %s, got %s", charvar1.DataAsString(), _series.DataAsString())
 	}
 
-	if _series := iod.ByName("CHARVAR2"); !_series.Eq(charvar2).(series.Bools).All() {
+	if _series := iod.ByName("CHARVAR2"); _series == nil {
+		t.Error("expected series, got nil")
+	} else if !_series.Eq(charvar2).(series.Bools).All() {
 		t.Errorf("expected %s, got %s", charvar2.DataAsString(), _series.DataAsString())
 	}
 
-	if _series := iod.ByName("NUMVAR1"); !_series.Eq(numvar1).(series.Bools).All() {
+	if _series := iod.ByName("NUMVAR1"); _series == nil {
+		t.Error("expected series, got nil")
+	} else if !_series.Eq(numvar1).(series.Bools).All() {
 		t.Errorf("expected %s, got %s", numvar1.DataAsString(), _series.DataAsString())
 	}
 
-	if _series := iod.ByName("FOO"); !_series.Eq(numvar2).(series.Bools).All() {
+	if _series := iod.ByName("FOO"); _series == nil {
+		t.Error("expected series, got nil")
+	} else if !_series.Eq(numvar2).(series.Bools).All() {
 		t.Errorf("expected %s, got %s", numvar2.DataAsString(), _series.DataAsString())
 	}
 }

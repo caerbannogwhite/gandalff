@@ -8,7 +8,7 @@ import (
 	"github.com/caerbannogwhite/gandalff/series"
 )
 
-func Test_IOMarkDown_ValidWrite(t *testing.T) {
+func Test_IoMarkDown_ValidWrite(t *testing.T) {
 	iod := NewIoData(ctx)
 
 	iod.AddSeries(series.NewSeriesFloat64([]float64{1, 2, 3}, nil, false, ctx), SeriesMeta{Name: "a"})

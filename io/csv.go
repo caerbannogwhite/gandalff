@@ -173,6 +173,7 @@ type CsvWriter struct {
 	format    bool // TODO: Implement this
 	path      string
 	naText    string
+	eol       string
 	writer    io.Writer
 	ioData    *IoData
 }
@@ -184,6 +185,7 @@ func NewCsvWriter() *CsvWriter {
 		format:    true,
 		path:      "",
 		naText:    gandalff.NA_TEXT,
+		eol:       "\n",
 		writer:    nil,
 		ioData:    nil,
 	}
@@ -211,6 +213,11 @@ func (w *CsvWriter) SetPath(path string) *CsvWriter {
 
 func (w *CsvWriter) SetNaText(naText string) *CsvWriter {
 	w.naText = naText
+	return w
+}
+
+func (w *CsvWriter) SetEol(eol string) *CsvWriter {
+	w.eol = eol
 	return w
 }
 
@@ -242,7 +249,7 @@ func (w *CsvWriter) Write() error {
 		return fmt.Errorf("CsvWriter: no writer specified")
 	}
 
-	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText)
+	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText, w.eol)
 	if err != nil {
 		return err
 	}
@@ -250,25 +257,25 @@ func (w *CsvWriter) Write() error {
 	return nil
 }
 
-func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string) error {
-	series := make([]series.Series, len(ioData.Series))
-	for i := 0; i < len(ioData.Series); i++ {
-		series[i] = ioData.Series[i]
-	}
+func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string, eol string) error {
+	// _series := make([]series.Series, len(ioData.Series))
+	// for i := 0; i < len(ioData.Series); i++ {
+	// 	_series[i] = ioData.Series[i]
+	// }
 
 	if header {
-		for i, name := range ioData.SeriesMeta {
+		for i, meta := range ioData.SeriesMeta {
 			if i > 0 {
 				fmt.Fprintf(writer, "%c", delimiter)
 			}
-			fmt.Fprintf(writer, "%s", name)
+			fmt.Fprintf(writer, "%s", meta.Name)
 		}
 
-		fmt.Fprintf(writer, "\n")
+		fmt.Fprintf(writer, "%s", eol)
 	}
 
 	for i := 0; i < ioData.NRows(); i++ {
-		for j, s := range series {
+		for j, s := range ioData.Series {
 			if j > 0 {
 				fmt.Fprintf(writer, "%c", delimiter)
 			}
@@ -280,7 +287,7 @@ func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, for
 			}
 		}
 
-		fmt.Fprintf(writer, "\n")
+		fmt.Fprintf(writer, "%s", eol)
 	}
 
 	return nil

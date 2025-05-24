@@ -136,7 +136,7 @@ func readJson(reader io.Reader, schema *meta.Schema, ctx *gandalff.Context) ([]s
 		for tokens.More() {
 
 			// read index
-			token, err := tokens.Token()
+			_, err := tokens.Token()
 			if err != nil {
 				return nil, nil, fmt.Errorf("readJson: invalid json")
 			}
