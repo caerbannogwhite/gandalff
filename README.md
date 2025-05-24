@@ -68,10 +68,6 @@ Megan,26,55.0,F,IT,3
 // ╰────────────┴─────────┴─────────┴─────────┴───────╯
 ```
 
-### Community
-
-You can join the [Gandalff community on Discord](https://discord.gg/vPv5bhXY).
-
 ### Supported data types
 
 The data types not checked are not yet supported, but might be in the future.

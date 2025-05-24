@@ -8,19 +8,20 @@ import (
 type Context struct {
 	// StringPool is a pool of strings that are used by the series.
 	// This is used to reduce the number of allocations and to allow for fast comparisons.
-	stringPool *StringPool
+	StringPool *StringPool
+
+	TimeFormat string
 
 	threadsNumber int
 	naText        string
-	timeFormat    string
 }
 
 func NewContext() *Context {
 	return &Context{
-		stringPool:    NewStringPool().SetNaText(NA_TEXT),
+		StringPool:    NewStringPool().SetNaText(NA_TEXT),
 		threadsNumber: THREADS_NUMBER,
 		naText:        NA_TEXT,
-		timeFormat:    "2006-01-02 15:04:05",
+		TimeFormat:    "2006-01-02 15:04:05",
 	}
 }
 
@@ -38,17 +39,17 @@ func (ctx *Context) GetNaText() string {
 }
 
 func (ctx *Context) SetNaText(s string) *Context {
-	ctx.stringPool.SetNaText(s)
+	ctx.StringPool.SetNaText(s)
 	ctx.naText = s
 	return ctx
 }
 
 func (ctx *Context) GetTimeFormat() string {
-	return ctx.timeFormat
+	return ctx.TimeFormat
 }
 
 func (ctx *Context) SetTimeFormat(s string) *Context {
-	ctx.timeFormat = s
+	ctx.TimeFormat = s
 	return ctx
 }
 
