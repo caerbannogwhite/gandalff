@@ -1,6 +1,8 @@
 package io
 
 import (
+	"path/filepath"
+
 	"github.com/caerbannogwhite/gandalff"
 )
 
@@ -9,6 +11,7 @@ const (
 )
 
 var ctx *gandalff.Context
+var testDataFolder = filepath.Join("..", "testdata")
 
 func init() {
 	ctx = gandalff.NewContext()

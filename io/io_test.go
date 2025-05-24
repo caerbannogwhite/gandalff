@@ -2,6 +2,7 @@ package io
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/caerbannogwhite/gandalff/series"
@@ -12,7 +13,7 @@ func Test_IOAll(t *testing.T) {
 	var iod *IoData
 
 	iod, err = FromXpt(ctx).
-		SetPath("testdata/xpt_test_mixed.xpt").
+		SetPath(filepath.Join(testDataFolder, "xpt_test_mixed.xpt")).
 		SetVersion(XPT_VERSION_9).
 		Read()
 
@@ -22,12 +23,12 @@ func Test_IOAll(t *testing.T) {
 
 	// to JSON
 	err = iod.ToJson().
-		SetPath("testdata/test.json").
+		SetPath(filepath.Join(testDataFolder, "test.json")).
 		Write()
 
 	// From JSON
 	iod, err = FromJson(ctx).
-		SetPath("testdata/test.json").
+		SetPath(filepath.Join(testDataFolder, "test.json")).
 		Read()
 
 	if err != nil {
@@ -36,14 +37,14 @@ func Test_IOAll(t *testing.T) {
 
 	// to CSV
 	err = iod.ToCsv().
-		SetPath("testdata/test.csv").
+		SetPath(filepath.Join(testDataFolder, "test.csv")).
 		SetNaText("").
 		SetDelimiter(',').
 		Write()
 
 	// From CSV
 	iod, err = FromCsv(ctx).
-		SetPath("testdata/test.csv").
+		SetPath(filepath.Join(testDataFolder, "test.csv")).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
@@ -54,14 +55,14 @@ func Test_IOAll(t *testing.T) {
 
 	// to Excel
 	err = iod.ToXlsx().
-		SetPath("testdata/test.xlsx").
+		SetPath(filepath.Join(testDataFolder, "test.xlsx")).
 		SetSheet("test").
 		SetNaText("").
 		Write()
 
 	// From Excel
 	iod, err = FromXlsx(ctx).
-		SetPath("testdata/test.xlsx").
+		SetPath(filepath.Join(testDataFolder, "test.xlsx")).
 		SetSheet("test").
 		Read()
 
@@ -69,9 +70,9 @@ func Test_IOAll(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	os.Remove("testdata/test.json")
-	os.Remove("testdata/test.csv")
-	os.Remove("testdata/test.xlsx")
+	os.Remove(filepath.Join(testDataFolder, "test.json"))
+	os.Remove(filepath.Join(testDataFolder, "test.csv"))
+	os.Remove(filepath.Join(testDataFolder, "test.xlsx"))
 
 	if iod.NCols() != 4 {
 		t.Errorf("expected 4 columns, got %d", iod.NCols())

@@ -445,7 +445,7 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 			_series[i] = series.NewSeriesFloat64(values[i].([]float64), nullMasks[i], false, ctx)
 
 		case meta.StringType:
-			_series[i] = series.NewSeriesString(values[i].([]string), nullMasks[i], false, ctx)
+			_series[i] = series.NewSeriesStringFromPtrs(values[i].([]*string), nullMasks[i], false, ctx)
 		}
 	}
 
