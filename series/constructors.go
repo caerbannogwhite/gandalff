@@ -374,6 +374,35 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalf
 	}
 }
 
+// Build a String Series from a slice of pointers to strings, if nullMask is nil then the series is not nullable
+func NewSeriesStringFromPtrs(data []*string, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Strings {
+	if ctx == nil {
+		fmt.Println("WARNING: NewSeriesStringFromPtrs: context is nil")
+	}
+
+	var isNullable bool
+	var nullMask_ []uint8
+	if nullMask != nil {
+		isNullable = true
+		if len(nullMask) < len(data) {
+			nullMask = append(nullMask, make([]bool, len(data)-len(nullMask))...)
+		} else if len(nullMask) > len(data) {
+			nullMask = nullMask[:len(data)]
+		}
+		nullMask_ = __binVecFromBools(nullMask)
+	} else {
+		isNullable = false
+		nullMask_ = make([]uint8, 0)
+	}
+
+	return Strings{
+		isNullable: isNullable,
+		data:       data,
+		nullMask:   nullMask_,
+		ctx:        ctx,
+	}
+}
+
 // Build a Time Series, if nullMask is nil then the series is not nullable
 func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Times {
 	if ctx == nil {
