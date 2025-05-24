@@ -961,22 +961,22 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 		namestr.npos = int32(offset)
 
 		switch s := series.(type) {
-		case series.SeriesBool:
+		case series.Bools:
 			namestr.ntype = 1
 			namestr.nlng = 8
 			offset += 8
 
-		case series.SeriesInt:
+		case series.Ints:
 			namestr.ntype = 1
 			namestr.nlng = 8
 			offset += 8
 
-		case series.SeriesInt64:
+		case series.Int64s:
 			namestr.ntype = 1
 			namestr.nlng = 8
 			offset += 8
 
-		case series.SeriesFloat64:
+		case series.Float64s:
 			namestr.ntype = 1
 			namestr.nlng = 8
 			offset += 8
@@ -1088,7 +1088,7 @@ func writeXPTv89(df DataFrame, writer io.Writer, byteOrder binary.ByteOrder) err
 				offset += stringVarLengths[j]
 
 				// TODO: implement
-				// case SeriesTime:
+				// case Times:
 			}
 		}
 	}

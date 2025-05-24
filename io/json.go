@@ -260,7 +260,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 
 		series := dataframe.At(i)
 		switch ser := series.(type) {
-		case SeriesBool:
+		case Bools:
 			for j, b := range ser.Bools() {
 				if series.IsNull(j) {
 					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
@@ -274,7 +274,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 				writer.Write([]byte(newLine))
 			}
 
-		case SeriesInt:
+		case Ints:
 			for j, n := range ser.Ints() {
 				if series.IsNull(j) {
 					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
@@ -288,7 +288,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 				writer.Write([]byte(newLine))
 			}
 
-		case SeriesInt64:
+		case Int64s:
 			for j, n := range ser.Int64s() {
 				if series.IsNull(j) {
 					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
@@ -302,7 +302,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 				writer.Write([]byte(newLine))
 			}
 
-		case SeriesFloat64:
+		case Float64s:
 			for j, f := range ser.Float64s() {
 				if series.IsNull(j) {
 					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))
@@ -316,7 +316,7 @@ func writeJson(dataframe DataFrame, writer io.Writer, newLine, indent string) er
 				writer.Write([]byte(newLine))
 			}
 
-		case SeriesString:
+		case Strings:
 			for j, s := range ser.Strings() {
 				if series.IsNull(j) {
 					writer.Write([]byte(fmt.Sprintf("%s\"%d\": null", indent2, j)))

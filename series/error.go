@@ -6,139 +6,139 @@ import (
 )
 
 // Dummy series for error handling.
-type SeriesError struct {
+type Errors struct {
 	msg string
 }
 
-func (s SeriesError) printInfo() {}
+func (s Errors) printInfo() {}
 
 // Return the context of the series.
-func (s SeriesError) GetContext() *gandalff.Context {
+func (s Errors) GetContext() *gandalff.Context {
 	return nil
 }
 
 // Returns the length of the series.
-func (s SeriesError) Len() int {
+func (s Errors) Len() int {
 	return 0
 }
 
 // Returns if the series is grouped.
-func (s SeriesError) IsGrouped() bool {
+func (s Errors) IsGrouped() bool {
 	return false
 }
 
 // Returns if the series admits null values.
-func (s SeriesError) IsNullable() bool {
+func (s Errors) IsNullable() bool {
 	return false
 }
 
-func (s SeriesError) IsSorted() gandalff.SeriesSortOrder {
+func (s Errors) IsSorted() gandalff.SeriesSortOrder {
 	return gandalff.SORTED_NONE
 }
 
 // Returns if the series is error.
-func (s SeriesError) IsError() bool {
+func (s Errors) IsError() bool {
 	return true
 }
 
 // Returns the error message of the series.
-func (s SeriesError) GetError() string {
+func (s Errors) GetError() string {
 	return s.msg
 }
 
 // Makes the series nullable.
-func (s SeriesError) MakeNullable() Series {
+func (s Errors) MakeNullable() Series {
 	return s
 }
 
 // Make the series non-nullable.
-func (s SeriesError) MakeNonNullable() Series {
+func (s Errors) MakeNonNullable() Series {
 	return s
 }
 
 // Returns the type of the series.
-func (s SeriesError) Type() meta.BaseType {
+func (s Errors) Type() meta.BaseType {
 	return meta.ErrorType
 }
 
 // Returns the type and cardinality of the series.
-func (s SeriesError) TypeCard() meta.BaseTypeCard {
+func (s Errors) TypeCard() meta.BaseTypeCard {
 	return meta.BaseTypeCard{Base: meta.ErrorType, Card: s.Len()}
 }
 
 // Returns if the series has null values.
-func (s SeriesError) HasNull() bool {
+func (s Errors) HasNull() bool {
 	return false
 }
 
 // Returns the number of null values in the series.
-func (s SeriesError) NullCount() int {
+func (s Errors) NullCount() int {
 	return 0
 }
 
 // Returns if the element at index i is null.
-func (s SeriesError) IsNull(i int) bool {
+func (s Errors) IsNull(i int) bool {
 	return false
 }
 
 // Returns the null mask of the series.
-func (s SeriesError) GetNullMask() []bool {
+func (s Errors) GetNullMask() []bool {
 	return []bool{}
 }
 
 // Sets the null mask of the series.
-func (s SeriesError) SetNullMask(mask []bool) Series {
+func (s Errors) SetNullMask(mask []bool) Series {
 	return s
 }
 
 // Get the element at index i.
-func (s SeriesError) Get(i int) any {
+func (s Errors) Get(i int) any {
 	return nil
 }
 
-func (s SeriesError) GetAsString(i int) string {
+func (s Errors) GetAsString(i int) string {
 	return ""
 }
 
 // Set the element at index i.
-func (s SeriesError) Set(i int, v any) Series {
+func (s Errors) Set(i int, v any) Series {
 	return s
 }
 
 // Take the elements according to the given interval.
-func (s SeriesError) Take(params ...int) Series {
+func (s Errors) Take(params ...int) Series {
 	return s
 }
 
 // Append elements to the series.
-func (s SeriesError) Append(v any) Series {
+func (s Errors) Append(v any) Series {
 	return s
 }
 
 // All-data accessors.
 
 // Returns the actual data of the series.
-func (s SeriesError) Data() any {
+func (s Errors) Data() any {
 	return s
 }
 
 // Returns the nullable data of the series.
-func (s SeriesError) DataAsNullable() any {
+func (s Errors) DataAsNullable() any {
 	return s
 }
 
 // Returns the data of the series as a slice of strings.
-func (s SeriesError) DataAsString() []string {
+func (s Errors) DataAsString() []string {
 	return []string{s.msg}
 }
 
 // Casts the series to a given type.
-func (s SeriesError) Cast(t meta.BaseType) Series {
+func (s Errors) Cast(t meta.BaseType) Series {
 	return s
 }
 
 // Copies the series.
-func (s SeriesError) Copy() Series {
+func (s Errors) Copy() Series {
 	return s
 }
 
@@ -146,114 +146,114 @@ func (s SeriesError) Copy() Series {
 
 // Filters out the elements by the given mask.
 // Mask can be a bool series, a slice of bools or a slice of ints.
-func (s SeriesError) Filter(mask any) Series {
+func (s Errors) Filter(mask any) Series {
 	return s
 }
 
-func (s SeriesError) filterIntSlice(mask []int, check bool) Series {
+func (s Errors) filterIntSlice(mask []int, check bool) Series {
 	return s
 }
 
-func (s SeriesError) Map(f gandalff.MapFunc) Series {
+func (s Errors) Map(f gandalff.MapFunc) Series {
 	return s
 }
 
-func (s SeriesError) MapNull(f gandalff.MapFuncNull) Series {
+func (s Errors) MapNull(f gandalff.MapFuncNull) Series {
 	return s
 }
 
 // Group the elements in the series.
-func (s SeriesError) group() Series {
+func (s Errors) group() Series {
 	return s
 }
 
-func (s SeriesError) GroupBy(gp SeriesPartition) Series {
+func (s Errors) GroupBy(gp SeriesPartition) Series {
 	return s
 }
 
-func (s SeriesError) UnGroup() Series {
+func (s Errors) UnGroup() Series {
 	return s
 }
 
-func (s SeriesError) GetPartition() SeriesPartition {
+func (s Errors) GetPartition() SeriesPartition {
 	return nil
 }
 
 // Sort interface.
-func (s SeriesError) Less(i, j int) bool {
+func (s Errors) Less(i, j int) bool {
 	return false
 }
 
-func (s SeriesError) equal(i, j int) bool {
+func (s Errors) equal(i, j int) bool {
 	return false
 }
 
-func (s SeriesError) Swap(i, j int) {}
+func (s Errors) Swap(i, j int) {}
 
-func (s SeriesError) Sort() Series {
+func (s Errors) Sort() Series {
 	return s
 }
 
-func (s SeriesError) SortRev() Series {
+func (s Errors) SortRev() Series {
 	return s
 }
 
 ////////////////////////			ARITHMETIC OPERATIONS
 
-func (s SeriesError) And(other any) Series {
+func (s Errors) And(other any) Series {
 	return s
 }
 
-func (s SeriesError) Or(other any) Series {
+func (s Errors) Or(other any) Series {
 	return s
 }
 
-func (s SeriesError) Mul(other any) Series {
+func (s Errors) Mul(other any) Series {
 	return s
 }
 
-func (s SeriesError) Div(other any) Series {
+func (s Errors) Div(other any) Series {
 	return s
 }
 
-func (s SeriesError) Mod(other any) Series {
+func (s Errors) Mod(other any) Series {
 	return s
 }
 
-func (s SeriesError) Exp(other any) Series {
+func (s Errors) Exp(other any) Series {
 	return s
 }
 
-func (s SeriesError) Add(other any) Series {
+func (s Errors) Add(other any) Series {
 	return s
 }
 
-func (s SeriesError) Sub(other any) Series {
+func (s Errors) Sub(other any) Series {
 	return s
 }
 
 ////////////////////////			LOGICAL OPERATIONS
 
-func (s SeriesError) Eq(other any) Series {
+func (s Errors) Eq(other any) Series {
 	return s
 }
 
-func (s SeriesError) Ne(other any) Series {
+func (s Errors) Ne(other any) Series {
 	return s
 }
 
-func (s SeriesError) Gt(other any) Series {
+func (s Errors) Gt(other any) Series {
 	return s
 }
 
-func (s SeriesError) Ge(other any) Series {
+func (s Errors) Ge(other any) Series {
 	return s
 }
 
-func (s SeriesError) Lt(other any) Series {
+func (s Errors) Lt(other any) Series {
 	return s
 }
 
-func (s SeriesError) Le(other any) Series {
+func (s Errors) Le(other any) Series {
 	return s
 }

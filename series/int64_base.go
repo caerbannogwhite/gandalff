@@ -8,8 +8,8 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-func (s SeriesInt64) printInfo() {
-	fmt.Println("SeriesInt64")
+func (s Int64s) printInfo() {
+	fmt.Println("Int64s")
 	fmt.Println("==========")
 	fmt.Println("IsNullable:", s.isNullable)
 	fmt.Println("Sorted:    ", s.sorted)
@@ -22,57 +22,57 @@ func (s SeriesInt64) printInfo() {
 ////////////////////////			BASIC ACCESSORS
 
 // Return the context of the series.
-func (s SeriesInt64) GetContext() *gandalff.Context {
+func (s Int64s) GetContext() *gandalff.Context {
 	return s.ctx
 }
 
 // Return the number of elements in the series.
-func (s SeriesInt64) Len() int {
+func (s Int64s) Len() int {
 	return len(s.data)
 }
 
 // Return the type of the series.
-func (s SeriesInt64) Type() meta.BaseType {
+func (s Int64s) Type() meta.BaseType {
 	return meta.Int64Type
 }
 
 // Return the type and cardinality of the series.
-func (s SeriesInt64) TypeCard() meta.BaseTypeCard {
+func (s Int64s) TypeCard() meta.BaseTypeCard {
 	return meta.BaseTypeCard{Base: meta.Int64Type, Card: s.Len()}
 }
 
 // Return if the series is grouped.
-func (s SeriesInt64) IsGrouped() bool {
+func (s Int64s) IsGrouped() bool {
 	return s.partition != nil
 }
 
 // Return if the series admits null values.
-func (s SeriesInt64) IsNullable() bool {
+func (s Int64s) IsNullable() bool {
 	return s.isNullable
 }
 
 // Return if the series is sorted.
-func (s SeriesInt64) IsSorted() gandalff.SeriesSortOrder {
+func (s Int64s) IsSorted() gandalff.SeriesSortOrder {
 	return s.sorted
 }
 
 // Return if the series is error.
-func (s SeriesInt64) IsError() bool {
+func (s Int64s) IsError() bool {
 	return false
 }
 
 // Return the error message of the series.
-func (s SeriesInt64) GetError() string {
+func (s Int64s) GetError() string {
 	return ""
 }
 
 // Return the partition of the series.
-func (s SeriesInt64) GetPartition() SeriesPartition {
+func (s Int64s) GetPartition() SeriesPartition {
 	return s.partition
 }
 
 // Return if the series has null values.
-func (s SeriesInt64) HasNull() bool {
+func (s Int64s) HasNull() bool {
 	for _, v := range s.nullMask {
 		if v != 0 {
 			return true
@@ -82,7 +82,7 @@ func (s SeriesInt64) HasNull() bool {
 }
 
 // Return the number of null values in the series.
-func (s SeriesInt64) NullCount() int {
+func (s Int64s) NullCount() int {
 	count := 0
 	for _, x := range s.nullMask {
 		for ; x != 0; x >>= 1 {
@@ -93,7 +93,7 @@ func (s SeriesInt64) NullCount() int {
 }
 
 // Return if the element at index i is null.
-func (s SeriesInt64) IsNull(i int) bool {
+func (s Int64s) IsNull(i int) bool {
 	if s.isNullable {
 		return s.nullMask[i>>3]&(1<<uint(i%8)) != 0
 	}
@@ -101,7 +101,7 @@ func (s SeriesInt64) IsNull(i int) bool {
 }
 
 // Return the null mask of the series.
-func (s SeriesInt64) GetNullMask() []bool {
+func (s Int64s) GetNullMask() []bool {
 	mask := make([]bool, len(s.data))
 	idx := 0
 	for _, v := range s.nullMask {
@@ -114,9 +114,9 @@ func (s SeriesInt64) GetNullMask() []bool {
 }
 
 // Set the null mask of the series.
-func (s SeriesInt64) SetNullMask(mask []bool) Series {
+func (s Int64s) SetNullMask(mask []bool) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesInt64.SetNullMask: cannot set values on a grouped series"}
+		return Errors{"Int64s.SetNullMask: cannot set values on a grouped series"}
 	}
 
 	if s.isNullable {
@@ -146,7 +146,7 @@ func (s SeriesInt64) SetNullMask(mask []bool) Series {
 }
 
 // Make the series nullable.
-func (s SeriesInt64) MakeNullable() Series {
+func (s Int64s) MakeNullable() Series {
 	if !s.isNullable {
 		s.isNullable = true
 		s.nullMask = __binVecInit(len(s.data), false)
@@ -155,7 +155,7 @@ func (s SeriesInt64) MakeNullable() Series {
 }
 
 // Make the series non-nullable.
-func (s SeriesInt64) MakeNonNullable() Series {
+func (s Int64s) MakeNonNullable() Series {
 	if s.isNullable {
 		s.isNullable = false
 		s.nullMask = make([]uint8, 0)
@@ -164,26 +164,26 @@ func (s SeriesInt64) MakeNonNullable() Series {
 }
 
 // Get the element at index i.
-func (s SeriesInt64) Get(i int) any {
+func (s Int64s) Get(i int) any {
 	return s.data[i]
 }
 
 // Append appends a value or a slice of values to the series.
-func (s SeriesInt64) Append(v any) Series {
+func (s Int64s) Append(v any) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesInt64.Append: cannot append values to a grouped series"}
+		return Errors{"Int64s.Append: cannot append values to a grouped series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
 		s.data = append(s.data, 0)
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
 		s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
 
-	case SeriesNA:
+	case NAs:
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, v.Len(), true, __binVecInit(v.Len(), true))
 		s.data = append(s.data, make([]int64, v.Len())...)
 
@@ -201,7 +201,7 @@ func (s SeriesInt64) Append(v any) Series {
 
 	case gandalff.NullableInt64:
 		s.data = append(s.data, v.Value)
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
@@ -212,7 +212,7 @@ func (s SeriesInt64) Append(v any) Series {
 	case []gandalff.NullableInt64:
 		ssize := len(s.data)
 		s.data = append(s.data, make([]int64, len(v))...)
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask)+1)...)
 		}
@@ -223,16 +223,16 @@ func (s SeriesInt64) Append(v any) Series {
 			}
 		}
 
-	case SeriesInt64:
+	case Int64s:
 		if s.ctx != v.ctx {
-			return SeriesError{"SeriesInt64.Append: cannot append SeriesInt64 from different contexts"}
+			return Errors{"Int64s.Append: cannot append Int64s from different contexts"}
 		}
 
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, len(v.data), v.isNullable, v.nullMask)
 		s.data = append(s.data, v.data...)
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.Append: invalid type %T", v)}
+		return Errors{fmt.Sprintf("Int64s.Append: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -240,27 +240,27 @@ func (s SeriesInt64) Append(v any) Series {
 }
 
 // Take the elements according to the given interval.
-func (s SeriesInt64) Take(params ...int) Series {
-	indeces, err := seriesTakePreprocess("SeriesInt64", s.Len(), params...)
+func (s Int64s) Take(params ...int) Series {
+	indeces, err := seriesTakePreprocess("Int64s", s.Len(), params...)
 	if err != nil {
-		return SeriesError{err.Error()}
+		return Errors{err.Error()}
 	}
 	return s.filterIntSlice(indeces, false)
 }
 
 // Return the elements of the series as a slice.
-func (s SeriesInt64) Data() any {
+func (s Int64s) Data() any {
 	return s.data
 }
 
 // Copy the series.
-func (s SeriesInt64) Copy() Series {
+func (s Int64s) Copy() Series {
 	data := make([]int64, len(s.data))
 	copy(data, s.data)
 	nullMask := make([]uint8, len(s.nullMask))
 	copy(nullMask, s.nullMask)
 
-	return SeriesInt64{
+	return Int64s{
 		isNullable: s.isNullable,
 		sorted:     s.sorted,
 		data:       data,
@@ -270,12 +270,12 @@ func (s SeriesInt64) Copy() Series {
 	}
 }
 
-func (s SeriesInt64) getData() []int64 {
+func (s Int64s) getData() []int64 {
 	return s.data
 }
 
 // Ungroup the series.
-func (s SeriesInt64) UnGroup() Series {
+func (s Int64s) UnGroup() Series {
 	s.partition = nil
 	return s
 }
@@ -283,25 +283,25 @@ func (s SeriesInt64) UnGroup() Series {
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
-// Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
-func (s SeriesInt64) Filter(mask any) Series {
+// Mask can be Bools, Ints, bool slice or a int slice.
+func (s Int64s) Filter(mask any) Series {
 	switch mask := mask.(type) {
-	case SeriesBool:
+	case Bools:
 		return s.filterBoolSlice(mask.data)
-	case SeriesInt:
+	case Ints:
 		return s.filterIntSlice(mask.data, true)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
 		return s.filterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.Filter: invalid type %T", mask)}
+		return Errors{fmt.Sprintf("Int64s.Filter: invalid type %T", mask)}
 	}
 }
 
-func (s SeriesInt64) filterBoolSlice(mask []bool) Series {
+func (s Int64s) filterBoolSlice(mask []bool) Series {
 	if len(mask) != len(s.data) {
-		return SeriesError{fmt.Sprintf("SeriesInt64.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
+		return Errors{fmt.Sprintf("Int64s.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
 	}
 
 	elementCount := 0
@@ -347,7 +347,7 @@ func (s SeriesInt64) filterBoolSlice(mask []bool) Series {
 	return s
 }
 
-func (s SeriesInt64) filterIntSlice(indexes []int, check bool) Series {
+func (s Int64s) filterIntSlice(indexes []int, check bool) Series {
 	if len(indexes) == 0 {
 		s.data = make([]int64, 0)
 		s.nullMask = make([]uint8, 0)
@@ -358,7 +358,7 @@ func (s SeriesInt64) filterIntSlice(indexes []int, check bool) Series {
 	if check {
 		for _, v := range indexes {
 			if v < 0 || v >= len(s.data) {
-				return SeriesError{fmt.Sprintf("SeriesInt64.Filter: index %d is out of range", v)}
+				return Errors{fmt.Sprintf("Int64s.Filter: index %d is out of range", v)}
 			}
 		}
 	}
@@ -393,7 +393,7 @@ func (s SeriesInt64) filterIntSlice(indexes []int, check bool) Series {
 }
 
 // Apply the given function to each element of the series.
-func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
+func (s Int64s) Map(f gandalff.MapFunc) Series {
 	if len(s.data) == 0 {
 		return s
 	}
@@ -406,7 +406,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(bool)
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -421,7 +421,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(int)
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -436,7 +436,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(int64)
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -451,7 +451,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(float64)
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -466,7 +466,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = s.ctx.StringPool.Put(f(s.data[i]).(string))
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -481,7 +481,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(time.Time)
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -496,7 +496,7 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(time.Duration)
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -506,18 +506,18 @@ func (s SeriesInt64) Map(f gandalff.MapFunc) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.Map: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("Int64s.Map: Unsupported type %T", v)}
 	}
 }
 
 // Apply the given function to each element of the series.
-func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
+func (s Int64s) MapNull(f gandalff.MapFuncNull) Series {
 	if len(s.data) == 0 {
 		return s
 	}
 
 	if !s.isNullable {
-		return SeriesError{"SeriesInt64.MapNull: series is not nullable"}
+		return Errors{"Int64s.MapNull: series is not nullable"}
 	}
 
 	v, isNull := f(s.Get(0), s.IsNull(0))
@@ -533,7 +533,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -553,7 +553,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -573,7 +573,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -593,7 +593,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -613,7 +613,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -633,7 +633,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -653,7 +653,7 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -663,6 +663,6 @@ func (s SeriesInt64) MapNull(f gandalff.MapFuncNull) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.MapNull: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("Int64s.MapNull: Unsupported type %T", v)}
 	}
 }

@@ -15,7 +15,7 @@ func Test_SeriesInt_Base(t *testing.T) {
 	data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	mask := []bool{false, false, true, false, false, true, false, false, true, false}
 
-	// Create a new SeriesInt.
+	// Create a new Ints.
 	s := NewSeriesInt(data, mask, true, ctx)
 
 	// Check the length.
@@ -119,7 +119,7 @@ func Test_SeriesInt_Base(t *testing.T) {
 	}
 
 	// Make the series nullable.
-	p = p.MakeNullable().(SeriesInt)
+	p = p.MakeNullable().(Ints)
 
 	// Check the nullability.
 	if !p.IsNullable() {
@@ -146,7 +146,7 @@ func Test_SeriesInt_Take(t *testing.T) {
 	data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	mask := []bool{false, false, true, false, false, true, false, false, true, false}
 
-	// Create a new SeriesInt.
+	// Create a new Ints.
 	s := NewSeriesInt(data, mask, true, ctx)
 
 	// Take the first 5 values.
@@ -301,13 +301,13 @@ func Test_SeriesInt_Append(t *testing.T) {
 		r := int(rand.Intn(100))
 		switch i % 4 {
 		case 0:
-			s = s.Append(r).(SeriesInt)
+			s = s.Append(r).(Ints)
 		case 1:
-			s = s.Append([]int{r}).(SeriesInt)
+			s = s.Append([]int{r}).(Ints)
 		case 2:
-			s = s.Append(gandalff.NullableInt{true, r}).(SeriesInt)
+			s = s.Append(gandalff.NullableInt{true, r}).(Ints)
 		case 3:
-			s = s.Append([]gandalff.NullableInt{{false, r}}).(SeriesInt)
+			s = s.Append([]gandalff.NullableInt{{false, r}}).(Ints)
 		}
 
 		if s.Get(i) != r {
@@ -319,19 +319,19 @@ func Test_SeriesInt_Append(t *testing.T) {
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(nil).(SeriesInt)
+		s = s.Append(nil).(Ints)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesNA
+	// Append NAs
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 	na := NewSeriesNA(10, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(na).(SeriesInt)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "SeriesInt.Append") {
+		s = s.Append(na).(Ints)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "Ints.Append") {
 			t.Errorf("Expected %v, got %v at index %d", na.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -340,7 +340,7 @@ func Test_SeriesInt_Append(t *testing.T) {
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableInt{false, 1}).(SeriesInt)
+		s = s.Append(gandalff.NullableInt{false, 1}).(Ints)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -350,19 +350,19 @@ func Test_SeriesInt_Append(t *testing.T) {
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableInt{{false, 1}}).(SeriesInt)
+		s = s.Append([]gandalff.NullableInt{{false, 1}}).(Ints)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesInt
+	// Append Ints
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 	b := NewSeriesInt(dataA, []bool{true, true, true, true, true, true, true, true, true, true}, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(b).(SeriesInt)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "SeriesInt.Append") {
+		s = s.Append(b).(Ints)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "Ints.Append") {
 			t.Errorf("Expected %v, got %v at index %d", b.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -452,7 +452,7 @@ func Test_SeriesInt_Cast(t *testing.T) {
 	castError := s.Cast(meta.ErrorType)
 
 	// Check the message.
-	if castError.(SeriesError).msg != "SeriesInt.Cast: invalid type Error" {
+	if castError.(Errors).msg != "Ints.Cast: invalid type Error" {
 		t.Errorf("Expected error, got %v", castError)
 	}
 }
@@ -545,8 +545,8 @@ func Test_SeriesInt_Filter(t *testing.T) {
 	// try to filter by a series with a different length.
 	filtered = filtered.Filter(filterMask)
 
-	if e, ok := filtered.(SeriesError); !ok || e.GetError() != "SeriesInt.Filter: mask length (20) does not match series length (14)" {
-		t.Errorf("Expected SeriesError, got %v", filtered)
+	if e, ok := filtered.(Errors); !ok || e.GetError() != "Ints.Filter: mask length (20) does not match series length (14)" {
+		t.Errorf("Expected Errors, got %v", filtered)
 	}
 
 	// Another test.
@@ -783,7 +783,7 @@ func Test_SeriesInt_Sort(t *testing.T) {
 	// Check the data.
 	expected := []int{-802, -674, -558, -518, -352, -195, -123, -67, -27, 33, 169, 250, 308, 313, 593, 679, 697, 767, 873, 920}
 	if !utils.CheckEqSlice(sorted.Data().([]int), expected, nil, "") {
-		t.Errorf("SeriesInt.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]int))
+		t.Errorf("Ints.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]int))
 	}
 
 	// Create a new series.
@@ -795,13 +795,13 @@ func Test_SeriesInt_Sort(t *testing.T) {
 	// Check the data.
 	expected = []int{-802, -518, -352, -195, -67, 33, 250, 308, 313, 697, 920, 873, 767, -123, -674, -558, 679, 169, -27, 593}
 	if !utils.CheckEqSlice(sorted.Data().([]int), expected, nil, "") {
-		t.Errorf("SeriesInt.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]int))
+		t.Errorf("Ints.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]int))
 	}
 
 	// Check the null mask.
 	expectedMask := []bool{false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true}
 	if !utils.CheckEqSliceBool(sorted.GetNullMask(), expectedMask, nil, "") {
-		t.Errorf("SeriesInt.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
+		t.Errorf("Ints.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
 	}
 }
 

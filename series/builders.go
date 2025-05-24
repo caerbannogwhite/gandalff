@@ -13,7 +13,7 @@ import (
 // If nullMask is nil then the series is not nullable.
 func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ctx *gandalff.Context) Series {
 	if ctx == nil {
-		return SeriesError{"NewSeries: context is nil"}
+		return Errors{"NewSeries: context is nil"}
 	}
 
 	switch data := data.(type) {
@@ -22,12 +22,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case bool:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesBool([]bool{data}, nil, false, ctx)
 	case []bool:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesBool(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableBool:
@@ -43,12 +43,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case int:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesInt([]int{data}, nil, false, ctx)
 	case []int:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesInt(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableInt:
@@ -64,12 +64,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case int64:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesInt64([]int64{data}, nil, false, ctx)
 	case []int64:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesInt64(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableInt64:
@@ -85,12 +85,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case float64:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesFloat64([]float64{data}, nil, false, ctx)
 	case []float64:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesFloat64(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableFloat64:
@@ -106,12 +106,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case string:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesString([]string{data}, nil, false, ctx)
 	case []string:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesString(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableString:
@@ -127,12 +127,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case time.Time:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesTime([]time.Time{data}, nil, false, ctx)
 	case []time.Time:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesTime(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableTime:
@@ -148,12 +148,12 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 	case time.Duration:
 		if nullMask != nil && len(nullMask) != 1 {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length 1", len(nullMask))}
 		}
 		return NewSeriesDuration([]time.Duration{data}, nil, false, ctx)
 	case []time.Duration:
 		if nullMask != nil && len(nullMask) != len(data) {
-			return SeriesError{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
+			return Errors{fmt.Sprintf("NewSeries: null mask length %d does not match data length %d", len(nullMask), len(data))}
 		}
 		return NewSeriesDuration(data, nullMask, makeCopy, ctx)
 	case gandalff.NullableDuration:
@@ -168,17 +168,17 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 		return NewSeriesDuration(values, nulls, false, ctx)
 
 	default:
-		return SeriesError{fmt.Sprintf("NewSeries: unsupported type %T", data)}
+		return Errors{fmt.Sprintf("NewSeries: unsupported type %T", data)}
 	}
 }
 
 // Build an Error Series
-func NewSeriesError(err string) SeriesError {
-	return SeriesError{msg: err}
+func NewSeriesError(err string) Errors {
+	return Errors{msg: err}
 }
 
 // Build an NA Series
-func NewSeriesNA(size int, ctx *gandalff.Context) SeriesNA {
+func NewSeriesNA(size int, ctx *gandalff.Context) NAs {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesNA: context is nil")
 	}
@@ -187,11 +187,11 @@ func NewSeriesNA(size int, ctx *gandalff.Context) SeriesNA {
 		size = 0
 	}
 
-	return SeriesNA{size: size, ctx: ctx}
+	return NAs{size: size, ctx: ctx}
 }
 
 // Build a Bool Series, if nullMask is nil then the series is not nullable
-func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesBool {
+func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Bools {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesBool: context is nil")
 	}
@@ -217,7 +217,7 @@ func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Co
 		data = actualData
 	}
 
-	return SeriesBool{
+	return Bools{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,
@@ -226,7 +226,7 @@ func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Co
 }
 
 // Build a Int Series, if nullMask is nil then the series is not nullable
-func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesInt {
+func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Ints {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesInt: context is nil")
 	}
@@ -252,7 +252,7 @@ func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Cont
 		data = actualData
 	}
 
-	return SeriesInt{
+	return Ints{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,
@@ -261,7 +261,7 @@ func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Cont
 }
 
 // Build a Int64 Series, if nullMask is nil then the series is not nullable
-func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesInt64 {
+func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Int64s {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesInt64: context is nil")
 	}
@@ -287,7 +287,7 @@ func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.
 		data = actualData
 	}
 
-	return SeriesInt64{
+	return Int64s{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,
@@ -296,7 +296,7 @@ func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.
 }
 
 // Build a Float64 Series, if nullMask is nil then the series is not nullable
-func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesFloat64 {
+func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Float64s {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesFloat64: context is nil")
 	}
@@ -322,7 +322,7 @@ func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *ganda
 		data = actualData
 	}
 
-	return SeriesFloat64{
+	return Float64s{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,
@@ -331,7 +331,7 @@ func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *ganda
 }
 
 // Build a String Series, if nullMask is nil then the series is not nullable
-func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesString {
+func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Strings {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesString: context is nil")
 	}
@@ -366,7 +366,7 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalf
 		}
 	}
 
-	return SeriesString{
+	return Strings{
 		isNullable: isNullable,
 		data:       actualData,
 		nullMask:   nullMask_,
@@ -375,7 +375,7 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalf
 }
 
 // Build a Time Series, if nullMask is nil then the series is not nullable
-func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesTime {
+func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Times {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesTime: context is nil")
 	}
@@ -401,7 +401,7 @@ func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandal
 		data = actualData
 	}
 
-	return SeriesTime{
+	return Times{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,
@@ -411,7 +411,7 @@ func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandal
 }
 
 // Build a Duration Series, if nullMask is nil then the series is not nullable
-func NewSeriesDuration(data []time.Duration, nullMask []bool, makeCopy bool, ctx *gandalff.Context) SeriesDuration {
+func NewSeriesDuration(data []time.Duration, nullMask []bool, makeCopy bool, ctx *gandalff.Context) Durations {
 	if ctx == nil {
 		fmt.Println("WARNING: NewSeriesDuration: context is nil")
 	}
@@ -437,7 +437,7 @@ func NewSeriesDuration(data []time.Duration, nullMask []bool, makeCopy bool, ctx
 		data = actualData
 	}
 
-	return SeriesDuration{
+	return Durations{
 		isNullable: isNullable,
 		data:       data,
 		nullMask:   nullMask_,

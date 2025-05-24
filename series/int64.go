@@ -9,8 +9,8 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-// SeriesInt64 represents a series of ints.
-type SeriesInt64 struct {
+// Int64s represents a series of ints.
+type Int64s struct {
 	isNullable bool
 	sorted     gandalff.SeriesSortOrder
 	data       []int64
@@ -20,7 +20,7 @@ type SeriesInt64 struct {
 }
 
 // Get the element at index i as a string.
-func (s SeriesInt64) GetAsString(i int) string {
+func (s Int64s) GetAsString(i int) string {
 	if s.isNullable && s.IsNull(i) {
 		return gandalff.NA_TEXT
 	}
@@ -29,14 +29,14 @@ func (s SeriesInt64) GetAsString(i int) string {
 
 // Set the element at index i. The value v can be any belonging to types:
 // int8, int16, int, int, int64 and their nullable versions.
-func (s SeriesInt64) Set(i int, v any) Series {
+func (s Int64s) Set(i int, v any) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesInt64.Set: cannot set values on a grouped Series"}
+		return Errors{"Int64s.Set: cannot set values on a grouped Series"}
 	}
 
 	switch val := v.(type) {
 	case nil:
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		s.nullMask[i>>3] |= 1 << uint(i%8)
 
 	case int8:
@@ -55,7 +55,7 @@ func (s SeriesInt64) Set(i int, v any) Series {
 		s.data[i] = val
 
 	case gandalff.NullableInt8:
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt8).Valid {
 			s.data[i] = int64(val.Value)
 		} else {
@@ -64,7 +64,7 @@ func (s SeriesInt64) Set(i int, v any) Series {
 		}
 
 	case gandalff.NullableInt16:
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt16).Valid {
 			s.data[i] = int64(val.Value)
 		} else {
@@ -73,7 +73,7 @@ func (s SeriesInt64) Set(i int, v any) Series {
 		}
 
 	case gandalff.NullableInt:
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt).Valid {
 			s.data[i] = int64(val.Value)
 		} else {
@@ -82,7 +82,7 @@ func (s SeriesInt64) Set(i int, v any) Series {
 		}
 
 	case gandalff.NullableInt64:
-		s = s.MakeNullable().(SeriesInt64)
+		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt64).Valid {
 			s.data[i] = val.Value
 		} else {
@@ -91,7 +91,7 @@ func (s SeriesInt64) Set(i int, v any) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.Set: invalid type %T", v)}
+		return Errors{fmt.Sprintf("Int64s.Set: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -101,12 +101,12 @@ func (s SeriesInt64) Set(i int, v any) Series {
 ////////////////////////			ALL DATA ACCESSORS
 
 // Return the underlying data as a slice of int64.
-func (s SeriesInt64) Int64s() []int64 {
+func (s Int64s) Int64s() []int64 {
 	return s.data
 }
 
 // Return the underlying data as a slice of NullableInt64.
-func (s SeriesInt64) DataAsNullable() any {
+func (s Int64s) DataAsNullable() any {
 	data := make([]gandalff.NullableInt64, len(s.data))
 	for i, v := range s.data {
 		data[i] = gandalff.NullableInt64{Valid: !s.IsNull(i), Value: v}
@@ -115,7 +115,7 @@ func (s SeriesInt64) DataAsNullable() any {
 }
 
 // Return the underlying data as a slice of strings.
-func (s SeriesInt64) DataAsString() []string {
+func (s Int64s) DataAsString() []string {
 	data := make([]string, len(s.data))
 	if s.isNullable {
 		for i, v := range s.data {
@@ -134,7 +134,7 @@ func (s SeriesInt64) DataAsString() []string {
 }
 
 // Casts the series to a given type.
-func (s SeriesInt64) Cast(t meta.BaseType) Series {
+func (s Int64s) Cast(t meta.BaseType) Series {
 	switch t {
 	case meta.BoolType:
 		data := make([]bool, len(s.data))
@@ -142,7 +142,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			data[i] = v != 0
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -157,7 +157,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			data[i] = int(v)
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -175,7 +175,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			data[i] = float64(v)
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -186,7 +186,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 
 	case meta.StringType:
 		if s.ctx.StringPool == nil {
-			return SeriesError{"SeriesInt64.Cast: StringPool is nil"}
+			return Errors{"Int64s.Cast: StringPool is nil"}
 		}
 
 		data := make([]*string, len(s.data))
@@ -204,7 +204,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -219,7 +219,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			data[i] = time.Unix(0, v)
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -234,7 +234,7 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 			data[i] = time.Duration(v)
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -244,13 +244,13 @@ func (s SeriesInt64) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesInt64.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Int64s.Cast: invalid type %s", t.ToString())}
 	}
 }
 
 ////////////////////////			GROUPING OPERATIONS
 
-// A SeriesInt64Partition is a partition of a SeriesInt64.
+// A SeriesInt64Partition is a partition of a Int64s.
 // Each key is a hash of a bool value, and each value is a slice of indices
 // of the original series that are set to that value.
 type SeriesInt64Partition struct {
@@ -290,7 +290,7 @@ func (gp *SeriesInt64Partition) getMap() map[int64][]int {
 	return gp.partition
 }
 
-func (s SeriesInt64) group() Series {
+func (s Int64s) group() Series {
 	var useDenseMap bool
 	var min, max int64
 	var partition SeriesInt64Partition
@@ -401,7 +401,7 @@ func (s SeriesInt64) group() Series {
 	return s
 }
 
-func (s SeriesInt64) GroupBy(partition SeriesPartition) Series {
+func (s Int64s) GroupBy(partition SeriesPartition) Series {
 	if partition == nil {
 		return s
 	}
@@ -454,7 +454,7 @@ func (s SeriesInt64) GroupBy(partition SeriesPartition) Series {
 
 ////////////////////////			SORTING OPERATIONS
 
-func (s SeriesInt64) Less(i, j int) bool {
+func (s Int64s) Less(i, j int) bool {
 	if s.isNullable {
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 {
 			return false
@@ -467,7 +467,7 @@ func (s SeriesInt64) Less(i, j int) bool {
 	return s.data[i] < s.data[j]
 }
 
-func (s SeriesInt64) equal(i, j int) bool {
+func (s Int64s) equal(i, j int) bool {
 	if s.isNullable {
 		if (s.nullMask[i>>3] & (1 << uint(i%8))) > 0 {
 			return (s.nullMask[j>>3] & (1 << uint(j%8))) > 0
@@ -480,7 +480,7 @@ func (s SeriesInt64) equal(i, j int) bool {
 	return s.data[i] == s.data[j]
 }
 
-func (s SeriesInt64) Swap(i, j int) {
+func (s Int64s) Swap(i, j int) {
 	if s.isNullable {
 		// i is null, j is not null
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 && s.nullMask[j>>3]&(1<<uint(j%8)) == 0 {
@@ -498,7 +498,7 @@ func (s SeriesInt64) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 
-func (s SeriesInt64) Sort() Series {
+func (s Int64s) Sort() Series {
 	if s.sorted != gandalff.SORTED_ASC {
 		sort.Sort(s)
 		s.sorted = gandalff.SORTED_ASC
@@ -506,7 +506,7 @@ func (s SeriesInt64) Sort() Series {
 	return s
 }
 
-func (s SeriesInt64) SortRev() Series {
+func (s Int64s) SortRev() Series {
 	if s.sorted != gandalff.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
 		s.sorted = gandalff.SORTED_DESC

@@ -17,9 +17,9 @@ import (
 // 		switch td.op {
 // 		case AGGREGATE_SUM:
 // 			switch series := td.series.(type) {
-// 			case SeriesBool:
+// 			case Bools:
 
-// 			case SeriesInt:
+// 			case Ints:
 // 				sum_ := int(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -27,7 +27,7 @@ import (
 // 				}
 // 				td.res[td.gi] = float64(sum_)
 
-// 			case SeriesInt64:
+// 			case Int64s:
 // 				sum_ := int64(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -35,7 +35,7 @@ import (
 // 				}
 // 				td.res[td.gi] = float64(sum_)
 
-// 			case SeriesFloat64:
+// 			case Float64s:
 // 				sum_ := float64(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -49,9 +49,9 @@ import (
 
 // 		case AGGREGATE_MEAN:
 // 			switch series := td.series.(type) {
-// 			case SeriesBool:
+// 			case Bools:
 
-// 			case SeriesInt:
+// 			case Ints:
 // 				sum_ := int(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -59,7 +59,7 @@ import (
 // 				}
 // 				td.res[td.gi] = float64(sum_) / float64(len(td.indeces))
 
-// 			case SeriesInt64:
+// 			case Int64s:
 // 				sum_ := int64(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -67,7 +67,7 @@ import (
 // 				}
 // 				td.res[td.gi] = float64(sum_) / float64(len(td.indeces))
 
-// 			case SeriesFloat64:
+// 			case Float64s:
 // 				sum_ := float64(0)
 // 				data := series.getDataPtr()
 // 				for _, i := range td.indeces {
@@ -84,7 +84,7 @@ func __gdl_stats_preprocess(s Series) []float64 {
 	dataF64 := make([]float64, s.Len())
 
 	switch series := s.(type) {
-	case SeriesBool:
+	case Bools:
 		if s.IsNullable() {
 			for i, v := range series.getData() {
 				if series.IsNull(i) {
@@ -101,7 +101,7 @@ func __gdl_stats_preprocess(s Series) []float64 {
 			}
 		}
 
-	case SeriesInt:
+	case Ints:
 		if s.IsNullable() {
 			for i, v := range series.getData() {
 				if series.IsNull(i) {
@@ -116,7 +116,7 @@ func __gdl_stats_preprocess(s Series) []float64 {
 			}
 		}
 
-	case SeriesInt64:
+	case Int64s:
 		if s.IsNullable() {
 			for i, v := range series.getData() {
 				if series.IsNull(i) {
@@ -131,7 +131,7 @@ func __gdl_stats_preprocess(s Series) []float64 {
 			}
 		}
 
-	case SeriesFloat64:
+	case Float64s:
 		if s.IsNullable() {
 			for i, v := range series.getData() {
 				if series.IsNull(i) {

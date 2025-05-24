@@ -16,7 +16,7 @@ func Test_SeriesString_Base(t *testing.T) {
 	data = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
 	mask := []bool{false, false, true, false, false, true, false, false, true, false}
 
-	// Create a new SeriesString.
+	// Create a new Strings.
 	s := NewSeriesString(data, mask, true, ctx)
 
 	// Check the length.
@@ -31,7 +31,7 @@ func Test_SeriesString_Base(t *testing.T) {
 
 	// Check the data.
 	expected = []string{"a", "b", NA_TEXT, "d", "e", NA_TEXT, "g", "h", NA_TEXT, "j"}
-	if !utils.CheckEqSliceString(s.Data().([]string), expected, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(s.Data().([]string), expected, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, s.Data())
 	}
 
@@ -41,7 +41,7 @@ func Test_SeriesString_Base(t *testing.T) {
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(s.GetNullMask(), mask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(s.GetNullMask(), mask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", mask, s.GetNullMask())
 	}
 
@@ -95,7 +95,7 @@ func Test_SeriesString_Base(t *testing.T) {
 
 	// Check the data.
 	expected = []string{"ax", "bx", NA_TEXT + "x", "dx", "ex", NA_TEXT + "x", "gx", "hx", NA_TEXT + "x", "jx"}
-	if !utils.CheckEqSliceString(s.Data().([]string), expected, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(s.Data().([]string), expected, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, s.Data())
 	}
 
@@ -118,7 +118,7 @@ func Test_SeriesString_Base(t *testing.T) {
 	}
 
 	// Make the series nullable.
-	p = p.MakeNullable().(SeriesString)
+	p = p.MakeNullable().(Strings)
 
 	// Check the nullability.
 	if !p.IsNullable() {
@@ -170,12 +170,12 @@ func Test_SeriesString_Append(t *testing.T) {
 		"k", "l", "m", "n", NA_TEXT, "p", NA_TEXT, "r", "s", NA_TEXT,
 		NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT,
 	}
-	if !utils.CheckEqSliceString(result.Data().([]string), expected, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(result.Data().([]string), expected, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expected, result.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(result.GetNullMask(), append(maskA, append(maskB, maskC...)...), nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(result.GetNullMask(), append(maskA, append(maskB, maskC...)...), nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", append(maskA, append(maskB, maskC...)...), result.GetNullMask())
 	}
 
@@ -187,13 +187,13 @@ func Test_SeriesString_Append(t *testing.T) {
 		r := string(alpha[rand.Intn(len(alpha))])
 		switch i % 4 {
 		case 0:
-			s = s.Append(r).(SeriesString)
+			s = s.Append(r).(Strings)
 		case 1:
-			s = s.Append([]string{r}).(SeriesString)
+			s = s.Append([]string{r}).(Strings)
 		case 2:
-			s = s.Append(gandalff.NullableString{true, r}).(SeriesString)
+			s = s.Append(gandalff.NullableString{true, r}).(Strings)
 		case 3:
-			s = s.Append([]gandalff.NullableString{{false, r}}).(SeriesString)
+			s = s.Append([]gandalff.NullableString{{false, r}}).(Strings)
 		}
 
 		if s.Get(i) != r {
@@ -205,19 +205,19 @@ func Test_SeriesString_Append(t *testing.T) {
 	s = NewSeriesString([]string{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(nil).(SeriesString)
+		s = s.Append(nil).(Strings)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesNA
+	// Append NAs
 	s = NewSeriesString([]string{}, nil, true, ctx)
 	na := NewSeriesNA(10, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(na).(SeriesString)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "SeriesString.Append") {
+		s = s.Append(na).(Strings)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "Strings.Append") {
 			t.Errorf("Expected %v, got %v at index %d", na.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -226,7 +226,7 @@ func Test_SeriesString_Append(t *testing.T) {
 	s = NewSeriesString([]string{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableString{false, "a"}).(SeriesString)
+		s = s.Append(gandalff.NullableString{false, "a"}).(Strings)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -236,19 +236,19 @@ func Test_SeriesString_Append(t *testing.T) {
 	s = NewSeriesString([]string{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableString{{false, "a"}}).(SeriesString)
+		s = s.Append([]gandalff.NullableString{{false, "a"}}).(Strings)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesString
+	// Append Strings
 	s = NewSeriesString([]string{}, nil, true, ctx)
 	b := NewSeriesString(dataA, []bool{true, true, true, true, true, true, true, true, true, true}, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(b).(SeriesString)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "SeriesString.Append") {
+		s = s.Append(b).(Strings)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "Strings.Append") {
 			t.Errorf("Expected %v, got %v at index %d", b.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -266,12 +266,12 @@ func Test_SeriesString_Cast(t *testing.T) {
 	expectedMask := []bool{false, false, true, true, true, true, true, true, true, true}
 
 	// Check the data.
-	if !utils.CheckEqSlice(resBool.Data().([]bool), []bool{true, false, false, false, false, false, false, false, false, false}, nil, "SeriesString.Data") {
+	if !utils.CheckEqSlice(resBool.Data().([]bool), []bool{true, false, false, false, false, false, false, false, false, false}, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", []bool{true, false, false, false, false, false, false, false, false, false}, resBool.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSlice(resBool.GetNullMask(), expectedMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSlice(resBool.GetNullMask(), expectedMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", mask, resBool.GetNullMask())
 	}
 
@@ -281,12 +281,12 @@ func Test_SeriesString_Cast(t *testing.T) {
 	expectedMask = []bool{true, true, true, false, false, true, true, false, true, true}
 
 	// Check the data.
-	if !utils.CheckEqSlice(resInt.Data().([]int), expectedInt, nil, "SeriesString.Data") {
+	if !utils.CheckEqSlice(resInt.Data().([]int), expectedInt, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expectedInt, resInt.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSlice(resInt.GetNullMask(), expectedMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSlice(resInt.GetNullMask(), expectedMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", expectedMask, resInt.GetNullMask())
 	}
 
@@ -295,12 +295,12 @@ func Test_SeriesString_Cast(t *testing.T) {
 	expectedInt64 := []int64{0, 0, 0, 3, 4, 0, 0, 7, 0, 0}
 
 	// Check the data.
-	if !utils.CheckEqSlice(resInt64.Data().([]int64), expectedInt64, nil, "SeriesString.Data") {
+	if !utils.CheckEqSlice(resInt64.Data().([]int64), expectedInt64, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expectedInt64, resInt64.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSlice(resInt64.GetNullMask(), expectedMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSlice(resInt64.GetNullMask(), expectedMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", expectedMask, resInt64.GetNullMask())
 	}
 
@@ -309,12 +309,12 @@ func Test_SeriesString_Cast(t *testing.T) {
 	expectedFloat64 := []float64{0, 0, 0, 3, 4, 0, 0, 7, 0, 0}
 
 	// Check the data.
-	if !utils.CheckEqSlice(resFloat64.Data().([]float64), expectedFloat64, nil, "SeriesString.Data") {
+	if !utils.CheckEqSlice(resFloat64.Data().([]float64), expectedFloat64, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expectedFloat64, resFloat64.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSlice(resFloat64.GetNullMask(), expectedMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSlice(resFloat64.GetNullMask(), expectedMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", expectedMask, resFloat64.GetNullMask())
 	}
 
@@ -323,17 +323,17 @@ func Test_SeriesString_Cast(t *testing.T) {
 	expectedString := []string{"true", "false", NA_TEXT, "3", "4", NA_TEXT, "hello", "7", NA_TEXT, "world"}
 
 	// Check the data.
-	if !utils.CheckEqSlice(resString.Data().([]string), expectedString, nil, "SeriesString.Data") {
+	if !utils.CheckEqSlice(resString.Data().([]string), expectedString, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", expectedString, resString.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSlice(resString.GetNullMask(), mask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSlice(resString.GetNullMask(), mask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", mask, resString.GetNullMask())
 	}
 
 	// Cast to time.
-	if s.Cast(meta.TimeType).(SeriesError).GetError() != "SeriesString.Cast: cannot cast to Time, use SeriesString.ParseTime(layout) instead" {
+	if s.Cast(meta.TimeType).(Errors).GetError() != "Strings.Cast: cannot cast to Time, use Strings.ParseTime(layout) instead" {
 		t.Errorf("Expected error, got %v", s.Cast(meta.TimeType))
 	}
 
@@ -341,7 +341,7 @@ func Test_SeriesString_Cast(t *testing.T) {
 	castError := s.Cast(meta.ErrorType)
 
 	// Check the message.
-	if castError.(SeriesError).msg != "SeriesString.Cast: invalid type Error" {
+	if castError.(Errors).msg != "Strings.Cast: invalid type Error" {
 		t.Errorf("Expected error, got %v", castError)
 	}
 
@@ -354,7 +354,7 @@ func Test_SeriesString_Cast(t *testing.T) {
 		time.Date(2019, 1, 4, 0, 0, 0, 0, time.UTC),
 	}
 
-	if !utils.CheckEqSlice(s.ParseTime("2006-01-02").Data().([]time.Time), expectedTime, nil, "SeriesString.ParseTime") {
+	if !utils.CheckEqSlice(s.ParseTime("2006-01-02").Data().([]time.Time), expectedTime, nil, "Strings.ParseTime") {
 		t.Errorf("Expected data of %v, got %v", expectedTime, s.ParseTime("2006-01-02").Data())
 	}
 }
@@ -383,12 +383,12 @@ func Test_SeriesString_Filter(t *testing.T) {
 	}
 
 	// Check the data.
-	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", result, filtered.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", resultMask, filtered.GetNullMask())
 	}
 
@@ -402,12 +402,12 @@ func Test_SeriesString_Filter(t *testing.T) {
 	}
 
 	// Check the data.
-	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", result, filtered.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", resultMask, filtered.GetNullMask())
 	}
 
@@ -421,12 +421,12 @@ func Test_SeriesString_Filter(t *testing.T) {
 	}
 
 	// Check the data.
-	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", result, filtered.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(filtered.GetNullMask(), resultMask, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", resultMask, filtered.GetNullMask())
 	}
 
@@ -435,8 +435,8 @@ func Test_SeriesString_Filter(t *testing.T) {
 	// try to filter by a series with a different length.
 	filtered = filtered.Filter(filterMask)
 
-	if e, ok := filtered.(SeriesError); !ok || e.GetError() != "SeriesString.Filter: mask length (20) does not match series length (14)" {
-		t.Errorf("Expected SeriesError, got %v", filtered)
+	if e, ok := filtered.(Errors); !ok || e.GetError() != "Strings.Filter: mask length (20) does not match series length (14)" {
+		t.Errorf("Expected Errors, got %v", filtered)
 	}
 
 	// Another test.
@@ -462,12 +462,12 @@ func Test_SeriesString_Filter(t *testing.T) {
 	}
 
 	// Check the data.
-	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", result, filtered.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(filtered.GetNullMask(), []bool{true, true, true}, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(filtered.GetNullMask(), []bool{true, true, true}, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", []bool{true, true, true}, filtered.GetNullMask())
 	}
 
@@ -481,12 +481,12 @@ func Test_SeriesString_Filter(t *testing.T) {
 	}
 
 	// Check the data.
-	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "SeriesString.Data") {
+	if !utils.CheckEqSliceString(filtered.Data().([]string), result, nil, "Strings.Data") {
 		t.Errorf("Expected data of %v, got %v", result, filtered.Data())
 	}
 
 	// Check the null mask.
-	if !utils.CheckEqSliceBool(filtered.GetNullMask(), []bool{true, true, true}, nil, "SeriesString.GetNullMask") {
+	if !utils.CheckEqSliceBool(filtered.GetNullMask(), []bool{true, true, true}, nil, "Strings.GetNullMask") {
 		t.Errorf("Expected null mask of %v, got %v", []bool{true, true, true}, filtered.GetNullMask())
 	}
 }
@@ -504,7 +504,7 @@ func Test_SeriesString_Map(t *testing.T) {
 	})
 
 	expectedBool := []bool{false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false}
-	if !utils.CheckEqSliceBool(resBool.Data().([]bool), expectedBool, nil, "SeriesString.Map") {
+	if !utils.CheckEqSliceBool(resBool.Data().([]bool), expectedBool, nil, "Strings.Map") {
 		t.Errorf("Expected data of %v, got %v", expectedBool, resBool.Data())
 	}
 
@@ -514,7 +514,7 @@ func Test_SeriesString_Map(t *testing.T) {
 	})
 
 	expectedInt := []int{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 0, 2, 2, 1, 0, 2}
-	if !utils.CheckEqSliceInt(resInt.Data().([]int), expectedInt, nil, "SeriesString.Map") {
+	if !utils.CheckEqSliceInt(resInt.Data().([]int), expectedInt, nil, "Strings.Map") {
 		t.Errorf("Expected data of %v, got %v", expectedInt, resInt.Data())
 	}
 
@@ -524,7 +524,7 @@ func Test_SeriesString_Map(t *testing.T) {
 	})
 
 	expectedInt64 := []int64{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 0, 2, 2, 1, 0, 2}
-	if !utils.CheckEqSliceInt64(resInt64.Data().([]int64), expectedInt64, nil, "SeriesString.Map") {
+	if !utils.CheckEqSliceInt64(resInt64.Data().([]int64), expectedInt64, nil, "Strings.Map") {
 		t.Errorf("Expected data of %v, got %v", expectedInt64, resInt64.Data())
 	}
 
@@ -534,7 +534,7 @@ func Test_SeriesString_Map(t *testing.T) {
 	})
 
 	expectedFloat64 := []float64{-2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -6, -0, -2, -2, -1, -0, -2}
-	if !utils.CheckEqSliceFloat64(resFloat64.Data().([]float64), expectedFloat64, nil, "SeriesString.Map") {
+	if !utils.CheckEqSliceFloat64(resFloat64.Data().([]float64), expectedFloat64, nil, "Strings.Map") {
 		t.Errorf("Expected data of %v, got %v", expectedFloat64, resFloat64.Data())
 	}
 
@@ -547,7 +547,7 @@ func Test_SeriesString_Map(t *testing.T) {
 	})
 
 	expectedString := []string{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "empty", "", "", "", "empty", ""}
-	if !utils.CheckEqSliceString(resString.Data().([]string), expectedString, nil, "SeriesString.Map") {
+	if !utils.CheckEqSliceString(resString.Data().([]string), expectedString, nil, "Strings.Map") {
 		t.Errorf("Expected data of %v, got %v", expectedString, resString.Data())
 	}
 }
@@ -643,7 +643,7 @@ func Test_SeriesString_Sort(t *testing.T) {
 	// Check the data.
 	expected := []string{"a", "a", "b", "b", "d", "e", "e", "e", "g", "h", "l", "t", "u", "u", "w", "w", "w", "x", "y", "{"}
 	if !utils.CheckEqSliceString(sorted.Data().([]string), expected, nil, "") {
-		t.Errorf("SeriesString.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]string))
+		t.Errorf("Strings.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]string))
 	}
 
 	// Create a new series.
@@ -655,13 +655,13 @@ func Test_SeriesString_Sort(t *testing.T) {
 	// Check the data.
 	expected = []string{"a", "a", "b", "d", "e", "l", "t", "w", "w", "{", NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT}
 	if !utils.CheckEqSliceString(sorted.Data().([]string), expected, nil, "") {
-		t.Errorf("SeriesString.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]string))
+		t.Errorf("Strings.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]string))
 	}
 
 	// Check the null mask.
 	expectedMask := []bool{false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true}
 	if !utils.CheckEqSliceBool(sorted.GetNullMask(), expectedMask, nil, "") {
-		t.Errorf("SeriesString.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
+		t.Errorf("Strings.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
 	}
 }
 

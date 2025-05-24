@@ -13,8 +13,8 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-// SeriesString represents a series of strings.
-type SeriesString struct {
+// Strings represents a series of strings.
+type Strings struct {
 	isNullable bool
 	sorted     gandalff.SeriesSortOrder
 	data       []*string
@@ -24,19 +24,19 @@ type SeriesString struct {
 }
 
 // Get the element at index i as a string.
-func (s SeriesString) GetAsString(i int) string {
+func (s Strings) GetAsString(i int) string {
 	return *s.data[i]
 }
 
 // Set the element at index i. The value v must be of type string or NullableString.
-func (s SeriesString) Set(i int, v any) Series {
+func (s Strings) Set(i int, v any) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.Set: cannot set values on a grouped Series"}
+		return Errors{"Strings.Set: cannot set values on a grouped Series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
-		s = s.MakeNullable().(SeriesString)
+		s = s.MakeNullable().(Strings)
 		s.data[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT)
 		s.nullMask[i>>3] |= 1 << uint(i%8)
 
@@ -44,7 +44,7 @@ func (s SeriesString) Set(i int, v any) Series {
 		s.data[i] = s.ctx.StringPool.Put(v)
 
 	case gandalff.NullableString:
-		s = s.MakeNullable().(SeriesString)
+		s = s.MakeNullable().(Strings)
 		if v.Valid {
 			s.data[i] = s.ctx.StringPool.Put(v.Value)
 		} else {
@@ -53,7 +53,7 @@ func (s SeriesString) Set(i int, v any) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.Set: invalid type %T", v)}
+		return Errors{fmt.Sprintf("Strings.Set: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -63,7 +63,7 @@ func (s SeriesString) Set(i int, v any) Series {
 ////////////////////////			ALL DATA ACCESSORS
 
 // Return the underlying data as a slice of string.
-func (s SeriesString) Strings() []string {
+func (s Strings) Strings() []string {
 	data := make([]string, len(s.data))
 	if s.isNullable {
 		for i, v := range s.data {
@@ -82,7 +82,7 @@ func (s SeriesString) Strings() []string {
 }
 
 // Return the underlying data as a slice of NullableString.
-func (s SeriesString) DataAsNullable() any {
+func (s Strings) DataAsNullable() any {
 	data := make([]gandalff.NullableString, len(s.data))
 	for i, v := range s.data {
 		data[i] = gandalff.NullableString{Valid: !s.IsNull(i), Value: *v}
@@ -91,7 +91,7 @@ func (s SeriesString) DataAsNullable() any {
 }
 
 // Return the underlying data as a slice of string.
-func (s SeriesString) DataAsString() []string {
+func (s Strings) DataAsString() []string {
 	data := make([]string, len(s.data))
 	if s.isNullable {
 		for i, v := range s.data {
@@ -122,7 +122,7 @@ func atoBool(s string) (bool, error) {
 }
 
 // Casts the series to a given type.
-func (s SeriesString) Cast(t meta.BaseType) Series {
+func (s Strings) Cast(t meta.BaseType) Series {
 	switch t {
 	case meta.BoolType:
 		data := make([]bool, len(s.data))
@@ -151,7 +151,7 @@ func (s SeriesString) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -189,7 +189,7 @@ func (s SeriesString) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -227,7 +227,7 @@ func (s SeriesString) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -265,7 +265,7 @@ func (s SeriesString) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -278,15 +278,15 @@ func (s SeriesString) Cast(t meta.BaseType) Series {
 		return s
 
 	case meta.TimeType:
-		return SeriesError{"SeriesString.Cast: cannot cast to Time, use SeriesString.ParseTime(layout) instead"}
+		return Errors{"Strings.Cast: cannot cast to Time, use Strings.ParseTime(layout) instead"}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Strings.Cast: invalid type %s", t.ToString())}
 	}
 }
 
 // Parse the series as a time series.
-func (s SeriesString) ParseTime(layout string) Series {
+func (s Strings) ParseTime(layout string) Series {
 	data := make([]time.Time, len(s.data))
 	nullMask := __binVecInit(len(s.data), false)
 	if s.isNullable {
@@ -305,7 +305,7 @@ func (s SeriesString) ParseTime(layout string) Series {
 		}
 	}
 
-	return SeriesTime{
+	return Times{
 		isNullable: true,
 		sorted:     gandalff.SORTED_NONE,
 		data:       data,
@@ -317,7 +317,7 @@ func (s SeriesString) ParseTime(layout string) Series {
 
 ////////////////////////			GROUPING OPERATIONS
 
-// A SeriesStringPartition is a partition of a SeriesString.
+// A SeriesStringPartition is a partition of a Strings.
 // Each key is a hash of a bool value, and each value is a slice of indices
 // of the original series that are set to that value.
 type SeriesStringPartition struct {
@@ -333,7 +333,7 @@ func (gp *SeriesStringPartition) getMap() map[int64][]int {
 	return gp.partition
 }
 
-func (s SeriesString) group() Series {
+func (s Strings) group() Series {
 
 	// Define the worker callback
 	worker := func(threadNum, start, end int, map_ map[int64][]int) {
@@ -369,7 +369,7 @@ func (s SeriesString) group() Series {
 	return s
 }
 
-func (s SeriesString) GroupBy(partition SeriesPartition) Series {
+func (s Strings) GroupBy(partition SeriesPartition) Series {
 	// collect all keys
 	otherIndeces := partition.getMap()
 	keys := make([]int64, len(otherIndeces))
@@ -423,7 +423,7 @@ func (s SeriesString) GroupBy(partition SeriesPartition) Series {
 
 ////////////////////////			SORTING OPERATIONS
 
-func (s SeriesString) Less(i, j int) bool {
+func (s Strings) Less(i, j int) bool {
 	if s.isNullable {
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 {
 			return false
@@ -436,7 +436,7 @@ func (s SeriesString) Less(i, j int) bool {
 	return (*s.data[i]) < (*s.data[j])
 }
 
-func (s SeriesString) equal(i, j int) bool {
+func (s Strings) equal(i, j int) bool {
 	if s.isNullable {
 		if (s.nullMask[i>>3] & (1 << uint(i%8))) > 0 {
 			return (s.nullMask[j>>3] & (1 << uint(j%8))) > 0
@@ -449,7 +449,7 @@ func (s SeriesString) equal(i, j int) bool {
 	return (*s.data[i]) == (*s.data[j])
 }
 
-func (s SeriesString) Swap(i, j int) {
+func (s Strings) Swap(i, j int) {
 	if s.isNullable {
 		// i is null, j is not null
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 && s.nullMask[j>>3]&(1<<uint(j%8)) == 0 {
@@ -467,7 +467,7 @@ func (s SeriesString) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 
-func (s SeriesString) Sort() Series {
+func (s Strings) Sort() Series {
 	if s.sorted != gandalff.SORTED_ASC {
 		sort.Sort(s)
 		s.sorted = gandalff.SORTED_ASC
@@ -475,7 +475,7 @@ func (s SeriesString) Sort() Series {
 	return s
 }
 
-func (s SeriesString) SortRev() Series {
+func (s Strings) SortRev() Series {
 	if s.sorted != gandalff.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
 		s.sorted = gandalff.SORTED_DESC
@@ -485,9 +485,9 @@ func (s SeriesString) SortRev() Series {
 
 ////////////////////////			STRING OPERATIONS
 
-func (s SeriesString) ToUpper() Series {
+func (s Strings) ToUpper() Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.ToUpper() not supported on grouped Series"}
+		return Errors{"Strings.ToUpper() not supported on grouped Series"}
 	}
 
 	for i := 0; i < len(s.data); i++ {
@@ -497,9 +497,9 @@ func (s SeriesString) ToUpper() Series {
 	return s
 }
 
-func (s SeriesString) ToLower() Series {
+func (s Strings) ToLower() Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.ToLower() not supported on grouped Series"}
+		return Errors{"Strings.ToLower() not supported on grouped Series"}
 	}
 
 	for i := 0; i < len(s.data); i++ {
@@ -509,9 +509,9 @@ func (s SeriesString) ToLower() Series {
 	return s
 }
 
-func (s SeriesString) TrimSpace() Series {
+func (s Strings) TrimSpace() Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.TrimSpace() not supported on grouped Series"}
+		return Errors{"Strings.TrimSpace() not supported on grouped Series"}
 	}
 
 	for i := 0; i < len(s.data); i++ {
@@ -521,9 +521,9 @@ func (s SeriesString) TrimSpace() Series {
 	return s
 }
 
-func (s SeriesString) Trim(cutset string) Series {
+func (s Strings) Trim(cutset string) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.Trim() not supported on grouped Series"}
+		return Errors{"Strings.Trim() not supported on grouped Series"}
 	}
 
 	for i := 0; i < len(s.data); i++ {
@@ -533,9 +533,9 @@ func (s SeriesString) Trim(cutset string) Series {
 	return s
 }
 
-func (s SeriesString) Replace(old, new string, n int) Series {
+func (s Strings) Replace(old, new string, n int) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.Replace() not supported on grouped Series"}
+		return Errors{"Strings.Replace() not supported on grouped Series"}
 	}
 
 	for i := 0; i < len(s.data); i++ {

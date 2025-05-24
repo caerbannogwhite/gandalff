@@ -253,49 +253,49 @@ func writeXlsx(dataframe DataFrame, writer io.Writer, sheetName string, naText s
 			cell := row.AddCell()
 
 			switch s := dataframe.At(j).(type) {
-			case SeriesBool:
+			case Bools:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetBool(s.Get(i).(bool))
 
-			case SeriesInt:
+			case Ints:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetInt(s.Get(i).(int))
 
-			case SeriesInt64:
+			case Int64s:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetInt64(s.Get(i).(int64))
 
-			case SeriesFloat64:
+			case Float64s:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetFloat(s.Get(i).(float64))
 
-			case SeriesString:
+			case Strings:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.Value = s.Get(i).(string)
 
-			case SeriesTime:
+			case Times:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue
 				}
 				cell.SetDateTime(s.Get(i).(time.Time))
 
-			case SeriesDuration:
+			case Durations:
 				if s.IsNull(i) {
 					cell.Value = naText
 					continue

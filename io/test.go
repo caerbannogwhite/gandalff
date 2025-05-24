@@ -93,19 +93,19 @@ func Test_IOAll(t *testing.T) {
 		1.23e-4,  // 1.2345e-4
 	}, nil, true, false, ctx)
 
-	if series := df.C("CHARVAR1"); !series.Eq(charvar1).(SeriesBool).All() {
+	if series := df.C("CHARVAR1"); !series.Eq(charvar1).(Bools).All() {
 		t.Errorf("expected %s, got %s", charvar1.DataAsString(), series.DataAsString())
 	}
 
-	if series := df.C("CHARVAR2"); !series.Eq(charvar2).(SeriesBool).All() {
+	if series := df.C("CHARVAR2"); !series.Eq(charvar2).(Bools).All() {
 		t.Errorf("expected %s, got %s", charvar2.DataAsString(), series.DataAsString())
 	}
 
-	if series := df.C("NUMVAR1"); !series.Eq(numvar1).(SeriesBool).All() {
+	if series := df.C("NUMVAR1"); !series.Eq(numvar1).(Bools).All() {
 		t.Errorf("expected %s, got %s", numvar1.DataAsString(), series.DataAsString())
 	}
 
-	if series := df.C("FOO"); !series.Eq(numvar2).(SeriesBool).All() {
+	if series := df.C("FOO"); !series.Eq(numvar2).(Bools).All() {
 		t.Errorf("expected %s, got %s", numvar2.DataAsString(), series.DataAsString())
 	}
 }

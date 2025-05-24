@@ -27,7 +27,7 @@ func Test_SeriesNA_Append(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedMask, res.GetNullMask())
 	}
 
-	// Append SeriesNA
+	// Append NAs
 	res = nas.Append(NewSeriesNA(5, ctx))
 	expectedMask = append(baseMask, true, true, true, true, true)
 	if res.Len() != 15 {
@@ -98,7 +98,7 @@ func Test_SeriesNA_Append(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedMask, res.GetNullMask())
 	}
 
-	// Append SeriesInt64
+	// Append Int64s
 	res = nas.Append(int64s)
 	expectedMask = append(baseMask, false, true, false, true, false)
 	if res.Len() != 15 {
@@ -175,7 +175,7 @@ func Test_SeriesNA_Append(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedMask, res.GetNullMask())
 	}
 
-	// Append SeriesString
+	// Append Strings
 	res = nas.Append(strings)
 	expectedMask = append(baseMask, false, true, false, true, false)
 	if res.Len() != 15 {
@@ -214,11 +214,11 @@ func Test_SeriesNA_Arithmetic_Mul(t *testing.T) {
 	}
 
 	// scalar | int64
-	if res, ok := nas.Mul(int64s).(SeriesNA); !ok || res.Len() != 1 {
-		t.Errorf("Expected SeriesNA of length 1, got %v", res)
+	if res, ok := nas.Mul(int64s).(NAs); !ok || res.Len() != 1 {
+		t.Errorf("Expected NAs of length 1, got %v", res)
 	}
-	if res, ok := nas.Mul(int64v).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nas.Mul(int64v).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nas.Mul(int64s).GetNullMask(), []bool{true}, nil, "NA Mul") {
 		t.Errorf("Expected %v, got %v", []bool{true}, nas.Mul(int64s).GetNullMask())
@@ -234,11 +234,11 @@ func Test_SeriesNA_Arithmetic_Mul(t *testing.T) {
 	}
 
 	// scalar | float64
-	if res, ok := nas.Mul(float64s).(SeriesNA); !ok || res.Len() != 1 {
-		t.Errorf("Expected SeriesNA of length 1, got %v", res)
+	if res, ok := nas.Mul(float64s).(NAs); !ok || res.Len() != 1 {
+		t.Errorf("Expected NAs of length 1, got %v", res)
 	}
-	if res, ok := nas.Mul(float64v).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nas.Mul(float64v).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nas.Mul(float64s).GetNullMask(), []bool{true}, nil, "NA Mul") {
 		t.Errorf("Expected %v, got %v", []bool{true}, nas.Mul(float64s).GetNullMask())
@@ -262,11 +262,11 @@ func Test_SeriesNA_Arithmetic_Mul(t *testing.T) {
 	}
 
 	// vector | int64
-	if res, ok := nav.Mul(int64s).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Mul(int64s).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
-	if res, ok := nav.Mul(int64v).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Mul(int64v).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nav.Mul(int64s).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "NA Mul") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, nav.Mul(int64s).GetNullMask())
@@ -282,11 +282,11 @@ func Test_SeriesNA_Arithmetic_Mul(t *testing.T) {
 	}
 
 	// vector | float64
-	if res, ok := nav.Mul(float64s).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Mul(float64s).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
-	if res, ok := nav.Mul(float64v).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Mul(float64v).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nav.Mul(float64s).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "NA Mul") {
 		t.Errorf("Expected %v, got %v", []bool{true}, nav.Mul(float64s).GetNullMask())
@@ -327,11 +327,11 @@ func Test_SeriesNA_Arithmetic_Add(t *testing.T) {
 	}
 
 	// scalar | int64
-	if res, ok := nas.Add(ints).(SeriesNA); !ok || res.Len() != 1 {
-		t.Errorf("Expected SeriesNA of length 1, got %v", res)
+	if res, ok := nas.Add(ints).(NAs); !ok || res.Len() != 1 {
+		t.Errorf("Expected NAs of length 1, got %v", res)
 	}
-	if res, ok := nas.Add(intv).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nas.Add(intv).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nas.Add(ints).GetNullMask(), []bool{true}, nil, "NA Add") {
 		t.Errorf("Expected %v, got %v", []bool{true}, nas.Add(ints).GetNullMask())
@@ -375,11 +375,11 @@ func Test_SeriesNA_Arithmetic_Add(t *testing.T) {
 	}
 
 	// vector | int64
-	if res, ok := nav.Add(ints).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Add(ints).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
-	if res, ok := nav.Add(intv).(SeriesNA); !ok || res.Len() != 10 {
-		t.Errorf("Expected SeriesNA of length 10, got %v", res)
+	if res, ok := nav.Add(intv).(NAs); !ok || res.Len() != 10 {
+		t.Errorf("Expected NAs of length 10, got %v", res)
 	}
 	if !utils.CheckEqSlice(nav.Add(ints).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "NA Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, nav.Add(ints).GetNullMask())

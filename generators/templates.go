@@ -117,7 +117,7 @@ func (s {{.SeriesName}}) GetNullMask() []bool {
 // Set the null mask of the series.
 func (s {{.SeriesName}}) SetNullMask(mask []bool) Series {
 	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.SetNullMask: cannot set values on a grouped series"}
+		return Errors{"{{.SeriesName}}.SetNullMask: cannot set values on a grouped series"}
 	}
 
 	if s.isNullable {
@@ -172,7 +172,7 @@ func (s {{.SeriesName}}) Get(i int) any {
 // Append appends a value or a slice of values to the series.
 func (s {{.SeriesName}}) Append(v any) Series {
 	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.Append: cannot append values to a grouped series"}
+		return Errors{"{{.SeriesName}}.Append: cannot append values to a grouped series"}
 	}
 
 	switch v := v.(type) {
@@ -184,12 +184,12 @@ func (s {{.SeriesName}}) Append(v any) Series {
 		}
 		s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
 
-	case SeriesNA:
+	case NAs:
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, v.Len(), true, __binVecInit(v.Len(), true))
 		s.data = append(s.data, make([]{{.SeriesGoTypeStr}}, v.Len())...)
 
 	case {{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+		{{if eq .SeriesName "Strings" -}}
 		s.data = append(s.data, s.ctx.StringPool.Put(v))
 		{{- else -}}
 		s.data = append(s.data, v)
@@ -199,7 +199,7 @@ func (s {{.SeriesName}}) Append(v any) Series {
 		}
 
 	case []{{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+		{{if eq .SeriesName "Strings" -}}
 		s.data = append(s.data, make([]*string, len(v))...)
 		for i, str := range v {
 			s.data[len(s.data)-len(v)+i] = s.ctx.StringPool.Put(str)
@@ -212,7 +212,7 @@ func (s {{.SeriesName}}) Append(v any) Series {
 		}
 
 	case {{.SeriesNullableTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
+		{{if eq .SeriesName "Strings" -}}
 		s.data = append(s.data, s.ctx.StringPool.Put(v.Value))
 		{{- else -}}
 		s.data = append(s.data, v.Value)
@@ -233,7 +233,7 @@ func (s {{.SeriesName}}) Append(v any) Series {
 			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask)+1)...)
 		}
 		for i, b := range v {
-			{{if eq .SeriesName "SeriesString" -}}
+			{{if eq .SeriesName "Strings" -}}
 			s.data[ssize+i] = s.ctx.StringPool.Put(b.Value)
 			{{- else -}}
 			s.data[ssize+i] = b.Value
@@ -245,14 +245,14 @@ func (s {{.SeriesName}}) Append(v any) Series {
 
 	case {{.SeriesName}}:
 		if s.ctx != v.ctx {
-			return SeriesError{"{{.SeriesName}}.Append: cannot append {{.SeriesName}} from different contexts"}
+			return Errors{"{{.SeriesName}}.Append: cannot append {{.SeriesName}} from different contexts"}
 		}
 
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, len(v.data), v.isNullable, v.nullMask)
 		s.data = append(s.data, v.data...)
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Append: invalid type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Append: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -263,14 +263,14 @@ func (s {{.SeriesName}}) Append(v any) Series {
 func (s {{.SeriesName}}) Take(params ...int) Series {
 	indeces, err := seriesTakePreprocess("{{.SeriesName}}", s.Len(), params...)
 	if err != nil {
-		return SeriesError{err.Error()}
+		return Errors{err.Error()}
 	}
 	return s.filterIntSlice(indeces, false)
 }
 
 // Return the elements of the series as a slice.
 func (s {{.SeriesName}}) Data() any {
-	{{if eq .SeriesName "SeriesString" -}}
+	{{if eq .SeriesName "Strings" -}}
 	data := make([]string, len(s.data))
 	for i, v := range s.data {
 		data[i] = *v
@@ -313,25 +313,25 @@ var TEMPLATE_FILTERS = `
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
-// Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
+// Mask can be Bools, Ints, bool slice or a int slice.
 func (s {{.SeriesName}}) Filter(mask any) Series {
 	switch mask := mask.(type) {
-	case SeriesBool:
+	case Bools:
 		return s.filterBoolSlice(mask.data)
-	case SeriesInt:
+	case Ints:
 		return s.filterIntSlice(mask.data, true)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
 		return s.filterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: invalid type %T", mask)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: invalid type %T", mask)}
 	}
 }
 
 func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
 	if len(mask) != len(s.data) {
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
 	}
 
 	elementCount := 0
@@ -388,7 +388,7 @@ func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
 	if check {
 		for _, v := range indexes {
 			if v < 0 || v >= len(s.data) {
-				return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: index %d is out of range", v)}
+				return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: index %d is out of range", v)}
 			}
 		}
 	}
@@ -438,7 +438,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(bool)
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -453,7 +453,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int)
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -468,7 +468,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int64)
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -483,7 +483,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(float64)
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -498,7 +498,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = s.ctx.StringPool.Put(f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(string))
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -513,7 +513,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(time.Time)
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -528,7 +528,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 			data[i] = f(s.data[i]).(time.Duration)
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -538,7 +538,7 @@ func (s {{.SeriesName}}) Map(f MapFunc) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Map: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Map: Unsupported type %T", v)}
 	}
 }
 
@@ -549,7 +549,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 	}
 
 	if !s.isNullable {
-		return SeriesError{"{{.SeriesName}}.MapNull: series is not nullable"}
+		return Errors{"{{.SeriesName}}.MapNull: series is not nullable"}
 	}
 
 	v, isNull := f(s.Get(0), s.IsNull(0))
@@ -565,7 +565,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -585,7 +585,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -605,7 +605,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -625,7 +625,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -645,7 +645,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -665,7 +665,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -685,7 +685,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 			}
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -695,7 +695,7 @@ func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.MapNull: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.MapNull: Unsupported type %T", v)}
 	}
 }
 `

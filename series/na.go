@@ -8,86 +8,86 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-// SeriesNA represents a series with no data.
-type SeriesNA struct {
+// NAs represents a series with no data.
+type NAs struct {
 	size      int
 	partition *SeriesNAPartition
 	ctx       *gandalff.Context
 }
 
-func (s SeriesNA) printInfo() {}
+func (s NAs) printInfo() {}
 
 // Return the context of the series.
-func (s SeriesNA) GetContext() *gandalff.Context {
+func (s NAs) GetContext() *gandalff.Context {
 	return s.ctx
 }
 
 // Returns the length of the series.
-func (s SeriesNA) Len() int {
+func (s NAs) Len() int {
 	return s.size
 }
 
 // Returns if the series is grouped.
-func (s SeriesNA) IsGrouped() bool {
+func (s NAs) IsGrouped() bool {
 	return s.partition != nil
 }
 
 // Returns if the series admits null values.
-func (s SeriesNA) IsNullable() bool {
+func (s NAs) IsNullable() bool {
 	return true
 }
 
-func (s SeriesNA) IsSorted() gandalff.SeriesSortOrder {
+func (s NAs) IsSorted() gandalff.SeriesSortOrder {
 	return gandalff.SORTED_ASC
 }
 
 // Returns if the series is error.
-func (s SeriesNA) IsError() bool {
+func (s NAs) IsError() bool {
 	return false
 }
 
 // Returns the error message of the series.
-func (s SeriesNA) GetError() string {
+func (s NAs) GetError() string {
 	return ""
 }
 
 // Makes the series nullable.
-func (s SeriesNA) MakeNullable() Series {
+func (s NAs) MakeNullable() Series {
 	return s
 }
 
 // Make the series non-nullable.
-func (s SeriesNA) MakeNonNullable() Series {
+func (s NAs) MakeNonNullable() Series {
 	return s
 }
 
 // Returns the type of the series.
-func (s SeriesNA) Type() meta.BaseType {
+func (s NAs) Type() meta.BaseType {
 	return meta.NullType
 }
 
 // Returns the type and cardinality of the series.
-func (s SeriesNA) TypeCard() meta.BaseTypeCard {
+func (s NAs) TypeCard() meta.BaseTypeCard {
 	return meta.BaseTypeCard{Base: meta.NullType, Card: s.Len()}
 }
 
 // Returns if the series has null values.
-func (s SeriesNA) HasNull() bool {
+func (s NAs) HasNull() bool {
 	return true
 }
 
 // Returns the number of null values in the series.
-func (s SeriesNA) NullCount() int {
+func (s NAs) NullCount() int {
 	return s.size
 }
 
 // Returns if the element at index i is null.
-func (s SeriesNA) IsNull(i int) bool {
+func (s NAs) IsNull(i int) bool {
 	return true
 }
 
 // Returns the null mask of the series.
-func (s SeriesNA) GetNullMask() []bool {
+func (s NAs) GetNullMask() []bool {
 	nullMask := make([]bool, s.size)
 	for i := 0; i < s.size; i++ {
 		nullMask[i] = true
@@ -96,42 +96,42 @@ func (s SeriesNA) GetNullMask() []bool {
 }
 
 // Sets the null mask of the series.
-func (s SeriesNA) SetNullMask(mask []bool) Series {
+func (s NAs) SetNullMask(mask []bool) Series {
 	return s
 }
 
 // Get the element at index i.
-func (s SeriesNA) Get(i int) any {
+func (s NAs) Get(i int) any {
 	return nil
 }
 
-func (s SeriesNA) GetAsString(i int) string {
+func (s NAs) GetAsString(i int) string {
 	return gandalff.NA_TEXT
 }
 
 // Set the element at index i.
-func (s SeriesNA) Set(i int, v any) Series {
+func (s NAs) Set(i int, v any) Series {
 	return s
 }
 
 // Take the elements according to the given interval.
-func (s SeriesNA) Take(params ...int) Series {
+func (s NAs) Take(params ...int) Series {
 	return s
 }
 
 // Append elements to the series.
-func (s SeriesNA) Append(v any) Series {
+func (s NAs) Append(v any) Series {
 	var nullMask []byte
 	switch v := v.(type) {
 	case nil:
 		s.size++
 		return s
 
-	case SeriesNA:
+	case NAs:
 		s.size += v.size
 		return s
 
-	case bool, gandalff.NullableBool, []bool, []gandalff.NullableBool, SeriesBool:
+	case bool, gandalff.NullableBool, []bool, []gandalff.NullableBool, Bools:
 		var data []bool
 		switch v := v.(type) {
 		case bool:
@@ -165,12 +165,12 @@ func (s SeriesNA) Append(v any) Series {
 
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
 
-		case SeriesBool:
+		case Bools:
 			data = append(make([]bool, s.size), v.data...)
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -179,7 +179,7 @@ func (s SeriesNA) Append(v any) Series {
 			ctx:        s.ctx,
 		}
 
-	case int, gandalff.NullableInt, []int, []gandalff.NullableInt, SeriesInt:
+	case int, gandalff.NullableInt, []int, []gandalff.NullableInt, Ints:
 		var data []int
 		switch v := v.(type) {
 		case int:
@@ -213,12 +213,12 @@ func (s SeriesNA) Append(v any) Series {
 
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
 
-		case SeriesInt:
+		case Ints:
 			data = append(make([]int, s.size), v.data...)
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -227,7 +227,7 @@ func (s SeriesNA) Append(v any) Series {
 			ctx:        s.ctx,
 		}
 
-	case int64, gandalff.NullableInt64, []int64, []gandalff.NullableInt64, SeriesInt64:
+	case int64, gandalff.NullableInt64, []int64, []gandalff.NullableInt64, Int64s:
 		var data []int64
 		switch v := v.(type) {
 		case int64:
@@ -261,12 +261,12 @@ func (s SeriesNA) Append(v any) Series {
 
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
 
-		case SeriesInt64:
+		case Int64s:
 			data = append(make([]int64, s.size), v.data...)
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -275,7 +275,7 @@ func (s SeriesNA) Append(v any) Series {
 			ctx:        s.ctx,
 		}
 
-	case float64, gandalff.NullableFloat64, []float64, []gandalff.NullableFloat64, SeriesFloat64:
+	case float64, gandalff.NullableFloat64, []float64, []gandalff.NullableFloat64, Float64s:
 		var data []float64
 		switch v := v.(type) {
 		case float64:
@@ -309,12 +309,12 @@ func (s SeriesNA) Append(v any) Series {
 
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
 
-		case SeriesFloat64:
+		case Float64s:
 			data = append(make([]float64, s.size), v.data...)
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -323,7 +323,7 @@ func (s SeriesNA) Append(v any) Series {
 			ctx:        s.ctx,
 		}
 
-	case string, gandalff.NullableString, []string, []gandalff.NullableString, SeriesString:
+	case string, gandalff.NullableString, []string, []gandalff.NullableString, Strings:
 		data := make([]*string, s.size)
 		for i := 0; i < s.size; i++ {
 			data[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT)
@@ -365,12 +365,12 @@ func (s SeriesNA) Append(v any) Series {
 
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
 
-		case SeriesString:
+		case Strings:
 			data = append(data, v.data...)
 			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -380,24 +380,24 @@ func (s SeriesNA) Append(v any) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesNA.Append: invalid type %T", v)}
+		return Errors{fmt.Sprintf("NAs.Append: invalid type %T", v)}
 	}
 }
 
 // All-data accessors.
 
 // Returns the actual data of the series.
-func (s SeriesNA) Data() any {
+func (s NAs) Data() any {
 	return make([]bool, s.size)
 }
 
 // Returns the nullable data of the series.
-func (s SeriesNA) DataAsNullable() any {
+func (s NAs) DataAsNullable() any {
 	return make([]gandalff.NullableBool, s.size)
 }
 
 // Returns the data of the series as a slice of strings.
-func (s SeriesNA) DataAsString() []string {
+func (s NAs) DataAsString() []string {
 	data := make([]string, s.size)
 	for i := 0; i < s.size; i++ {
 		data[i] = gandalff.NA_TEXT
@@ -406,13 +406,13 @@ func (s SeriesNA) DataAsString() []string {
 }
 
 // Casts the series to a given type.
-func (s SeriesNA) Cast(t meta.BaseType) Series {
+func (s NAs) Cast(t meta.BaseType) Series {
 	switch t {
 	case meta.NullType:
 		return s
 
 	case meta.BoolType:
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]bool, s.size),
@@ -422,7 +422,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.IntType:
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]int, s.size),
@@ -432,7 +432,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.Int64Type:
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]int64, s.size),
@@ -442,7 +442,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.Float64Type:
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]float64, s.size),
@@ -452,7 +452,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.StringType:
-		return SeriesString{
+		return Strings{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]*string, s.size),
@@ -462,7 +462,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.TimeType:
-		return SeriesTime{
+		return Times{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]time.Time, s.size),
@@ -472,7 +472,7 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	case meta.DurationType:
-		return SeriesDuration{
+		return Durations{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       make([]time.Duration, s.size),
@@ -482,12 +482,12 @@ func (s SeriesNA) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesNA.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("NAs.Cast: invalid type %s", t.ToString())}
 	}
 }
 
 // Copies the series.
-func (s SeriesNA) Copy() Series {
+func (s NAs) Copy() Series {
 	return s
 }
 
@@ -495,20 +495,20 @@ func (s SeriesNA) Copy() Series {
 
 // Filters out the elements by the given mask.
 // Mask can be a bool series, a slice of bools or a slice of ints.
-func (s SeriesNA) Filter(mask any) Series {
+func (s NAs) Filter(mask any) Series {
 	switch mask := mask.(type) {
-	case SeriesBool:
+	case Bools:
 		return s.filterBool(mask)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
 		return s.filterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("SeriesNA.Filter: invalid type %T", mask)}
+		return Errors{fmt.Sprintf("NAs.Filter: invalid type %T", mask)}
 	}
 }
 
-func (s SeriesNA) filterBool(mask SeriesBool) Series {
+func (s NAs) filterBool(mask Bools) Series {
 	elementCount := 0
 	for _, v := range mask.data {
 		if v {
@@ -520,7 +520,7 @@ func (s SeriesNA) filterBool(mask SeriesBool) Series {
 	return s
 }
 
-func (s SeriesNA) filterBoolSlice(mask []bool) Series {
+func (s NAs) filterBoolSlice(mask []bool) Series {
 	elementCount := 0
 	for _, v := range mask {
 		if v {
@@ -532,12 +532,12 @@ func (s SeriesNA) filterBoolSlice(mask []bool) Series {
 	return s
 }
 
-func (s SeriesNA) filterIntSlice(indexes []int, check bool) Series {
+func (s NAs) filterIntSlice(indexes []int, check bool) Series {
 	// check if indexes are in range
 	if check {
 		for _, v := range indexes {
 			if v < 0 || v >= s.size {
-				return SeriesError{fmt.Sprintf("SeriesNA.Filter: index %d is out of range", v)}
+				return Errors{fmt.Sprintf("NAs.Filter: index %d is out of range", v)}
 			}
 		}
 	}
@@ -546,11 +546,11 @@ func (s SeriesNA) filterIntSlice(indexes []int, check bool) Series {
 	return s
 }
 
-func (s SeriesNA) Map(f gandalff.MapFunc) Series {
+func (s NAs) Map(f gandalff.MapFunc) Series {
 	return s
 }
 
-func (s SeriesNA) MapNull(f gandalff.MapFuncNull) Series {
+func (s NAs) MapNull(f gandalff.MapFuncNull) Series {
 	return s
 }
 
@@ -567,37 +567,37 @@ func (gp *SeriesNAPartition) getMap() map[int64][]int {
 }
 
 // Group the elements in the series.
-func (s SeriesNA) group() Series {
+func (s NAs) group() Series {
 	return s
 }
 
-func (s SeriesNA) GroupBy(gp SeriesPartition) Series {
+func (s NAs) GroupBy(gp SeriesPartition) Series {
 	return s
 }
 
-func (s SeriesNA) UnGroup() Series {
+func (s NAs) UnGroup() Series {
 	return s
 }
 
-func (s SeriesNA) GetPartition() SeriesPartition {
+func (s NAs) GetPartition() SeriesPartition {
 	return s.partition
 }
 
 // Sort interface.
-func (s SeriesNA) Less(i, j int) bool {
+func (s NAs) Less(i, j int) bool {
 	return false
 }
 
-func (s SeriesNA) equal(i, j int) bool {
+func (s NAs) equal(i, j int) bool {
 	return false
 }
 
-func (s SeriesNA) Swap(i, j int) {}
+func (s NAs) Swap(i, j int) {}
 
-func (s SeriesNA) Sort() Series {
+func (s NAs) Sort() Series {
 	return s
 }
 
-func (s SeriesNA) SortRev() Series {
+func (s NAs) SortRev() Series {
 	return s
 }

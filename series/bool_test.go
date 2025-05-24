@@ -14,7 +14,7 @@ func Test_SeriesBool_Base(t *testing.T) {
 	data := []bool{true, false, true, false, true, false, true, false, true, false}
 	mask := []bool{false, false, true, false, false, true, false, false, true, false}
 
-	// Create a new SeriesBool.
+	// Create a new Bools.
 	s := NewSeriesBool(data, mask, true, ctx)
 
 	// Check the length.
@@ -118,7 +118,7 @@ func Test_SeriesBool_Base(t *testing.T) {
 	}
 
 	// Make the series nullable.
-	p = p.MakeNullable().(SeriesBool)
+	p = p.MakeNullable().(Bools)
 
 	// Check the nullability.
 	if !p.IsNullable() {
@@ -203,13 +203,13 @@ func Test_SeriesBool_Append(t *testing.T) {
 		if rand.Float32() > 0.5 {
 			switch i % 4 {
 			case 0:
-				s = s.Append(true).(SeriesBool)
+				s = s.Append(true).(Bools)
 			case 1:
-				s = s.Append([]bool{true}).(SeriesBool)
+				s = s.Append([]bool{true}).(Bools)
 			case 2:
-				s = s.Append(gandalff.NullableBool{true, true}).(SeriesBool)
+				s = s.Append(gandalff.NullableBool{true, true}).(Bools)
 			case 3:
-				s = s.Append([]gandalff.NullableBool{{false, true}}).(SeriesBool)
+				s = s.Append([]gandalff.NullableBool{{false, true}}).(Bools)
 			}
 
 			if s.Get(i) != true {
@@ -218,13 +218,13 @@ func Test_SeriesBool_Append(t *testing.T) {
 		} else {
 			switch i % 4 {
 			case 0:
-				s = s.Append(false).(SeriesBool)
+				s = s.Append(false).(Bools)
 			case 1:
-				s = s.Append([]bool{false}).(SeriesBool)
+				s = s.Append([]bool{false}).(Bools)
 			case 2:
-				s = s.Append(gandalff.NullableBool{true, false}).(SeriesBool)
+				s = s.Append(gandalff.NullableBool{true, false}).(Bools)
 			case 3:
-				s = s.Append([]gandalff.NullableBool{{false, false}}).(SeriesBool)
+				s = s.Append([]gandalff.NullableBool{{false, false}}).(Bools)
 			}
 
 			if s.Get(i) != false {
@@ -237,19 +237,19 @@ func Test_SeriesBool_Append(t *testing.T) {
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(nil).(SeriesBool)
+		s = s.Append(nil).(Bools)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesNA
+	// Append NAs
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 	na := NewSeriesNA(10, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(na).(SeriesBool)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "SeriesBool.Append") {
+		s = s.Append(na).(Bools)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "Bools.Append") {
 			t.Errorf("Expected %v, got %v at index %d", na.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -258,7 +258,7 @@ func Test_SeriesBool_Append(t *testing.T) {
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableBool{false, true}).(SeriesBool)
+		s = s.Append(gandalff.NullableBool{false, true}).(Bools)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -268,19 +268,19 @@ func Test_SeriesBool_Append(t *testing.T) {
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableBool{{false, true}}).(SeriesBool)
+		s = s.Append([]gandalff.NullableBool{{false, true}}).(Bools)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesBool
+	// Append Bools
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 	b := NewSeriesBool([]bool{true, false, true, false, true, false, true, false, true, false}, []bool{true, true, true, true, true, true, true, true, true, true}, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(b).(SeriesBool)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "SeriesBool.Append") {
+		s = s.Append(b).(Bools)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "Bools.Append") {
 			t.Errorf("Expected %v, got %v at index %d", b.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -369,7 +369,7 @@ func Test_SeriesBool_Cast(t *testing.T) {
 	castError := s.Cast(meta.ErrorType)
 
 	// Check the message.
-	if castError.(SeriesError).msg != "SeriesBool.Cast: invalid type Error" {
+	if castError.(Errors).msg != "Bools.Cast: invalid type Error" {
 		t.Errorf("Expected error, got %v", castError)
 	}
 }
@@ -548,8 +548,8 @@ func Test_SeriesBool_Filter(t *testing.T) {
 	// try to filter by a series with a different length.
 	filtered = filtered.Filter(filterMask)
 
-	if e, ok := filtered.(SeriesError); !ok || e.GetError() != "SeriesBool.Filter: mask length (13) does not match series length (9)" {
-		t.Errorf("Expected SeriesError, got %v", filtered)
+	if e, ok := filtered.(Errors); !ok || e.GetError() != "Bools.Filter: mask length (13) does not match series length (9)" {
+		t.Errorf("Expected Errors, got %v", filtered)
 	}
 
 	// Another test.
@@ -796,7 +796,7 @@ func Test_SeriesBool_Sort(t *testing.T) {
 	// Check the data.
 	expected := []bool{false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true}
 	if !utils.CheckEqSliceBool(sorted.Data().([]bool), expected, nil, "") {
-		t.Errorf("SeriesBool.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]bool))
+		t.Errorf("Bools.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]bool))
 	}
 
 	// Create a new series.
@@ -808,13 +808,13 @@ func Test_SeriesBool_Sort(t *testing.T) {
 	// Check the data.
 	expected = []bool{false, false, false, false, true, true, true, true, true, true, true, true, false, false, true, true, true, false, false, false}
 	if !utils.CheckEqSliceBool(sorted.Data().([]bool), expected, nil, "") {
-		t.Errorf("SeriesBool.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]bool))
+		t.Errorf("Bools.Sort() failed, expecting %v, got %v", expected, sorted.Data().([]bool))
 	}
 
 	// Check the null mask.
 	expectedMask := []bool{false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true}
 	if !utils.CheckEqSliceBool(sorted.GetNullMask(), expectedMask, nil, "") {
-		t.Errorf("SeriesBool.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
+		t.Errorf("Bools.Sort() failed, expecting %v, got %v", expectedMask, sorted.GetNullMask())
 	}
 }
 
@@ -1630,9 +1630,9 @@ func Test_SeriesBool_Boolean_Or(t *testing.T) {
 
 	bools := NewSeriesBool([]bool{true}, nil, true, ctx)
 	boolv := NewSeriesBool([]bool{true, false, true, false, true, false, true, true, false, false}, nil, true, ctx)
-	bools_ := NewSeriesBool([]bool{true}, nil, true, ctx).SetNullMask([]bool{true}).(SeriesBool)
+	bools_ := NewSeriesBool([]bool{true}, nil, true, ctx).SetNullMask([]bool{true}).(Bools)
 	boolv_ := NewSeriesBool([]bool{true, false, true, false, true, false, true, true, false, false}, nil, true, ctx).
-		SetNullMask([]bool{false, true, false, true, false, true, false, true, false, true}).(SeriesBool)
+		SetNullMask([]bool{false, true, false, true, false, true, false, true, false, true}).(Bools)
 
 	// scalar | bool
 	if !utils.CheckEqSlice(bools.Or(bools).Data().([]bool), []bool{true}, nil, "Bool Or") {

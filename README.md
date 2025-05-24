@@ -154,7 +154,7 @@ Built with:
 - [ ] Improve filtering interface.
 - [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
 - [ ] Implement string factors.
-- [ ] SeriesTime: set time format.
+- [ ] Times: set time format.
 - [ ] Implement `Set(i []int, v []any) Series`.
 - [ ] Add `Slice(i []int) Series` (using filter?).
 - [ ] Implement memory optimized Bool series with uint64.

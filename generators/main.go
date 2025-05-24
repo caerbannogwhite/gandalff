@@ -19,7 +19,7 @@ const (
 	RESULT_VAR_NAME           = "result"
 	RESULT_SIZE_VAR_NAME      = "resultSize"
 	RESULT_NULL_MASK_VAR_NAME = "resultNullMask"
-	FINAL_RETURN_FMT          = "SeriesError{fmt.Sprintf(\"Cannot %s %%s and %%s\", s.Type().ToString(), o.Type().ToString())}"
+	FINAL_RETURN_FMT          = "Errors{fmt.Sprintf(\"Cannot %s %%s and %%s\", s.Type().ToString(), o.Type().ToString())}"
 )
 
 type BuildInfo struct {
@@ -102,7 +102,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 		},
 	}}
 
-	// One of the operands is SeriesNA, take the null mask of the other operand
+	// One of the operands is NAs, take the null mask of the other operand
 	// if info.Op1InnerType == meta.NullType || info.Op2InnerType == meta.NullType {
 	// 	stmts = append(stmts, &ast.AssignStmt{
 	// 		Lhs: []ast.Expr{
@@ -137,7 +137,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 
 		// Make the result null mask
 
-		// Special case: one of the operands is SeriesNA
+		// Special case: one of the operands is NAs
 		if info.Op1InnerType == meta.NullType || info.Op2InnerType == meta.NullType {
 
 			nonNullOperand := info.Op1VarName
@@ -412,7 +412,7 @@ func generateOperation(info BuildInfo) []ast.Stmt {
 	statements = append(statements, generateMakeResultStmt(info)...)
 
 	// 2 - Generate the loop to compute the operation
-	if resSeriesType != "SeriesNA" {
+	if resSeriesType != "NAs" {
 		statements = append(statements, generateOperationLoop(info)...)
 	}
 
@@ -431,7 +431,7 @@ func generateOperation(info BuildInfo) []ast.Stmt {
 	switch resSeriesType {
 
 	// NA: the only parameter is the size of the result series
-	case "SeriesNA":
+	case "NAs":
 		params = []ast.Expr{
 			&ast.KeyValueExpr{
 				Key:   &ast.Ident{Name: "size"},
@@ -641,7 +641,7 @@ func generateSwitchType(
 		Body: &ast.BlockStmt{
 			List: []ast.Stmt{
 				&ast.ReturnStmt{
-					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("SeriesError{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.ctx, %s.GetContext())}", "otherSeries"))},
+					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("Errors{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.ctx, %s.GetContext())}", "otherSeries"))},
 				},
 			},
 		},
@@ -692,25 +692,25 @@ func generateSwitchType(
 func computeResSeriesType(opCode meta.OPCODE, op1, op2 meta.BaseType) string {
 	switch ComputeResInnerType(opCode, op1, op2) {
 	case meta.NullType:
-		return "SeriesNA"
+		return "NAs"
 	case meta.BoolType:
-		return "SeriesBool"
+		return "Bools"
 	case meta.IntType:
-		return "SeriesInt"
+		return "Ints"
 	case meta.Int64Type:
-		return "SeriesInt64"
+		return "Int64s"
 	case meta.Float32Type:
 		return "SeriesFloat32"
 	case meta.Float64Type:
-		return "SeriesFloat64"
+		return "Float64s"
 	case meta.StringType:
-		return "SeriesString"
+		return "Strings"
 	case meta.TimeType:
-		return "SeriesTime"
+		return "Times"
 	case meta.DurationType:
-		return "SeriesDuration"
+		return "Durations"
 	}
-	return "SeriesError"
+	return "Errors"
 }
 
 func ComputeResInnerType(opCode meta.OPCODE, op1, op2 meta.BaseType) meta.BaseType {

@@ -14,7 +14,7 @@ func Test_Series(t *testing.T) {
 		Append([]gandalff.NullableBool{{true, true}, {true, false}}).
 		Filter([]bool{true, false, true, false, true, false, true, false, true, false, true, true, false})
 
-	if e, ok := r.(SeriesError); ok {
+	if e, ok := r.(Errors); ok {
 		t.Errorf("Expected a series, got an error: %s", e.GetError())
 	}
 

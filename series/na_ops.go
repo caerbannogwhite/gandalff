@@ -6,11 +6,11 @@ import (
 	"github.com/caerbannogwhite/gandalff"
 )
 
-func (s SeriesNA) Not() Series {
+func (s NAs) Not() Series {
 	return s
 }
 
-func (s SeriesNA) And(other any) Series {
+func (s NAs) And(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -18,54 +18,54 @@ func (s SeriesNA) And(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Or(other any) Series {
+func (s NAs) Or(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -73,29 +73,29 @@ func (s SeriesNA) Or(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
@@ -107,7 +107,7 @@ func (s SeriesNA) Or(other any) Series {
 					resultNullMask = make([]uint8, 0)
 				}
 				result[0] = o.data[0]
-				return SeriesBool{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else {
 				resultSize := o.Len()
 				result := make([]bool, resultSize)
@@ -121,7 +121,7 @@ func (s SeriesNA) Or(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = o.data[i]
 				}
-				return SeriesBool{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
 		} else {
 			if o.Len() == 1 {
@@ -136,7 +136,7 @@ func (s SeriesNA) Or(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = o.data[0]
 				}
-				return SeriesBool{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
 				result := make([]bool, resultSize)
@@ -150,17 +150,17 @@ func (s SeriesNA) Or(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = o.data[i]
 				}
-				return SeriesBool{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
-			return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Mul(other any) Series {
+func (s NAs) Mul(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -168,111 +168,111 @@ func (s SeriesNA) Mul(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Div(other any) Series {
+func (s NAs) Div(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -280,111 +280,111 @@ func (s SeriesNA) Div(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Mod(other any) Series {
+func (s NAs) Mod(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -392,111 +392,111 @@ func (s SeriesNA) Mod(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Exp(other any) Series {
+func (s NAs) Exp(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -504,111 +504,111 @@ func (s SeriesNA) Exp(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Add(other any) Series {
+func (s NAs) Add(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -616,105 +616,105 @@ func (s SeriesNA) Add(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
@@ -726,7 +726,7 @@ func (s SeriesNA) Add(other any) Series {
 					resultNullMask = make([]uint8, 0)
 				}
 				result[0] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[0])
-				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else {
 				resultSize := o.Len()
 				result := make([]*string, resultSize)
@@ -740,7 +740,7 @@ func (s SeriesNA) Add(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[i])
 				}
-				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
 		} else {
 			if o.Len() == 1 {
@@ -755,7 +755,7 @@ func (s SeriesNA) Add(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[0])
 				}
-				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
 				result := make([]*string, resultSize)
@@ -769,55 +769,55 @@ func (s SeriesNA) Add(other any) Series {
 				for i := 0; i < resultSize; i++ {
 					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[i])
 				}
-				return SeriesString{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Sub(other any) Series {
+func (s NAs) Sub(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -825,149 +825,149 @@ func (s SeriesNA) Sub(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Eq(other any) Series {
+func (s NAs) Eq(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -975,168 +975,168 @@ func (s SeriesNA) Eq(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Ne(other any) Series {
+func (s NAs) Ne(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -1144,168 +1144,168 @@ func (s SeriesNA) Ne(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Gt(other any) Series {
+func (s NAs) Gt(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -1313,168 +1313,168 @@ func (s SeriesNA) Gt(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Ge(other any) Series {
+func (s NAs) Ge(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -1482,168 +1482,168 @@ func (s SeriesNA) Ge(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Lt(other any) Series {
+func (s NAs) Lt(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -1651,168 +1651,168 @@ func (s SeriesNA) Lt(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }
 
-func (s SeriesNA) Le(other any) Series {
+func (s NAs) Le(other any) Series {
 	var otherSeries Series
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
@@ -1820,163 +1820,163 @@ func (s SeriesNA) Le(other any) Series {
 		otherSeries = NewSeries(other, nil, false, false, s.ctx)
 	}
 	if s.ctx != otherSeries.GetContext() {
-		return SeriesError{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
-	case SeriesNA:
+	case NAs:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesBool:
+	case Bools:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt:
+	case Ints:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesInt64:
+	case Int64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesFloat64:
+	case Float64s:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesString:
+	case Strings:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesTime:
+	case Times:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
-	case SeriesDuration:
+	case Durations:
 		if s.Len() == 1 {
 			if o.Len() == 1 {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else {
 				resultSize := o.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
-				return SeriesNA{size: resultSize}
+				return NAs{size: resultSize}
 			}
-			return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
 	default:
-		return SeriesError{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
 	}
 
 }

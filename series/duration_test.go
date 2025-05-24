@@ -70,13 +70,13 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		switch i % 4 {
 		case 0:
-			s = s.Append(time.Duration(i)).(SeriesDuration)
+			s = s.Append(time.Duration(i)).(Durations)
 		case 1:
-			s = s.Append([]time.Duration{time.Duration(i)}).(SeriesDuration)
+			s = s.Append([]time.Duration{time.Duration(i)}).(Durations)
 		case 2:
-			s = s.Append(gandalff.NullableDuration{true, time.Duration(i)}).(SeriesDuration)
+			s = s.Append(gandalff.NullableDuration{true, time.Duration(i)}).(Durations)
 		case 3:
-			s = s.Append([]gandalff.NullableDuration{{false, time.Duration(i)}}).(SeriesDuration)
+			s = s.Append([]gandalff.NullableDuration{{false, time.Duration(i)}}).(Durations)
 		}
 
 		if s.Get(i) != time.Duration(i) {
@@ -88,19 +88,19 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(nil).(SeriesDuration)
+		s = s.Append(nil).(Durations)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesNA
+	// Append NAs
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 	na := NewSeriesNA(10, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(na).(SeriesDuration)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "SeriesDuration.Append") {
+		s = s.Append(na).(Durations)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], na.GetNullMask(), nil, "Durations.Append") {
 			t.Errorf("Expected %v, got %v at index %d", na.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -109,7 +109,7 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableDuration{false, time.Second}).(SeriesDuration)
+		s = s.Append(gandalff.NullableDuration{false, time.Second}).(Durations)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -119,19 +119,19 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableDuration{{false, time.Second}}).(SeriesDuration)
+		s = s.Append([]gandalff.NullableDuration{{false, time.Second}}).(Durations)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
 	}
 
-	// Append SeriesDuration
+	// Append Durations
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 	b := NewSeriesDuration(dataA, []bool{true, true, true, true, true, true, true, true, true, true}, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(b).(SeriesDuration)
-		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "SeriesDuration.Append") {
+		s = s.Append(b).(Durations)
+		if !utils.CheckEqSlice(s.GetNullMask()[s.Len()-10:], b.GetNullMask(), nil, "Durations.Append") {
 			t.Errorf("Expected %v, got %v at index %d", b.GetNullMask(), s.GetNullMask()[s.Len()-10:], i)
 		}
 	}
@@ -159,86 +159,86 @@ func Test_SeriesDuration_Arithmetic_Add(t *testing.T) {
 		SetNullMask([]bool{false, true, false, true, false, true, false, true, false, true})
 
 	// scalar | duration
-	if !utils.CheckEqSlice(durations.Add(durations).Data(), []time.Duration{time.Duration(2 * dayNano)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(durations).Data(), []time.Duration{time.Duration(2 * dayNano)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(2 * dayNano)}, durations.Add(durations).Data())
 	}
-	if !utils.CheckEqSlice(durations.Add(durationv).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(durationv).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, durations.Add(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durations_.Add(durations_).GetNullMask(), []bool{true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(durations_).GetNullMask(), []bool{true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true}, durations_.Add(durations_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durations_.Add(durationv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(durationv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durations_.Add(durationv_).GetNullMask())
 	}
 
 	// scalar | time
-	if !utils.CheckEqSlice(durations.Add(times).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(times).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)}, durations.Add(times).Data())
 	}
-	if !utils.CheckEqSlice(durations.Add(timev).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(timev).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, durations.Add(timev).Data())
 	}
-	if !utils.CheckEqSlice(durations_.Add(times_).GetNullMask(), []bool{true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(times_).GetNullMask(), []bool{true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true}, durations_.Add(times_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durations_.Add(timev_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(timev_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durations_.Add(timev_).GetNullMask())
 	}
 
 	// scalar | string
-	if !utils.CheckEqSlice(durations.Add(ss).Data(), []string{"24h0m0s2"}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(ss).Data(), []string{"24h0m0s2"}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []string{"24h0m0s2"}, durations.Add(ss).Data())
 	}
-	if !utils.CheckEqSlice(durations.Add(sv).Data(), []string{"24h0m0s1", "24h0m0s2", "24h0m0s3", "24h0m0s4", "24h0m0s5", "24h0m0s6", "24h0m0s7", "24h0m0s8", "24h0m0s9", "24h0m0s10"}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations.Add(sv).Data(), []string{"24h0m0s1", "24h0m0s2", "24h0m0s3", "24h0m0s4", "24h0m0s5", "24h0m0s6", "24h0m0s7", "24h0m0s8", "24h0m0s9", "24h0m0s10"}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []string{"24h0m0s1", "24h0m0s2", "24h0m0s3", "24h0m0s4", "24h0m0s5", "24h0m0s6", "24h0m0s7", "24h0m0s8", "24h0m0s9", "24h0m0s10"}, durations.Add(sv).Data())
 	}
-	if !utils.CheckEqSlice(durations_.Add(ss_).GetNullMask(), []bool{true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(ss_).GetNullMask(), []bool{true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true}, durations_.Add(ss_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durations_.Add(sv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durations_.Add(sv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durations_.Add(sv_).GetNullMask())
 	}
 
 	// vector | duration
-	if !utils.CheckEqSlice(durationv.Add(durations).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(durations).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano), time.Duration(10 * dayNano), time.Duration(11 * dayNano)}, durationv.Add(durations).Data())
 	}
-	if !utils.CheckEqSlice(durationv.Add(durationv).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(4 * dayNano), time.Duration(6 * dayNano), time.Duration(8 * dayNano), time.Duration(10 * dayNano), time.Duration(12 * dayNano), time.Duration(14 * dayNano), time.Duration(16 * dayNano), time.Duration(18 * dayNano), time.Duration(20 * dayNano)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(durationv).Data(), []time.Duration{time.Duration(2 * dayNano), time.Duration(4 * dayNano), time.Duration(6 * dayNano), time.Duration(8 * dayNano), time.Duration(10 * dayNano), time.Duration(12 * dayNano), time.Duration(14 * dayNano), time.Duration(16 * dayNano), time.Duration(18 * dayNano), time.Duration(20 * dayNano)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(2 * dayNano), time.Duration(4 * dayNano), time.Duration(6 * dayNano), time.Duration(8 * dayNano), time.Duration(10 * dayNano), time.Duration(12 * dayNano), time.Duration(14 * dayNano), time.Duration(16 * dayNano), time.Duration(18 * dayNano), time.Duration(20 * dayNano)}, durationv.Add(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(durations_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(durations_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durationv_.Add(durations_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{false, true, false, true, false, true, false, true, false, true}, durationv_.Add(durationv_).GetNullMask())
 	}
 
 	// vector | time
-	if !utils.CheckEqSlice(durationv.Add(times).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(times).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 7, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 11, 0, 0, 0, 0, time.UTC)}, durationv.Add(times).Data())
 	}
-	if !utils.CheckEqSlice(durationv.Add(timev).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 12, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 14, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 16, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 18, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 20, 0, 0, 0, 0, time.UTC)}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(timev).Data(), []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 12, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 14, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 16, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 18, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 20, 0, 0, 0, 0, time.UTC)}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []time.Time{time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 12, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 14, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 16, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 18, 0, 0, 0, 0, time.UTC), time.Date(2020, 1, 20, 0, 0, 0, 0, time.UTC)}, durationv.Add(timev).Data())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(times_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(times_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durationv_.Add(times_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(timev_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(timev_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durationv_.Add(timev_).GetNullMask())
 	}
 
 	// vector | string
-	if !utils.CheckEqSlice(durationv.Add(ss).Data(), []string{"24h0m0s2", "48h0m0s2", "72h0m0s2", "96h0m0s2", "120h0m0s2", "144h0m0s2", "168h0m0s2", "192h0m0s2", "216h0m0s2", "240h0m0s2"}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(ss).Data(), []string{"24h0m0s2", "48h0m0s2", "72h0m0s2", "96h0m0s2", "120h0m0s2", "144h0m0s2", "168h0m0s2", "192h0m0s2", "216h0m0s2", "240h0m0s2"}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []string{"24h0m0s2", "48h0m0s2", "72h0m0s2", "96h0m0s2", "120h0m0s2", "144h0m0s2", "168h0m0s2", "192h0m0s2", "216h0m0s2", "240h0m0s2"}, durationv.Add(ss).Data())
 	}
-	if !utils.CheckEqSlice(durationv.Add(sv).Data(), []string{"24h0m0s1", "48h0m0s2", "72h0m0s3", "96h0m0s4", "120h0m0s5", "144h0m0s6", "168h0m0s7", "192h0m0s8", "216h0m0s9", "240h0m0s10"}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv.Add(sv).Data(), []string{"24h0m0s1", "48h0m0s2", "72h0m0s3", "96h0m0s4", "120h0m0s5", "144h0m0s6", "168h0m0s7", "192h0m0s8", "216h0m0s9", "240h0m0s10"}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []string{"24h0m0s1", "48h0m0s2", "72h0m0s3", "96h0m0s4", "120h0m0s5", "144h0m0s6", "168h0m0s7", "192h0m0s8", "216h0m0s9", "240h0m0s10"}, durationv.Add(sv).Data())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(ss_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(ss_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durationv_.Add(ss_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durationv_.Add(sv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "SeriesDuration.Add") {
+	if !utils.CheckEqSlice(durationv_.Add(sv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "Durations.Add") {
 		t.Errorf("Expected %v, got %v", []bool{false, true, false, true, false, true, false, true, false, true}, durationv_.Add(sv_).GetNullMask())
 	}
 }
@@ -253,44 +253,44 @@ func Test_SeriesDuration_Arithmetic_Sub(t *testing.T) {
 		SetNullMask([]bool{false, true, false, true, false, true, false, true, false, true})
 
 	// scalar | duration
-	if !utils.CheckEqSlice(durations.Sub(durations).Data(), []time.Duration{time.Duration(0)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durations.Sub(durations).Data(), []time.Duration{time.Duration(0)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0)}, durations.Sub(durations).Data())
 	}
-	if !utils.CheckEqSlice(durations.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durations.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, durations.Sub(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durations_.Sub(durations_).GetNullMask(), []bool{true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durations_.Sub(durations_).GetNullMask(), []bool{true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{true}, durations_.Sub(durations_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durations_.Sub(durationv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durations_.Sub(durationv_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durations_.Sub(durationv_).GetNullMask())
 	}
 
 	// duration | scalar
-	if !utils.CheckEqSlice(durationv.Sub(durations).Data(), []time.Duration{time.Duration(0), time.Duration(1 * dayNano), time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv.Sub(durations).Data(), []time.Duration{time.Duration(0), time.Duration(1 * dayNano), time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0), time.Duration(1 * dayNano), time.Duration(2 * dayNano), time.Duration(3 * dayNano), time.Duration(4 * dayNano), time.Duration(5 * dayNano), time.Duration(6 * dayNano), time.Duration(7 * dayNano), time.Duration(8 * dayNano), time.Duration(9 * dayNano)}, durationv.Sub(durations).Data())
 	}
-	if !utils.CheckEqSlice(durationv.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, durationv.Sub(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durationv_.Sub(durations_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv_.Sub(durations_).GetNullMask(), []bool{true, true, true, true, true, true, true, true, true, true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{true, true, true, true, true, true, true, true, true, true}, durationv_.Sub(durations_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{false, true, false, true, false, true, false, true, false, true}, durationv_.Sub(durationv_).GetNullMask())
 	}
 
 	// duration | vector
-	if !utils.CheckEqSlice(durations.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durations.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0), time.Duration(-1 * dayNano), time.Duration(-2 * dayNano), time.Duration(-3 * dayNano), time.Duration(-4 * dayNano), time.Duration(-5 * dayNano), time.Duration(-6 * dayNano), time.Duration(-7 * dayNano), time.Duration(-8 * dayNano), time.Duration(-9 * dayNano)}, durations.Sub(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durationv.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv.Sub(durationv).Data(), []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []time.Duration{time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0), time.Duration(0)}, durationv.Sub(durationv).Data())
 	}
-	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{false, true, false, true, false, true, false, true, false, true}, durationv_.Sub(durationv_).GetNullMask())
 	}
-	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "SeriesDuration.Sub") {
+	if !utils.CheckEqSlice(durationv_.Sub(durationv_).GetNullMask(), []bool{false, true, false, true, false, true, false, true, false, true}, nil, "Durations.Sub") {
 		t.Errorf("Expected %v, got %v", []bool{false, true, false, true, false, true, false, true, false, true}, durationv_.Sub(durationv_).GetNullMask())
 	}
 }

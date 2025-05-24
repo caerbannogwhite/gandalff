@@ -8,8 +8,8 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-func (s SeriesString) printInfo() {
-	fmt.Println("SeriesString")
+func (s Strings) printInfo() {
+	fmt.Println("Strings")
 	fmt.Println("==========")
 	fmt.Println("IsNullable:", s.isNullable)
 	fmt.Println("Sorted:    ", s.sorted)
@@ -22,57 +22,57 @@ func (s SeriesString) printInfo() {
 ////////////////////////			BASIC ACCESSORS
 
 // Return the context of the series.
-func (s SeriesString) GetContext() *gandalff.Context {
+func (s Strings) GetContext() *gandalff.Context {
 	return s.ctx
 }
 
 // Return the number of elements in the series.
-func (s SeriesString) Len() int {
+func (s Strings) Len() int {
 	return len(s.data)
 }
 
 // Return the type of the series.
-func (s SeriesString) Type() meta.BaseType {
+func (s Strings) Type() meta.BaseType {
 	return meta.StringType
 }
 
 // Return the type and cardinality of the series.
-func (s SeriesString) TypeCard() meta.BaseTypeCard {
+func (s Strings) TypeCard() meta.BaseTypeCard {
 	return meta.BaseTypeCard{Base: meta.StringType, Card: s.Len()}
 }
 
 // Return if the series is grouped.
-func (s SeriesString) IsGrouped() bool {
+func (s Strings) IsGrouped() bool {
 	return s.partition != nil
 }
 
 // Return if the series admits null values.
-func (s SeriesString) IsNullable() bool {
+func (s Strings) IsNullable() bool {
 	return s.isNullable
 }
 
 // Return if the series is sorted.
-func (s SeriesString) IsSorted() gandalff.SeriesSortOrder {
+func (s Strings) IsSorted() gandalff.SeriesSortOrder {
 	return s.sorted
 }
 
 // Return if the series is error.
-func (s SeriesString) IsError() bool {
+func (s Strings) IsError() bool {
 	return false
 }
 
 // Return the error message of the series.
-func (s SeriesString) GetError() string {
+func (s Strings) GetError() string {
 	return ""
 }
 
 // Return the partition of the series.
-func (s SeriesString) GetPartition() SeriesPartition {
+func (s Strings) GetPartition() SeriesPartition {
 	return s.partition
 }
 
 // Return if the series has null values.
-func (s SeriesString) HasNull() bool {
+func (s Strings) HasNull() bool {
 	for _, v := range s.nullMask {
 		if v != 0 {
 			return true
@@ -82,7 +82,7 @@ func (s SeriesString) HasNull() bool {
 }
 
 // Return the number of null values in the series.
-func (s SeriesString) NullCount() int {
+func (s Strings) NullCount() int {
 	count := 0
 	for _, x := range s.nullMask {
 		for ; x != 0; x >>= 1 {
@@ -93,7 +93,7 @@ func (s SeriesString) NullCount() int {
 }
 
 // Return if the element at index i is null.
-func (s SeriesString) IsNull(i int) bool {
+func (s Strings) IsNull(i int) bool {
 	if s.isNullable {
 		return s.nullMask[i>>3]&(1<<uint(i%8)) != 0
 	}
@@ -101,7 +101,7 @@ func (s SeriesString) IsNull(i int) bool {
 }
 
 // Return the null mask of the series.
-func (s SeriesString) GetNullMask() []bool {
+func (s Strings) GetNullMask() []bool {
 	mask := make([]bool, len(s.data))
 	idx := 0
 	for _, v := range s.nullMask {
@@ -114,9 +114,9 @@ func (s SeriesString) GetNullMask() []bool {
 }
 
 // Set the null mask of the series.
-func (s SeriesString) SetNullMask(mask []bool) Series {
+func (s Strings) SetNullMask(mask []bool) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.SetNullMask: cannot set values on a grouped series"}
+		return Errors{"Strings.SetNullMask: cannot set values on a grouped series"}
 	}
 
 	if s.isNullable {
@@ -146,7 +146,7 @@ func (s SeriesString) SetNullMask(mask []bool) Series {
 }
 
 // Make the series nullable.
-func (s SeriesString) MakeNullable() Series {
+func (s Strings) MakeNullable() Series {
 	if !s.isNullable {
 		s.isNullable = true
 		s.nullMask = __binVecInit(len(s.data), false)
@@ -155,7 +155,7 @@ func (s SeriesString) MakeNullable() Series {
 }
 
 // Make the series non-nullable.
-func (s SeriesString) MakeNonNullable() Series {
+func (s Strings) MakeNonNullable() Series {
 	if s.isNullable {
 		s.isNullable = false
 		s.nullMask = make([]uint8, 0)
@@ -164,26 +164,26 @@ func (s SeriesString) MakeNonNullable() Series {
 }
 
 // Get the element at index i.
-func (s SeriesString) Get(i int) any {
+func (s Strings) Get(i int) any {
 	return *s.data[i]
 }
 
 // Append appends a value or a slice of values to the series.
-func (s SeriesString) Append(v any) Series {
+func (s Strings) Append(v any) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesString.Append: cannot append values to a grouped series"}
+		return Errors{"Strings.Append: cannot append values to a grouped series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
 		s.data = append(s.data, s.ctx.StringPool.Put(gandalff.NA_TEXT))
-		s = s.MakeNullable().(SeriesString)
+		s = s.MakeNullable().(Strings)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
 		s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
 
-	case SeriesNA:
+	case NAs:
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, v.Len(), true, __binVecInit(v.Len(), true))
 		s.data = append(s.data, make([]*string, v.Len())...)
 
@@ -204,7 +204,7 @@ func (s SeriesString) Append(v any) Series {
 
 	case gandalff.NullableString:
 		s.data = append(s.data, s.ctx.StringPool.Put(v.Value))
-		s = s.MakeNullable().(SeriesString)
+		s = s.MakeNullable().(Strings)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, 0)
 		}
@@ -215,7 +215,7 @@ func (s SeriesString) Append(v any) Series {
 	case []gandalff.NullableString:
 		ssize := len(s.data)
 		s.data = append(s.data, make([]*string, len(v))...)
-		s = s.MakeNullable().(SeriesString)
+		s = s.MakeNullable().(Strings)
 		if len(s.data) > len(s.nullMask)<<3 {
 			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask)+1)...)
 		}
@@ -226,16 +226,16 @@ func (s SeriesString) Append(v any) Series {
 			}
 		}
 
-	case SeriesString:
+	case Strings:
 		if s.ctx != v.ctx {
-			return SeriesError{"SeriesString.Append: cannot append SeriesString from different contexts"}
+			return Errors{"Strings.Append: cannot append Strings from different contexts"}
 		}
 
 		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, len(v.data), v.isNullable, v.nullMask)
 		s.data = append(s.data, v.data...)
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.Append: invalid type %T", v)}
+		return Errors{fmt.Sprintf("Strings.Append: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -243,16 +243,16 @@ func (s SeriesString) Append(v any) Series {
 }
 
 // Take the elements according to the given interval.
-func (s SeriesString) Take(params ...int) Series {
-	indeces, err := seriesTakePreprocess("SeriesString", s.Len(), params...)
+func (s Strings) Take(params ...int) Series {
+	indeces, err := seriesTakePreprocess("Strings", s.Len(), params...)
 	if err != nil {
-		return SeriesError{err.Error()}
+		return Errors{err.Error()}
 	}
 	return s.filterIntSlice(indeces, false)
 }
 
 // Return the elements of the series as a slice.
-func (s SeriesString) Data() any {
+func (s Strings) Data() any {
 	data := make([]string, len(s.data))
 	for i, v := range s.data {
 		data[i] = *v
@@ -261,13 +261,13 @@ func (s SeriesString) Data() any {
 }
 
 // Copy the series.
-func (s SeriesString) Copy() Series {
+func (s Strings) Copy() Series {
 	data := make([]*string, len(s.data))
 	copy(data, s.data)
 	nullMask := make([]uint8, len(s.nullMask))
 	copy(nullMask, s.nullMask)
 
-	return SeriesString{
+	return Strings{
 		isNullable: s.isNullable,
 		sorted:     s.sorted,
 		data:       data,
@@ -277,12 +277,12 @@ func (s SeriesString) Copy() Series {
 	}
 }
 
-func (s SeriesString) getData() []*string {
+func (s Strings) getData() []*string {
 	return s.data
 }
 
 // Ungroup the series.
-func (s SeriesString) UnGroup() Series {
+func (s Strings) UnGroup() Series {
 	s.partition = nil
 	return s
 }
@@ -290,25 +290,25 @@ func (s SeriesString) UnGroup() Series {
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
-// Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
-func (s SeriesString) Filter(mask any) Series {
+// Mask can be Bools, Ints, bool slice or a int slice.
+func (s Strings) Filter(mask any) Series {
 	switch mask := mask.(type) {
-	case SeriesBool:
+	case Bools:
 		return s.filterBoolSlice(mask.data)
-	case SeriesInt:
+	case Ints:
 		return s.filterIntSlice(mask.data, true)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
 		return s.filterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.Filter: invalid type %T", mask)}
+		return Errors{fmt.Sprintf("Strings.Filter: invalid type %T", mask)}
 	}
 }
 
-func (s SeriesString) filterBoolSlice(mask []bool) Series {
+func (s Strings) filterBoolSlice(mask []bool) Series {
 	if len(mask) != len(s.data) {
-		return SeriesError{fmt.Sprintf("SeriesString.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
+		return Errors{fmt.Sprintf("Strings.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
 	}
 
 	elementCount := 0
@@ -354,7 +354,7 @@ func (s SeriesString) filterBoolSlice(mask []bool) Series {
 	return s
 }
 
-func (s SeriesString) filterIntSlice(indexes []int, check bool) Series {
+func (s Strings) filterIntSlice(indexes []int, check bool) Series {
 	if len(indexes) == 0 {
 		s.data = make([]*string, 0)
 		s.nullMask = make([]uint8, 0)
@@ -365,7 +365,7 @@ func (s SeriesString) filterIntSlice(indexes []int, check bool) Series {
 	if check {
 		for _, v := range indexes {
 			if v < 0 || v >= len(s.data) {
-				return SeriesError{fmt.Sprintf("SeriesString.Filter: index %d is out of range", v)}
+				return Errors{fmt.Sprintf("Strings.Filter: index %d is out of range", v)}
 			}
 		}
 	}
@@ -400,7 +400,7 @@ func (s SeriesString) filterIntSlice(indexes []int, check bool) Series {
 }
 
 // Apply the given function to each element of the series.
-func (s SeriesString) Map(f gandalff.MapFunc) Series {
+func (s Strings) Map(f gandalff.MapFunc) Series {
 	if len(s.data) == 0 {
 		return s
 	}
@@ -413,7 +413,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(*s.data[i]).(bool)
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -428,7 +428,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(*s.data[i]).(int)
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -443,7 +443,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(*s.data[i]).(int64)
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -458,7 +458,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(*s.data[i]).(float64)
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -473,7 +473,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = s.ctx.StringPool.Put(f(*s.data[i]).(string))
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -488,7 +488,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(*s.data[i]).(time.Time)
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -503,7 +503,7 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 			data[i] = f(s.data[i]).(time.Duration)
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: s.isNullable,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -513,18 +513,18 @@ func (s SeriesString) Map(f gandalff.MapFunc) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.Map: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("Strings.Map: Unsupported type %T", v)}
 	}
 }
 
 // Apply the given function to each element of the series.
-func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
+func (s Strings) MapNull(f gandalff.MapFuncNull) Series {
 	if len(s.data) == 0 {
 		return s
 	}
 
 	if !s.isNullable {
-		return SeriesError{"SeriesString.MapNull: series is not nullable"}
+		return Errors{"Strings.MapNull: series is not nullable"}
 	}
 
 	v, isNull := f(s.Get(0), s.IsNull(0))
@@ -540,7 +540,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesBool{
+		return Bools{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -560,7 +560,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -580,7 +580,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -600,7 +600,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -620,7 +620,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -640,7 +640,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesTime{
+		return Times{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -660,7 +660,7 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 			}
 		}
 
-		return SeriesDuration{
+		return Durations{
 			isNullable: true,
 			sorted:     gandalff.SORTED_NONE,
 			data:       data,
@@ -670,6 +670,6 @@ func (s SeriesString) MapNull(f gandalff.MapFuncNull) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesString.MapNull: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("Strings.MapNull: Unsupported type %T", v)}
 	}
 }

@@ -445,7 +445,7 @@ func readRowData(reader RowDataProvider, nullValues bool, guessDataTypeLen int, 
 			_series[i] = series.NewSeriesFloat64(values[i].([]float64), nullMasks[i], false, ctx)
 
 		case meta.StringType:
-			_series[i] = series.SeriesString{
+			_series[i] = series.Strings{
 				isNullable: nullValues,
 				data:       values[i].([]*string),
 				nullMask:   __binVecFromBools(nullMasks[i]),

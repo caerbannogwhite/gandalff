@@ -8,9 +8,9 @@ import (
 	"github.com/caerbannogwhite/gandalff/meta"
 )
 
-// SeriesBool represents a series of bools.
+// Bools represents a series of bools.
 // The data is stored as a byte array, with each bit representing a bool.
-type SeriesBool struct {
+type Bools struct {
 	isNullable bool
 	sorted     gandalff.SeriesSortOrder
 	data       []bool
@@ -20,7 +20,7 @@ type SeriesBool struct {
 }
 
 // Get the element at index i as a string.
-func (s SeriesBool) GetAsString(i int) string {
+func (s Bools) GetAsString(i int) string {
 	if s.isNullable && s.nullMask[i>>3]&(1<<uint(i%8)) != 0 {
 		return gandalff.NA_TEXT
 	} else if s.data[i] {
@@ -31,21 +31,21 @@ func (s SeriesBool) GetAsString(i int) string {
 }
 
 // Set the element at index i. The value must be of type bool or NullableBool.
-func (s SeriesBool) Set(i int, v any) Series {
+func (s Bools) Set(i int, v any) Series {
 	if s.partition != nil {
-		return SeriesError{"SeriesBool.Set: cannot set values in a grouped series"}
+		return Errors{"Bools.Set: cannot set values in a grouped series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
-		s = s.MakeNullable().(SeriesBool)
+		s = s.MakeNullable().(Bools)
 		s.nullMask[i>>3] |= 1 << uint(i%8)
 
 	case bool:
 		s.data[i] = v
 
 	case gandalff.NullableBool:
-		s = s.MakeNullable().(SeriesBool)
+		s = s.MakeNullable().(Bools)
 		if v.Valid {
 			s.data[i] = v.Value
 		} else {
@@ -54,7 +54,7 @@ func (s SeriesBool) Set(i int, v any) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesBool.Set: invalid type %T", v)}
+		return Errors{fmt.Sprintf("Bools.Set: invalid type %T", v)}
 	}
 
 	s.sorted = gandalff.SORTED_NONE
@@ -64,12 +64,12 @@ func (s SeriesBool) Set(i int, v any) Series {
 ////////////////////////			ALL DATA ACCESSORS
 
 // Return the underlying data as a slice of bools.
-func (s SeriesBool) Bools() []bool {
+func (s Bools) Bools() []bool {
 	return s.data
 }
 
 // Return the underlying data as a slice of NullableBool.
-func (s SeriesBool) DataAsNullable() any {
+func (s Bools) DataAsNullable() any {
 	data := make([]gandalff.NullableBool, len(s.data))
 	for i, v := range s.data {
 		data[i] = gandalff.NullableBool{Valid: !s.IsNull(i), Value: v}
@@ -78,7 +78,7 @@ func (s SeriesBool) DataAsNullable() any {
 }
 
 // Return the data as a slice of strings.
-func (s SeriesBool) DataAsString() []string {
+func (s Bools) DataAsString() []string {
 	data := make([]string, len(s.data))
 	if s.isNullable {
 		for i, v := range s.data {
@@ -103,7 +103,7 @@ func (s SeriesBool) DataAsString() []string {
 }
 
 // Cast the series to a given type.
-func (s SeriesBool) Cast(t meta.BaseType) Series {
+func (s Bools) Cast(t meta.BaseType) Series {
 	switch t {
 	case meta.BoolType:
 		return s
@@ -116,7 +116,7 @@ func (s SeriesBool) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesInt{
+		return Ints{
 			isNullable: s.isNullable,
 			sorted:     s.sorted,
 			data:       data,
@@ -133,7 +133,7 @@ func (s SeriesBool) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesInt64{
+		return Int64s{
 			isNullable: s.isNullable,
 			sorted:     s.sorted,
 			data:       data,
@@ -150,7 +150,7 @@ func (s SeriesBool) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesFloat64{
+		return Float64s{
 			isNullable: s.isNullable,
 			sorted:     s.sorted,
 			data:       data,
@@ -186,7 +186,7 @@ func (s SeriesBool) Cast(t meta.BaseType) Series {
 			}
 		}
 
-		return SeriesString{
+		return Strings{
 			isNullable: s.isNullable,
 			sorted:     s.sorted,
 			data:       data,
@@ -196,13 +196,13 @@ func (s SeriesBool) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("SeriesBool.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Bools.Cast: invalid type %s", t.ToString())}
 	}
 }
 
 ////////////////////////			GROUPING OPERATIONS
 
-// A SeriesBoolPartition is a partition of a SeriesBool.
+// A SeriesBoolPartition is a partition of a Bools.
 // Each key is a hash of a bool value, and each value is a slice of indices
 // of the original series that are set to that value.
 type SeriesBoolPartition struct {
@@ -217,7 +217,7 @@ func (gp *SeriesBoolPartition) getMap() map[int64][]int {
 	return gp.partition
 }
 
-func (s SeriesBool) group() Series {
+func (s Bools) group() Series {
 
 	// Define the worker callback
 	worker := func(threadNum, start, end int, map_ map[int64][]int) {
@@ -255,7 +255,7 @@ func (s SeriesBool) group() Series {
 	return s
 }
 
-func (s SeriesBool) GroupBy(partition SeriesPartition) Series {
+func (s Bools) GroupBy(partition SeriesPartition) Series {
 	// collect all keys
 	otherIndeces := partition.getMap()
 	keys := make([]int64, len(otherIndeces))
@@ -310,7 +310,7 @@ func (s SeriesBool) GroupBy(partition SeriesPartition) Series {
 
 ////////////////////////			SORTING OPERATIONS
 
-func (s SeriesBool) Less(i, j int) bool {
+func (s Bools) Less(i, j int) bool {
 	if s.isNullable {
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 {
 			return false
@@ -322,7 +322,7 @@ func (s SeriesBool) Less(i, j int) bool {
 	return !s.data[i] && s.data[j]
 }
 
-func (s SeriesBool) equal(i, j int) bool {
+func (s Bools) equal(i, j int) bool {
 	if s.isNullable {
 		if (s.nullMask[i>>3] & (1 << uint(i%8))) > 0 {
 			return (s.nullMask[j>>3] & (1 << uint(j%8))) > 0
@@ -335,7 +335,7 @@ func (s SeriesBool) equal(i, j int) bool {
 	return s.data[i] == s.data[j]
 }
 
-func (s SeriesBool) Swap(i, j int) {
+func (s Bools) Swap(i, j int) {
 	if s.isNullable {
 		// i is null, j is not null
 		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 && s.nullMask[j>>3]&(1<<uint(j%8)) == 0 {
@@ -353,7 +353,7 @@ func (s SeriesBool) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 
-func (s SeriesBool) Sort() Series {
+func (s Bools) Sort() Series {
 	if s.sorted != gandalff.SORTED_ASC {
 		sort.Sort(s)
 		s.sorted = gandalff.SORTED_ASC
@@ -361,7 +361,7 @@ func (s SeriesBool) Sort() Series {
 	return s
 }
 
-func (s SeriesBool) SortRev() Series {
+func (s Bools) SortRev() Series {
 	if s.sorted != gandalff.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
 		s.sorted = gandalff.SORTED_DESC
