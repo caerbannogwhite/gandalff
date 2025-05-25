@@ -209,7 +209,7 @@ func Test_SeriesBool_Append(t *testing.T) {
 			case 2:
 				s = s.Append(gandalff.NullableBool{Valid: true, Value: true}).(Bools)
 			case 3:
-				s = s.Append([]gandalff.NullableBool{{Valid: true, Value: false}}).(Bools)
+				s = s.Append([]gandalff.NullableBool{{Valid: true, Value: true}}).(Bools)
 			}
 
 			if s.Get(i) != true {
@@ -222,9 +222,9 @@ func Test_SeriesBool_Append(t *testing.T) {
 			case 1:
 				s = s.Append([]bool{false}).(Bools)
 			case 2:
-				s = s.Append(gandalff.NullableBool{true, false}).(Bools)
+				s = s.Append(gandalff.NullableBool{Valid: true, Value: false}).(Bools)
 			case 3:
-				s = s.Append([]gandalff.NullableBool{{false, false}}).(Bools)
+				s = s.Append([]gandalff.NullableBool{{Valid: true, Value: false}}).(Bools)
 			}
 
 			if s.Get(i) != false {
@@ -258,7 +258,7 @@ func Test_SeriesBool_Append(t *testing.T) {
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableBool{false, true}).(Bools)
+		s = s.Append(gandalff.NullableBool{Valid: false, Value: false}).(Bools)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -268,7 +268,7 @@ func Test_SeriesBool_Append(t *testing.T) {
 	s = NewSeriesBool([]bool{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableBool{{false, true}}).(Bools)
+		s = s.Append([]gandalff.NullableBool{{Valid: false, Value: false}}).(Bools)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
