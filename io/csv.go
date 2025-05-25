@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strings"
 
 	"io"
 
@@ -83,27 +84,27 @@ func (r *CsvReader) SetContext(ctx *gandalff.Context) *CsvReader {
 	return r
 }
 
-func (r *CsvReader) Read() (*IoData, error) {
+func (r *CsvReader) Read() *IoData {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return nil, err
+			return &IoData{Error: err}
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return nil, fmt.Errorf("CsvReader: no reader specified")
+		return &IoData{Error: fmt.Errorf("CsvReader: no reader specified")}
 	}
 
 	if r.ctx == nil {
-		return nil, fmt.Errorf("CsvReader: no context specified")
+		return &IoData{Error: fmt.Errorf("CsvReader: no context specified")}
 	}
 
 	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 	if err != nil {
-		return nil, err
+		return &IoData{Error: err}
 	}
 
 	iod := IoData{
@@ -119,7 +120,7 @@ func (r *CsvReader) Read() (*IoData, error) {
 		})
 	}
 
-	return &iod, nil
+	return &iod
 }
 
 // ReadCsv reads a CSV file and returns a GDLDataFrame.
@@ -167,6 +168,15 @@ func readCsv(
 	return names, series, nil
 }
 
+type CsvQuotingType int
+
+const (
+	CsvQuotingNone CsvQuotingType = iota
+	CsvQuotingAll
+	CsvQuotingNeeded
+	CsvQuotingNonNumeric
+)
+
 type CsvWriter struct {
 	delimiter rune
 	header    bool
@@ -174,6 +184,8 @@ type CsvWriter struct {
 	path      string
 	naText    string
 	eol       string
+	quote     string
+	quoting   CsvQuotingType
 	writer    io.Writer
 	ioData    *IoData
 }
@@ -185,7 +197,9 @@ func NewCsvWriter() *CsvWriter {
 		format:    true,
 		path:      "",
 		naText:    gandalff.NA_TEXT,
-		eol:       "\n",
+		eol:       gandalff.EOL,
+		quote:     gandalff.QUOTE,
+		quoting:   CsvQuotingNeeded,
 		writer:    nil,
 		ioData:    nil,
 	}
@@ -221,6 +235,16 @@ func (w *CsvWriter) SetEol(eol string) *CsvWriter {
 	return w
 }
 
+func (w *CsvWriter) SetQuote(quote string) *CsvWriter {
+	w.quote = quote
+	return w
+}
+
+func (w *CsvWriter) SetQuoting(quoting CsvQuotingType) *CsvWriter {
+	w.quoting = quoting
+	return w
+}
+
 func (w *CsvWriter) SetWriter(writer io.Writer) *CsvWriter {
 	w.writer = writer
 	return w
@@ -236,6 +260,10 @@ func (w *CsvWriter) Write() error {
 		return fmt.Errorf("CsvWriter: no ioData specified")
 	}
 
+	if w.ioData.Error != nil {
+		return w.ioData.Error
+	}
+
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
@@ -249,7 +277,7 @@ func (w *CsvWriter) Write() error {
 		return fmt.Errorf("CsvWriter: no writer specified")
 	}
 
-	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText, w.eol)
+	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText, w.eol, w.quote, w.quoting)
 	if err != nil {
 		return err
 	}
@@ -257,12 +285,7 @@ func (w *CsvWriter) Write() error {
 	return nil
 }
 
-func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string, eol string) error {
-	// _series := make([]series.Series, len(ioData.Series))
-	// for i := 0; i < len(ioData.Series); i++ {
-	// 	_series[i] = ioData.Series[i]
-	// }
-
+func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string, eol string, quote string, quoting CsvQuotingType) error {
 	if header {
 		for i, meta := range ioData.SeriesMeta {
 			if i > 0 {
@@ -283,7 +306,31 @@ func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, for
 			if s.IsNull(i) {
 				fmt.Fprintf(writer, "%s", naText)
 			} else {
-				fmt.Fprintf(writer, "%s", s.GetAsString(i))
+				switch quoting {
+				case CsvQuotingNone:
+					fmt.Fprintf(writer, "%s", s.GetAsString(i))
+
+				case CsvQuotingAll:
+					fmt.Fprintf(writer, "%s", quote+s.GetAsString(i)+quote)
+
+				case CsvQuotingNeeded:
+					str := s.GetAsString(i)
+					if strings.Contains(str, quote) || strings.Contains(str, string(delimiter)) || strings.Contains(str, eol) {
+						fmt.Fprintf(writer, "%s", quote+str+quote)
+					} else {
+						fmt.Fprintf(writer, "%s", str)
+					}
+
+				case CsvQuotingNonNumeric:
+					if s.Type() == meta.Float64Type || s.Type() == meta.Int64Type || s.Type() == meta.IntType {
+						fmt.Fprintf(writer, "%s", s.GetAsString(i))
+					} else {
+						fmt.Fprintf(writer, "%s", quote+s.GetAsString(i)+quote)
+					}
+
+				default:
+					return fmt.Errorf("writeCsv: invalid quoting type")
+				}
 			}
 		}
 

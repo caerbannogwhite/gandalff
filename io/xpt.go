@@ -72,22 +72,22 @@ func (r *XptReader) SetReader(reader io.Reader) *XptReader {
 	return r
 }
 
-func (r *XptReader) Read() (*IoData, error) {
+func (r *XptReader) Read() *IoData {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return nil, err
+			return &IoData{Error: err}
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return nil, fmt.Errorf("XptReader: no reader specified")
+		return &IoData{Error: fmt.Errorf("XptReader: no reader specified")}
 	}
 
 	if r.ctx == nil {
-		return nil, fmt.Errorf("XptReader: no context specified")
+		return &IoData{Error: fmt.Errorf("XptReader: no context specified")}
 	}
 
 	var err error
@@ -100,11 +100,11 @@ func (r *XptReader) Read() (*IoData, error) {
 	case XPT_VERSION_8, XPT_VERSION_9:
 		names, series, err = readXPTv89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	default:
-		return nil, fmt.Errorf("XptReader: unknown version")
+		return &IoData{Error: fmt.Errorf("XptReader: unknown version")}
 	}
 
 	if err != nil {
-		return nil, err
+		return &IoData{Error: err}
 	}
 
 	ioData := NewIoData(r.ctx)
@@ -112,7 +112,7 @@ func (r *XptReader) Read() (*IoData, error) {
 		ioData.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
-	return ioData, nil
+	return ioData
 }
 
 type XptWriter struct {

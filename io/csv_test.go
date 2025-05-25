@@ -151,15 +151,15 @@ Charlie,33,95.0,t
 `
 
 	// Create a new dataframe from the CSV data.
-	iod, err := FromCsv(ctx).
+	iod := FromCsv(ctx).
 		SetReader(strings.NewReader(data)).
 		SetDelimiter(',').
 		SetHeader(true).
 		SetGuessDataTypeLen(3).
 		Read()
 
-	if err != nil {
-		t.Error(err)
+	if iod.Error != nil {
+		t.Error(iod.Error)
 	}
 
 	// Check the number of rows.
@@ -284,15 +284,15 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		iod, err = FromCsv(ctx).
+		iod = FromCsv(ctx).
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).
 			SetGuessDataTypeLen(100).
 			Read()
 
-		if err != nil {
-			b.Error(err)
+		if iod.Error != nil {
+			b.Error(iod.Error)
 		}
 
 		f.Close()
@@ -367,15 +367,15 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 			b.Error(err)
 		}
 
-		iod, err = FromCsv(ctx).
+		iod = FromCsv(ctx).
 			SetReader(f).
 			SetDelimiter(',').
 			SetHeader(true).
 			SetGuessDataTypeLen(100).
 			Read()
 
-		if err != nil {
-			b.Error(err)
+		if iod.Error != nil {
+			b.Error(iod.Error)
 		}
 
 		f.Close()
@@ -450,16 +450,16 @@ func Test_IoCsv_ValidWrite(t *testing.T) {
 		Write()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	_, err = os.Stat("test.csv")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	err = os.Remove("test.csv")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }

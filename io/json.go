@@ -42,27 +42,27 @@ func (r *JsonReader) SetSchema(schema *meta.Schema) *JsonReader {
 	return r
 }
 
-func (r *JsonReader) Read() (*IoData, error) {
+func (r *JsonReader) Read() *IoData {
 	if r.path != "" {
 		file, err := os.OpenFile(r.path, os.O_RDONLY, 0666)
 		if err != nil {
-			return nil, err
+			return &IoData{Error: err}
 		}
 		defer file.Close()
 		r.reader = file
 	}
 
 	if r.reader == nil {
-		return nil, fmt.Errorf("JsonReader: no reader specified")
+		return &IoData{Error: fmt.Errorf("JsonReader: no reader specified")}
 	}
 
 	if r.ctx == nil {
-		return nil, fmt.Errorf("JsonReader: no context specified")
+		return &IoData{Error: fmt.Errorf("JsonReader: no context specified")}
 	}
 
 	names, series, err := readJson(r.reader, r.schema, r.ctx)
 	if err != nil {
-		return nil, err
+		return &IoData{Error: err}
 	}
 
 	iod := IoData{
@@ -78,7 +78,7 @@ func (r *JsonReader) Read() (*IoData, error) {
 		})
 	}
 
-	return &iod, nil
+	return &iod
 }
 
 func readJson(reader io.Reader, schema *meta.Schema, ctx *gandalff.Context) ([]string, []series.Series, error) {

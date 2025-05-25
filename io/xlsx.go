@@ -72,15 +72,15 @@ func (r *XlsxReader) SetSchema(schema *meta.Schema) *XlsxReader {
 	return r
 }
 
-func (r *XlsxReader) Read() (*IoData, error) {
+func (r *XlsxReader) Read() *IoData {
 	if r.ctx == nil {
-		return nil, fmt.Errorf("XlsxReader: no context specified")
+		return &IoData{Error: fmt.Errorf("XlsxReader: no context specified")}
 	}
 
 	names, series, err := readXlsx(r.path, r.sheet, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
 
 	if err != nil {
-		return nil, err
+		return &IoData{Error: err}
 	}
 
 	iod := NewIoData(r.ctx)
@@ -88,7 +88,7 @@ func (r *XlsxReader) Read() (*IoData, error) {
 		iod.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
-	return iod, nil
+	return iod
 }
 
 type xlsxRowReader struct {

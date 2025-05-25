@@ -9,77 +9,76 @@ import (
 )
 
 func Test_IoAll(t *testing.T) {
-	var err error
 	var iod *IoData
 
-	iod, err = FromXpt(ctx).
+	iod = FromXpt(ctx).
 		SetPath(filepath.Join(testDataFolder, "xpt_test_mixed.xpt")).
 		SetVersion(XPT_VERSION_9).
 		Read()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// to JSON
-	err = iod.ToJson().
+	iod.ToJson().
 		SetPath(filepath.Join(testDataFolder, "test.json")).
 		Write()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// From JSON
-	iod, err = FromJson(ctx).
+	iod = FromJson(ctx).
 		SetPath(filepath.Join(testDataFolder, "test.json")).
 		Read()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// to CSV
-	err = iod.ToCsv().
+	iod.ToCsv().
 		SetPath(filepath.Join(testDataFolder, "test.csv")).
 		SetNaText("").
 		SetDelimiter(',').
 		Write()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// From CSV
-	iod, err = FromCsv(ctx).
+	iod = FromCsv(ctx).
 		SetPath(filepath.Join(testDataFolder, "test.csv")).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// to Excel
-	err = iod.ToXlsx().
+	iod.ToXlsx().
 		SetPath(filepath.Join(testDataFolder, "test.xlsx")).
 		SetSheet("test").
 		SetNaText("").
 		Write()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	// From Excel
-	iod, err = FromXlsx(ctx).
+	iod = FromXlsx(ctx).
 		SetPath(filepath.Join(testDataFolder, "test.xlsx")).
 		SetSheet("test").
 		Read()
 
-	if err != nil {
-		t.Errorf(err.Error())
+	if iod.Error != nil {
+		t.Errorf(iod.Error.Error())
 	}
 
 	os.Remove(filepath.Join(testDataFolder, "test.json"))

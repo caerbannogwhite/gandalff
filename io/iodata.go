@@ -9,21 +9,29 @@ import (
 )
 
 type IoData struct {
+	ctx *gandalff.Context
+
 	FileMeta   FileMeta
 	SeriesMeta []SeriesMeta
 	Series     []series.Series
+	Error      error
 }
 
 type FileMeta struct {
-	FileName string
-	FilePath string
-	Created  time.Time
-	Modified time.Time
+	FileName     string
+	FilePath     string
+	Label        string
+	Created      time.Time
+	LastModified time.Time
 }
 
 type SeriesMeta struct {
-	Name  string
-	Label string
+	Format      string
+	Label       string
+	Length      int
+	KeySequence int
+	Name        string
+	Type        meta.BaseType
 }
 
 func (iod *IoData) AddSeries(series series.Series, meta SeriesMeta) {
@@ -56,8 +64,15 @@ func (iod *IoData) Types() []meta.BaseType {
 	return types
 }
 
+func (iod *IoData) GetContext() *gandalff.Context {
+	return iod.ctx
+}
+
 func (iod *IoData) NRows() int {
-	return iod.Series[0].Len()
+	if len(iod.Series) >= 1 {
+		return iod.Series[0].Len()
+	}
+	return 0
 }
 
 func (iod *IoData) NCols() int {
@@ -90,6 +105,7 @@ func (iod *IoData) ToXpt() *XptWriter {
 
 func NewIoData(ctx *gandalff.Context) *IoData {
 	return &IoData{
+		ctx:        ctx,
 		Series:     make([]series.Series, 0),
 		SeriesMeta: make([]SeriesMeta, 0),
 		FileMeta:   FileMeta{},
