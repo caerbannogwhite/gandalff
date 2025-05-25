@@ -10,6 +10,8 @@ similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
 
 Gandalff is a work in progress, and the API is not stable yet.
+The DataFrame package is still being developed.
+
 However, it already supports the following formats:
 
 - CSV
@@ -164,7 +166,6 @@ Built with:
 - [ ] Add format option to each writer.
 - [ ] JSON reader by records.
 - [ ] Implement chunked series.
-- [ ] Implement OpenAI interface.
 - [ ] Implement Parquet reader and writer.
 - [ ] Implement SPSS reader and writer.
 - [ ] Implement SAS7BDAT reader and writer (https://cran.r-project.org/web/packages/sas7bdat/vignettes/sas7bdat.pdf)
