@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 var G1_1e4_1e2_0_0_df *DataFrame
@@ -188,10 +189,10 @@ func Benchmark_Filter_Q1_1e5(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).Or(
+			}).(series.Bools).Or(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools)).(Bools))
+				}).(series.Bools)).(series.Bools))
 	}
 	b.StopTimer()
 }
@@ -209,10 +210,10 @@ func Benchmark_Filter_Q1_1e6(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).Or(
+			}).(series.Bools).Or(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools)).(Bools))
+				}).(series.Bools)).(series.Bools))
 	}
 	b.StopTimer()
 }
@@ -230,10 +231,10 @@ func Benchmark_Filter_Q1_1e7(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).Or(
+			}).(series.Bools).Or(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools)).(Bools))
+				}).(series.Bools)).(series.Bools))
 	}
 	b.StopTimer()
 }
@@ -251,27 +252,27 @@ func Benchmark_Filter_Q2_1e5(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).And(
+			}).(series.Bools).And(
 				df.C("v3").Map(func(v any) any {
 					return v.(float64) < 50
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools).Or(
+				}).(series.Bools).Or(
 					df.C("id2").Map(func(v any) any {
 						return v.(string) == "id024"
-					}).(Bools),
+					}).(series.Bools),
 				),
-			).(Bools).And(
+			).(series.Bools).And(
 				df.C("v1").Map(func(v any) any {
 					return v.(int64) == 5
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("v2").Map(func(v any) any {
 					return v.(int64) == 1
-				}).(Bools),
-			).(Bools),
+				}).(series.Bools),
+			).(series.Bools),
 		)
 	}
 	b.StopTimer()
@@ -290,27 +291,27 @@ func Benchmark_Filter_Q2_1e6(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).And(
+			}).(series.Bools).And(
 				df.C("v3").Map(func(v any) any {
 					return v.(float64) < 50
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools).Or(
+				}).(series.Bools).Or(
 					df.C("id2").Map(func(v any) any {
 						return v.(string) == "id024"
-					}).(Bools),
+					}).(series.Bools),
 				),
-			).(Bools).And(
+			).(series.Bools).And(
 				df.C("v1").Map(func(v any) any {
 					return v.(int64) == 5
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("v2").Map(func(v any) any {
 					return v.(int64) == 1
-				}).(Bools),
-			).(Bools),
+				}).(series.Bools),
+			).(series.Bools),
 		)
 	}
 	b.StopTimer()
@@ -329,27 +330,27 @@ func Benchmark_Filter_Q2_1e7(b *testing.B) {
 		df.Filter(
 			df.C("id6").Map(func(v any) any {
 				return v.(int64) > 500
-			}).(Bools).And(
+			}).(series.Bools).And(
 				df.C("v3").Map(func(v any) any {
 					return v.(float64) < 50
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("id1").Map(func(v any) any {
 					return v.(string) == "id024"
-				}).(Bools).Or(
+				}).(series.Bools).Or(
 					df.C("id2").Map(func(v any) any {
 						return v.(string) == "id024"
-					}).(Bools),
+					}).(series.Bools),
 				),
-			).(Bools).And(
+			).(series.Bools).And(
 				df.C("v1").Map(func(v any) any {
 					return v.(int64) == 5
-				}).(Bools),
-			).(Bools).And(
+				}).(series.Bools),
+			).(series.Bools).And(
 				df.C("v2").Map(func(v any) any {
 					return v.(int64) == 1
-				}).(Bools),
-			).(Bools),
+				}).(series.Bools),
+			).(series.Bools),
 		)
 	}
 	b.StopTimer()

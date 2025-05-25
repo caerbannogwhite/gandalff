@@ -3,7 +3,10 @@ package dataframe
 import (
 	"time"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/io"
+	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 type DataFrameJoinType int8
@@ -20,12 +23,12 @@ type DataFrame interface {
 	// Basic accessors.
 
 	// GetContext returns the context of the dataframe.
-	GetContext() *Context
+	GetContext() *gandalff.Context
 
 	// Names returns the names of the series in the dataframe.
 	Names() []string
 	// Types returns the types of the series in the dataframe.
-	Types() []preludiometa.BaseType
+	Types() []meta.BaseType
 	// NCols returns the number of columns in the dataframe.
 	NCols() int
 	// NRows returns the number of rows in the dataframe.
@@ -42,7 +45,7 @@ type DataFrame interface {
 	// Add new series to the dataframe.
 
 	// AddSeries adds a generic series to the dataframe.
-	AddSeries(name string, series Series) DataFrame
+	AddSeries(name string, series series.Series) DataFrame
 	// AddSeriesFromBools adds a series of bools to the dataframe.
 	AddSeriesFromBools(name string, data []bool, nullMask []bool, makeCopy bool) DataFrame
 	// AddSeriesFromInt32s adds a series of ints to the dataframe.
@@ -59,13 +62,13 @@ type DataFrame interface {
 	AddSeriesFromDurations(name string, data []time.Duration, nullMask []bool, makeCopy bool) DataFrame
 
 	// Replace the series with the given name.
-	Replace(name string, s Series) DataFrame
+	Replace(name string, s series.Series) DataFrame
 
 	// Returns the column with the given name.
-	C(name string) Series
+	C(name string) series.Series
 
 	// Returns the series at the given index.
-	At(index int) Series
+	At(index int) series.Series
 
 	// Returns the series with the given name as a bool series.
 	NameAt(index int) string
@@ -80,7 +83,7 @@ type DataFrame interface {
 
 	Ungroup() DataFrame
 
-	getPartitions() []SeriesPartition
+	getPartitions() []series.SeriesPartition
 
 	Join(how DataFrameJoinType, other DataFrame, on ...string) DataFrame
 
@@ -102,18 +105,18 @@ type DataFrame interface {
 	// Pretty print the dataframe.
 	PPrint(params PPrintParams) DataFrame
 
-	FromCsv() *CsvReader
-	ToCsv() *CsvWriter
+	FromCsv() *io.CsvReader
+	ToCsv() *io.CsvWriter
 
-	FromJson() *JsonReader
-	ToJson() *JsonWriter
+	FromJson() *io.JsonReader
+	ToJson() *io.JsonWriter
 
-	FromXpt() *XptReader
-	ToXpt() *XptWriter
+	FromXpt() *io.XptReader
+	ToXpt() *io.XptWriter
 
-	FromXlsx() *XlsxReader
-	ToXlsx() *XlsxWriter
+	FromXlsx() *io.XlsxReader
+	ToXlsx() *io.XlsxWriter
 
-	ToHtml() *HtmlWriter
-	ToMarkDown() *MarkDownWriter
+	ToHtml() *io.HtmlWriter
+	ToMarkDown() *io.MarkDownWriter
 }

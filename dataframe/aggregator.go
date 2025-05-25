@@ -1,6 +1,10 @@
 package dataframe
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/caerbannogwhite/gandalff/series"
+)
 
 type aggregatorBuilder struct {
 	df          BaseDataFrame
@@ -50,9 +54,9 @@ func (ab aggregatorBuilder) Run() DataFrame {
 
 		groupsNum := len(indeces)
 
-		var series Series
+		var _series series.Series
 		for _, agg := range ab.aggregators {
-			series = df.__series(agg.name)
+			_series = df.__series(agg.name)
 
 			switch agg.type_ {
 			case AGGREGATE_COUNT:
@@ -60,27 +64,27 @@ func (ab aggregatorBuilder) Run() DataFrame {
 				for i, group := range indeces {
 					counts[i] = int64(len(group))
 				}
-				result = result.AddSeries(agg.newName, NewSeriesInt64(counts, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, series.NewSeriesInt64(counts, nil, false, df.ctx))
 
 			case AGGREGATE_SUM:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_sum(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MIN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_min(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MAX:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_max(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MEAN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_mean(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_STD:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_std(dataF64, flatIndeces, groupsNum, ab.removeNAs), nil, false, df.ctx))
 			}
 		}
 
@@ -114,33 +118,33 @@ func (ab aggregatorBuilder) Run() DataFrame {
 	} else {
 		result = NewBaseDataFrame(df.ctx)
 
-		var series Series
+		var _series series.Series
 		for _, agg := range ab.aggregators {
-			series = df.__series(agg.name)
+			_series = df.__series(agg.name)
 
 			switch agg.type_ {
 			case AGGREGATE_COUNT:
-				result = result.AddSeries(agg.newName, NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
+				result = result.AddSeries(agg.newName, series.NewSeriesInt64([]int64{int64(df.NRows())}, nil, false, df.ctx))
 
 			case AGGREGATE_SUM:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_sum(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_sum(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MIN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_min(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_min(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MAX:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_max(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_max(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_MEAN:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_mean(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_mean(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 
 			case AGGREGATE_STD:
-				dataF64 := __gdl_stats_preprocess(series)
-				result = result.AddSeries(agg.newName, NewSeriesFloat64(__gdl_std(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
+				dataF64 := __gdl_stats_preprocess(_series)
+				result = result.AddSeries(agg.newName, series.NewSeriesFloat64(__gdl_std(dataF64, nil, 1, ab.removeNAs), nil, false, df.ctx))
 			}
 		}
 	}
@@ -199,9 +203,9 @@ func Std(name string) aggregator {
 ////////////////////////			SORT
 
 type SortParam struct {
-	asc    bool
-	name   string
-	series Series
+	asc     bool
+	name    string
+	_series series.Series
 }
 
 func Asc(name string) SortParam {

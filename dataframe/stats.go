@@ -2,6 +2,8 @@ package dataframe
 
 import (
 	"math"
+
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 // type __numeric_thread_data struct {
@@ -80,81 +82,81 @@ import (
 // 	wg.Done()
 // }
 
-func __gdl_stats_preprocess(s Series) []float64 {
+func __gdl_stats_preprocess(s series.Series) []float64 {
 	dataF64 := make([]float64, s.Len())
 
-	switch series := s.(type) {
-	case Bools:
+	switch _series := s.(type) {
+	case series.Bools:
 		if s.IsNullable() {
-			for i, v := range series.getData() {
-				if series.IsNull(i) {
+			for i, v := range _series.getData() {
+				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else if v {
 					dataF64[i] = 1.0
 				}
 			}
 		} else {
-			for i, v := range series.getData() {
+			for i, v := range _series.getData() {
 				if v {
 					dataF64[i] = 1.0
 				}
 			}
 		}
 
-	case Ints:
+	case series.Ints:
 		if s.IsNullable() {
-			for i, v := range series.getData() {
-				if series.IsNull(i) {
+			for i, v := range _series.getData() {
+				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
 					dataF64[i] = float64(v)
 				}
 			}
 		} else {
-			for i, v := range series.getData() {
+			for i, v := range _series.getData() {
 				dataF64[i] = float64(v)
 			}
 		}
 
-	case Int64s:
+	case series.Int64s:
 		if s.IsNullable() {
-			for i, v := range series.getData() {
-				if series.IsNull(i) {
+			for i, v := range _series.getData() {
+				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
 					dataF64[i] = float64(v)
 				}
 			}
 		} else {
-			for i, v := range series.getData() {
+			for i, v := range _series.getData() {
 				dataF64[i] = float64(v)
 			}
 		}
 
-	case Float64s:
+	case series.Float64s:
 		if s.IsNullable() {
-			for i, v := range series.getData() {
-				if series.IsNull(i) {
+			for i, v := range _series.getData() {
+				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
 					dataF64[i] = v
 				}
 			}
 		} else {
-			dataF64 = series.getData()
+			dataF64 = _series.getData()
 		}
 
-	case series.Duration:
+	case series.Durations:
 		if s.IsNullable() {
-			for i, v := range series.getData() {
-				if series.IsNull(i) {
+			for i, v := range _series.getData() {
+				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
 					dataF64[i] = float64(v)
 				}
 			}
 		} else {
-			for i, v := range series.getData() {
+			for i, v := range _series.getData() {
 				dataF64[i] = float64(v)
 			}
 		}

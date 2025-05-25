@@ -6,32 +6,36 @@ import (
 	"sort"
 	"time"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/formatter"
+	"github.com/caerbannogwhite/gandalff/io"
+	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/series"
 )
 
 type BaseDataFramePartitionEntry struct {
 	index     int
 	name      string
-	partition SeriesPartition
+	partition series.SeriesPartition
 }
 
 type BaseDataFrame struct {
 	isGrouped  bool
 	err        error
 	names      []string
-	series     []Series
+	series     []series.Series
 	partitions []BaseDataFramePartitionEntry
 	sortParams []SortParam
-	ctx        *Context
+	ctx        *gandalff.Context
 }
 
-func NewBaseDataFrame(ctx *Context) DataFrame {
+func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
 	if ctx == nil {
 		return BaseDataFrame{err: fmt.Errorf("NewBaseDataFrame: context is nil")}
 	}
 
 	return &BaseDataFrame{
-		series: make([]Series, 0),
+		series: make([]series.Series, 0),
 		ctx:    ctx,
 	}
 }
@@ -39,7 +43,7 @@ func NewBaseDataFrame(ctx *Context) DataFrame {
 ////////////////////////			BASIC ACCESSORS
 
 // GetContext returns the context of the dataframe.
-func (df BaseDataFrame) GetContext() *Context {
+func (df BaseDataFrame) GetContext() *gandalff.Context {
 	return df.ctx
 }
 
@@ -49,8 +53,8 @@ func (df BaseDataFrame) Names() []string {
 }
 
 // Types returns the types of the series in the dataframe.
-func (df BaseDataFrame) Types() []preludiometa.BaseType {
-	types := make([]preludiometa.BaseType, len(df.series))
+func (df BaseDataFrame) Types() []meta.BaseType {
+	types := make([]meta.BaseType, len(df.series))
 	for i, series := range df.series {
 		types[i] = series.Type()
 	}
@@ -91,7 +95,7 @@ func (df BaseDataFrame) GetSeriesIndex(name string) int {
 	return -1
 }
 
-func (df BaseDataFrame) AddSeries(name string, series Series) DataFrame {
+func (df BaseDataFrame) AddSeries(name string, series series.Series) DataFrame {
 	if df.err != nil {
 		return df
 	}
@@ -127,7 +131,7 @@ func (df BaseDataFrame) AddSeriesFromBools(name string, data []bool, nullMask []
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesBool(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesBool(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromInts(name string, data []int, nullMask []bool, makeCopy bool) DataFrame {
@@ -145,7 +149,7 @@ func (df BaseDataFrame) AddSeriesFromInts(name string, data []int, nullMask []bo
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesInt(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesInt(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromInt64s(name string, data []int64, nullMask []bool, makeCopy bool) DataFrame {
@@ -163,7 +167,7 @@ func (df BaseDataFrame) AddSeriesFromInt64s(name string, data []int64, nullMask 
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesInt64(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesInt64(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromFloat64s(name string, data []float64, nullMask []bool, makeCopy bool) DataFrame {
@@ -181,7 +185,7 @@ func (df BaseDataFrame) AddSeriesFromFloat64s(name string, data []float64, nullM
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesFloat64(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesFloat64(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromStrings(name string, data []string, nullMask []bool, makeCopy bool) DataFrame {
@@ -199,7 +203,7 @@ func (df BaseDataFrame) AddSeriesFromStrings(name string, data []string, nullMas
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesString(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesString(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromTimes(name string, data []time.Time, nullMask []bool, makeCopy bool) DataFrame {
@@ -217,7 +221,7 @@ func (df BaseDataFrame) AddSeriesFromTimes(name string, data []time.Time, nullMa
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesTime(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesTime(data, nullMask, makeCopy, df.ctx))
 }
 
 func (df BaseDataFrame) AddSeriesFromDurations(name string, data []time.Duration, nullMask []bool, makeCopy bool) DataFrame {
@@ -235,10 +239,10 @@ func (df BaseDataFrame) AddSeriesFromDurations(name string, data []time.Duration
 		return df
 	}
 
-	return df.AddSeries(name, NewSeriesDuration(data, nullMask, makeCopy, df.ctx))
+	return df.AddSeries(name, series.NewSeriesDuration(data, nullMask, makeCopy, df.ctx))
 }
 
-func (df BaseDataFrame) Replace(name string, s Series) DataFrame {
+func (df BaseDataFrame) Replace(name string, s series.Series) DataFrame {
 	if df.err != nil {
 		return df
 	}
@@ -264,19 +268,19 @@ func (df BaseDataFrame) Replace(name string, s Series) DataFrame {
 }
 
 // Returns the column with the given name.
-func (df BaseDataFrame) C(name string) Series {
+func (df BaseDataFrame) C(name string) series.Series {
 	for i, name_ := range df.names {
 		if name_ == name {
 			return df.series[i]
 		}
 	}
 
-	return Errors{msg: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
+	return series.Errors{msg: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
 }
 
 // Returns the series with the given name.
 // For internal use only: returns nil if the series is not found.
-func (df BaseDataFrame) __series(name string) Series {
+func (df BaseDataFrame) __series(name string) series.Series {
 	for i, name_ := range df.names {
 		if name_ == name {
 			return df.series[i]
@@ -287,9 +291,9 @@ func (df BaseDataFrame) __series(name string) Series {
 }
 
 // Returns the series at the given index.
-func (df BaseDataFrame) At(index int) Series {
+func (df BaseDataFrame) At(index int) series.Series {
 	if index < 0 || index >= len(df.series) {
-		return Errors{msg: fmt.Sprintf("BaseDataFrame.SeriesAt: index %d out of bounds", index)}
+		return series.Errors{msg: fmt.Sprintf("BaseDataFrame.SeriesAt: index %d out of bounds", index)}
 	}
 	return df.series[index]
 }
@@ -323,7 +327,7 @@ func (df BaseDataFrame) Select(selectors ...string) DataFrame {
 	}
 
 	names := make([]string, 0)
-	seriesList := make([]Series, 0)
+	seriesList := make([]series.Series, 0)
 
 	for _, regex := range regexes {
 		for _, name := range df.names {
@@ -364,14 +368,14 @@ func (df BaseDataFrame) Filter(mask any) DataFrame {
 		return df
 	}
 
-	var maskSeries Bools
-	if _, ok := mask.(Bools); ok {
-		maskSeries = mask.(Bools)
+	var maskSeries series.Bools
+	if _, ok := mask.(series.Bools); ok {
+		maskSeries = mask.(series.Bools)
 
 	} else {
-		s := NewSeries(mask, nil, false, false, df.ctx)
-		if _, ok := s.(Bools); ok {
-			maskSeries = s.(Bools)
+		s := series.NewSeriesBool(mask, nil, false, df.ctx)
+		if _, ok := s.(series.Bools); ok {
+			maskSeries = s.(series.Bools)
 		} else {
 			df.err = fmt.Errorf("BaseDataFrame.Filter: mask is not a bool series")
 			return df
@@ -383,7 +387,7 @@ func (df BaseDataFrame) Filter(mask any) DataFrame {
 		return df
 	}
 
-	seriesList := make([]Series, 0)
+	seriesList := make([]series.Series, 0)
 	for _, series := range df.series {
 		seriesList = append(seriesList, series.Filter(maskSeries))
 	}
@@ -461,13 +465,13 @@ func (df BaseDataFrame) Ungroup() DataFrame {
 	return df
 }
 
-func (df BaseDataFrame) getPartitions() []SeriesPartition {
+func (df BaseDataFrame) getPartitions() []series.SeriesPartition {
 	if df.err != nil {
 		return nil
 	}
 
 	if df.isGrouped {
-		partitions := make([]SeriesPartition, len(df.partitions))
+		partitions := make([]series.SeriesPartition, len(df.partitions))
 		for i, partition := range df.partitions {
 			partitions[i] = partition.partition
 		}
@@ -502,44 +506,44 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 		// TODO: null masks, null values are all mapped to the same group
 		result.names = append(result.names, partition.name)
 
-		switch series := old.(type) {
-		case Bools:
+		switch _series := old.(type) {
+		case series.Bools:
 			values := make([]bool, len(indeces))
 			for i, group := range indeces {
-				values[i] = series.data[group[0]]
+				values[i] = _series.data[group[0]]
 			}
 
-			result.series = append(result.series, Bools{
-				isNullable: series.isNullable,
+			result.series = append(result.series, series.Bools{
+				isNullable: _series.isNullable,
 				nullMask:   __binVecInit(len(indeces), false),
 				data:       values,
 			})
 
-		case Ints:
+		case series.Ints:
 			values := make([]int, len(indeces))
 			for i, group := range indeces {
 				values[i] = series.data[group[0]]
 			}
 
-			result.series = append(result.series, Ints{
+			result.series = append(result.series, series.Ints{
 				isNullable: series.isNullable,
 				nullMask:   __binVecInit(len(indeces), false),
 				data:       values,
 			})
 
-		case Int64s:
+		case series.Int64s:
 			values := make([]int64, len(indeces))
 			for i, group := range indeces {
 				values[i] = series.data[group[0]]
 			}
 
-			result.series = append(result.series, Int64s{
-				isNullable: series.isNullable,
+			result.series = append(result.series, series.Int64s{
+				isNullable: _series.isNullable,
 				nullMask:   __binVecInit(len(indeces), false),
 				data:       values,
 			})
 
-		case Float64s:
+		case series.Float64s:
 			values := make([]float64, len(indeces))
 			for i, group := range indeces {
 				values[i] = series.data[group[0]]
@@ -551,7 +555,7 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 				data:       values,
 			})
 
-		case Strings:
+		case series.Strings:
 			values := make([]*string, len(indeces))
 			for i, group := range indeces {
 				values[i] = series.data[group[0]]
@@ -611,7 +615,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 
 	// CHECK: all the join columns must exist
 	// CHECK: all the join columns must have the same type
-	types := make([]preludiometa.BaseType, len(on))
+	types := make([]meta.BaseType, len(on))
 	for _, name := range on {
 
 		// Series A
@@ -792,7 +796,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		}
 
 		// A columns
-		var ser_ Series
+		var ser_ series.Series
 		for _, name := range colsDiffA {
 			ser_ = df.C(name).Filter(indicesA)
 			if commonCols[name] {
@@ -833,7 +837,7 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		}
 
 		// A columns
-		var ser_ Series
+		var ser_ series.Series
 		for _, name := range colsDiffA {
 			ser_ = df.C(name).Filter(indicesA)
 			if commonCols[name] {
@@ -852,32 +856,32 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		for _, name := range colsDiffB {
 			ser_ = other.C(name).Filter(indicesB)
 			switch ser_.Type() {
-			case preludiometa.BoolType:
-				ser_ = NewSeriesBool(make([]bool, padBlen), nullMask, false, df.ctx).
+			case meta.BoolType:
+				ser_ = series.NewSeriesBool(make([]bool, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.IntType:
-				ser_ = NewSeriesInt(make([]int, padBlen), nullMask, false, df.ctx).
+			case meta.IntType:
+				ser_ = series.NewSeriesInt(make([]int, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.Int64Type:
-				ser_ = NewSeriesInt64(make([]int64, padBlen), nullMask, false, df.ctx).
+			case meta.Int64Type:
+				ser_ = series.NewSeriesInt64(make([]int64, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.Float64Type:
-				ser_ = NewSeriesFloat64(make([]float64, padBlen), nullMask, false, df.ctx).
+			case meta.Float64Type:
+				ser_ = series.NewSeriesFloat64(make([]float64, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.StringType:
-				ser_ = NewSeriesString(make([]string, padBlen), nullMask, false, df.ctx).
+			case meta.StringType:
+				ser_ = series.NewSeriesString(make([]string, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.TimeType:
-				ser_ = NewSeriesTime(make([]time.Time, padBlen), nullMask, false, df.ctx).
+			case meta.TimeType:
+				ser_ = series.NewSeriesTime(make([]time.Time, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.DurationType:
-				ser_ = NewSeriesDuration(make([]time.Duration, padBlen), nullMask, false, df.ctx).
+			case meta.DurationType:
+				ser_ = series.NewSeriesDuration(make([]time.Duration, padBlen), nullMask, false, df.ctx).
 					Append(ser_)
 			}
 
@@ -916,30 +920,30 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		}
 
 		// A columns
-		var ser_ Series
+		var ser_ series.Series
 		for _, name := range colsDiffA {
 			ser_ = df.C(name).Filter(indicesA)
 			switch ser_.Type() {
-			case preludiometa.BoolType:
-				ser_ = ser_.(Bools).Append(NewSeriesBool(make([]bool, padAlen), nullMask, false, df.ctx))
+			case meta.BoolType:
+				ser_ = ser_.(series.Bools).Append(series.NewSeriesBool(make([]bool, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.IntType:
-				ser_ = ser_.(Ints).Append(NewSeriesInt(make([]int, padAlen), nullMask, false, df.ctx))
+			case meta.IntType:
+				ser_ = ser_.(series.Ints).Append(series.NewSeriesInt(make([]int, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.Int64Type:
-				ser_ = ser_.(Int64s).Append(NewSeriesInt64(make([]int64, padAlen), nullMask, false, df.ctx))
+			case meta.Int64Type:
+				ser_ = ser_.(series.Int64s).Append(series.NewSeriesInt64(make([]int64, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.Float64Type:
-				ser_ = ser_.(Float64s).Append(NewSeriesFloat64(make([]float64, padAlen), nullMask, false, df.ctx))
+			case meta.Float64Type:
+				ser_ = ser_.(series.Float64s).Append(series.NewSeriesFloat64(make([]float64, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.StringType:
-				ser_ = ser_.(Strings).Append(NewSeriesString(make([]string, padAlen), nullMask, false, df.ctx))
+			case meta.StringType:
+				ser_ = ser_.(series.Strings).Append(series.NewSeriesString(make([]string, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.TimeType:
-				ser_ = ser_.(Times).Append(NewSeriesTime(make([]time.Time, padAlen), nullMask, false, df.ctx))
+			case meta.TimeType:
+				ser_ = ser_.(series.Times).Append(series.NewSeriesTime(make([]time.Time, padAlen), nullMask, false, df.ctx))
 
-			case preludiometa.DurationType:
-				ser_ = ser_.(Durations).Append(NewSeriesDuration(make([]time.Duration, padAlen), nullMask, false, df.ctx))
+			case meta.DurationType:
+				ser_ = ser_.(series.Durations).Append(series.NewSeriesDuration(make([]time.Duration, padAlen), nullMask, false, df.ctx))
 			}
 
 			if commonCols[name] {
@@ -1006,30 +1010,30 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		}
 
 		// A columns
-		var ser_ Series
+		var ser_ series.Series
 		for _, name := range colsDiffA {
 			ser_ = df.C(name).Filter(indicesA)
 			switch ser_.Type() {
-			case preludiometa.BoolType:
-				ser_ = ser_.(Bools).Append(NewSeriesBool(make([]bool, padAlen), nullMaskA, false, df.ctx))
+			case meta.BoolType:
+				ser_ = ser_.(series.Bools).Append(series.NewSeriesBool(make([]bool, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.IntType:
-				ser_ = ser_.(Ints).Append(NewSeriesInt(make([]int, padAlen), nullMaskA, false, df.ctx))
+			case meta.IntType:
+				ser_ = ser_.(series.Ints).Append(series.NewSeriesInt(make([]int, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.Int64Type:
-				ser_ = ser_.(Int64s).Append(NewSeriesInt64(make([]int64, padAlen), nullMaskA, false, df.ctx))
+			case meta.Int64Type:
+				ser_ = ser_.(series.Int64s).Append(series.NewSeriesInt64(make([]int64, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.Float64Type:
-				ser_ = ser_.(Float64s).Append(NewSeriesFloat64(make([]float64, padAlen), nullMaskA, false, df.ctx))
+			case meta.Float64Type:
+				ser_ = ser_.(series.Float64s).Append(series.NewSeriesFloat64(make([]float64, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.StringType:
-				ser_ = ser_.(Strings).Append(NewSeriesString(make([]string, padAlen), nullMaskA, false, df.ctx))
+			case meta.StringType:
+				ser_ = ser_.(series.Strings).Append(series.NewSeriesString(make([]string, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.TimeType:
-				ser_ = ser_.(Times).Append(NewSeriesTime(make([]time.Time, padAlen), nullMaskA, false, df.ctx))
+			case meta.TimeType:
+				ser_ = ser_.(series.Times).Append(series.NewSeriesTime(make([]time.Time, padAlen), nullMaskA, false, df.ctx))
 
-			case preludiometa.DurationType:
-				ser_ = ser_.(Durations).Append(NewSeriesDuration(make([]time.Duration, padAlen), nullMaskA, false, df.ctx))
+			case meta.DurationType:
+				ser_ = ser_.(series.Durations).Append(series.NewSeriesDuration(make([]time.Duration, padAlen), nullMaskA, false, df.ctx))
 			}
 
 			if commonCols[name] {
@@ -1042,32 +1046,32 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 		for _, name := range colsDiffB {
 			ser_ = other.C(name).Filter(indicesB)
 			switch ser_.Type() {
-			case preludiometa.BoolType:
-				ser_ = NewSeriesBool(make([]bool, padBlen), nullMaskB, false, df.ctx).
+			case meta.BoolType:
+				ser_ = series.NewSeriesBool(make([]bool, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.IntType:
-				ser_ = NewSeriesInt(make([]int, padBlen), nullMaskB, false, df.ctx).
+			case meta.IntType:
+				ser_ = series.NewSeriesInt(make([]int, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.Int64Type:
-				ser_ = NewSeriesInt64(make([]int64, padBlen), nullMaskB, false, df.ctx).
+			case meta.Int64Type:
+				ser_ = series.NewSeriesInt64(make([]int64, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.Float64Type:
-				ser_ = NewSeriesFloat64(make([]float64, padBlen), nullMaskB, false, df.ctx).
+			case meta.Float64Type:
+				ser_ = series.NewSeriesFloat64(make([]float64, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.StringType:
-				ser_ = NewSeriesString(make([]string, padBlen), nullMaskB, false, df.ctx).
+			case meta.StringType:
+				ser_ = series.NewSeriesString(make([]string, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.TimeType:
-				ser_ = NewSeriesTime(make([]time.Time, padBlen), nullMaskB, false, df.ctx).
+			case meta.TimeType:
+				ser_ = series.NewSeriesTime(make([]time.Time, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 
-			case preludiometa.DurationType:
-				ser_ = NewSeriesDuration(make([]time.Duration, padBlen), nullMaskB, false, df.ctx).
+			case meta.DurationType:
+				ser_ = series.NewSeriesDuration(make([]time.Duration, padBlen), nullMaskB, false, df.ctx).
 					Append(ser_)
 			}
 
@@ -1144,7 +1148,7 @@ func (df BaseDataFrame) OrderBy(params ...SortParam) DataFrame {
 		paramNames[param.name] = true
 
 		if series := df.__series(param.name); series != nil {
-			params[i].series = series
+			params[i]._series = series
 		} else {
 			df.err = fmt.Errorf("BaseDataFrame.OrderBy: series \"%s\" not found", param.name)
 			return df
@@ -1280,21 +1284,21 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		nRowsOut -= params.tailLen
 	}
 
-	formatters := make([]Formatter, nColsOut)
+	formatters := make([]formatter.Formatter, nColsOut)
 	for i := 0; i < nColsOut; i++ {
 		switch df.series[i].Type() {
-		case preludiometa.BoolType, preludiometa.StringType, preludiometa.TimeType:
-			formatters[i] = NewStringFormatter().
+		case meta.BoolType, meta.StringType, meta.TimeType:
+			formatters[i] = formatter.NewStringFormatter().
 				SetUseLipGloss(params.useLipGloss)
-		case preludiometa.IntType, preludiometa.Int64Type, preludiometa.Float64Type, preludiometa.DurationType:
-			formatters[i] = NewNumericFormatter().
+		case meta.IntType, meta.Int64Type, meta.Float64Type, meta.DurationType:
+			formatters[i] = formatter.NewNumericFormatter().
 				SetUseLipGloss(params.useLipGloss).
 				SetNaText(df.ctx.naText).
 				SetTruncateOutput(true)
 		}
 
 		switch s := df.series[i].(type) {
-		case Bools:
+		case series.Bools:
 			for _, v := range s.DataAsString()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1305,7 +1309,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Ints:
+		case series.Ints:
 			for _, v := range s.Ints()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1316,7 +1320,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Int64s:
+		case series.Int64s:
 			for _, v := range s.Int64s()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1327,7 +1331,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Float64s:
+		case series.Float64s:
 			for _, v := range s.Float64s()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1338,7 +1342,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Strings:
+		case series.Strings:
 			for _, v := range s.Strings()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1349,7 +1353,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Times:
+		case series.Times:
 			for _, v := range s.DataAsString()[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1360,7 +1364,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 				}
 			}
 
-		case Durations:
+		case series.Durations:
 			for _, v := range s.Data().([]time.Duration)[:nRowsOut] {
 				formatters[i].Push(v)
 			}
@@ -1456,19 +1460,19 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		buffer += params.indent + "│"
 		for j, c := range df.series[:nColsOut] {
 			switch s := c.(type) {
-			case Bools:
+			case series.Bools:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-			case Ints:
+			case series.Ints:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case Int64s:
+			case series.Int64s:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case Float64s:
+			case series.Float64s:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case Strings:
+			case series.Strings:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-			case Times:
+			case series.Times:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-			case Durations:
+			case series.Durations:
 				buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 			}
 		}
@@ -1488,19 +1492,19 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 			buffer += params.indent + "│"
 			for j, c := range df.series[:nColsOut] {
 				switch s := c.(type) {
-				case Bools:
+				case series.Bools:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-				case Ints:
+				case series.Ints:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-				case Int64s:
+				case series.Int64s:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-				case Float64s:
+				case series.Float64s:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-				case Strings:
+				case series.Strings:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
-				case Times:
+				case series.Times:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.GetAsString(i), s.IsNull(i))) + "│"
-				case Durations:
+				case series.Durations:
 					buffer += fmt.Sprintf(" %s ", formatters[j].Format(widths[j], s.Get(i), s.IsNull(i))) + "│"
 				}
 			}
@@ -1534,52 +1538,64 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 
 ////////////////////////			IO
 
-func (df BaseDataFrame) FromCsv() *CsvReader {
-	return NewCsvReader(df.ctx)
+func (df BaseDataFrame) toIoData() *io.IoData {
+	iod := io.NewIoData(df.ctx)
+
+	for i, s := range df.series {
+		iod.AddSeries(s, io.SeriesMeta{
+			Name: df.names[i],
+		})
+	}
+
+	return iod
 }
 
-func (df BaseDataFrame) ToCsv() *CsvWriter {
-	return NewCsvWriter().
-		SetDataFrame(df).
+func (df BaseDataFrame) FromCsv() *io.CsvReader {
+	return io.NewCsvReader(df.ctx)
+}
+
+func (df BaseDataFrame) ToCsv() *io.CsvWriter {
+	return io.NewCsvWriter().
+		SetIoData(df.toIoData()).
 		SetNaText(df.ctx.naText)
 }
 
-func (df BaseDataFrame) FromJson() *JsonReader {
-	return NewJsonReader(df.ctx)
+func (df BaseDataFrame) FromJson() *io.JsonReader {
+	return io.NewJsonReader(df.ctx)
 }
 
-func (df BaseDataFrame) ToJson() *JsonWriter {
-	return NewJsonWriter().
-		SetDataFrame(df)
+func (df BaseDataFrame) ToJson() *io.JsonWriter {
+	return io.NewJsonWriter().
+		SetIoData(df.toIoData())
 }
 
-func (df BaseDataFrame) FromXpt() *XptReader {
-	return NewXptReader(df.ctx)
+func (df BaseDataFrame) FromXpt() *io.XptReader {
+	return io.NewXptReader(df.ctx)
 }
 
-func (df BaseDataFrame) ToXpt() *XptWriter {
-	return NewXptWriter().
-		SetDataFrame(df)
+func (df BaseDataFrame) ToXpt() *io.XptWriter {
+	return io.NewXptWriter().
+		SetIoData(df.toIoData())
 }
 
-func (df BaseDataFrame) FromXlsx() *XlsxReader {
-	return NewXlsxReader(df.ctx)
+func (df BaseDataFrame) FromXlsx() *io.XlsxReader {
+	return io.NewXlsxReader(df.ctx)
 }
 
-func (df BaseDataFrame) ToXlsx() *XlsxWriter {
-	return NewXlsxWriter().
-		SetDataFrame(df).
+func (df BaseDataFrame) ToXlsx() *io.XlsxWriter {
+	return io.NewXlsxWriter().
+		SetIoData(df.toIoData()).
 		SetNaText(df.ctx.naText)
 }
 
-func (df BaseDataFrame) ToHtml() *HtmlWriter {
-	return NewHtmlWriter().
-		SetDataFrame(df).
+func (df BaseDataFrame) ToHtml() *io.HtmlWriter {
+	return io.NewHtmlWriter().
+		SetIoData(df.toIoData()).
 		SetNaText(df.ctx.naText)
 }
 
-func (df BaseDataFrame) ToMarkDown() *MarkDownWriter {
-	return NewMarkDownWriter().
-		SetDataFrame(df).
+func (df BaseDataFrame) ToMarkDown() *io.MarkDownWriter {
+	return io.NewMarkDownWriter().
+		SetIoData(df.toIoData()).
 		SetNaText(df.ctx.naText)
 }

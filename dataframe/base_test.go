@@ -6,6 +6,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/gandalff/utils"
 )
 
 const (
@@ -65,21 +68,21 @@ func Test_BaseDataFrame_Select(t *testing.T) {
 	df := NewBaseDataFrame(ctx)
 
 	for _, name := range names {
-		df = df.AddSeries(name, NewSeriesFloat64([]float64{1.0}, nil, false, ctx))
+		df = df.AddSeries(name, series.NewSeriesFloat64([]float64{1.0}, nil, false, ctx))
 	}
 
 	names = df.Select("^_.*_$", "NUMMEN").Names()
-	if !checkEqSlice(names, []string{"_AGEG_", "NUMMEN"}, nil, "") {
+	if !utils.CheckEqSlice(names, []string{"_AGEG_", "NUMMEN"}, nil, "") {
 		t.Errorf("Expected %v, got %v", []string{"_AGEG_", "NUMMEN"}, names)
 	}
 
 	names = df.Select(".*BL[O]*D.*").Names()
-	if !checkEqSlice(names, []string{"BLOODCHO", "BLOODAID", "BLDSTOOL"}, nil, "") {
+	if !utils.CheckEqSlice(names, []string{"BLOODCHO", "BLOODAID", "BLDSTOOL"}, nil, "") {
 		t.Errorf("Expected %v, got %v", []string{"BLOODCHO", "BLOODAID", "BLDSTOOL"}, names)
 	}
 
 	names = df.Select("_RAW", "^EX.*1$", "HOWLONG", "EDUCA$").Names()
-	if !checkEqSlice(names, []string{"_RAW", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "HOWLONG", "EDUCA"}, nil, "") {
+	if !utils.CheckEqSlice(names, []string{"_RAW", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "HOWLONG", "EDUCA"}, nil, "") {
 		t.Errorf("Expected %v, got %v", []string{"_RAW", "EXERACT1", "EXERDIS1", "EXEROFT1", "EXERHMM1", "HOWLONG", "EDUCA"}, names)
 	}
 }
@@ -100,14 +103,14 @@ func Test_BaseDataFrame_Filter(t *testing.T) {
 	mask := df.C("department").
 		Map(func(v any) any {
 			return v.(string) == "IT"
-		}).(Bools).
+		}).(series.Bools).
 		And(
 			df.C("age").Map(func(v any) any {
 				return v.(int64) >= 30
-			}).(Bools),
+			}).(series.Bools),
 		)
 
-	res := df.Filter(mask.(Bools))
+	res := df.Filter(mask.(series.Bools))
 	if res.GetError() != nil {
 		t.Error(res.GetError())
 	}
@@ -146,11 +149,11 @@ func Benchmark_100000Rows_Filter(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		df.Filter(
-			df.C("Country").Map(func(v any) any { return v.(string) == "United States of America" }).(Bools).
+			df.C("Country").Map(func(v any) any { return v.(string) == "United States of America" }).(series.Bools).
 				And(
-					df.C("Founded").Map(func(v any) any { return v.(int64) >= 2000 })).(Bools).
+					df.C("Founded").Map(func(v any) any { return v.(int64) >= 2000 })).(series.Bools).
 				And(
-					df.C("Number of employees").Map(func(v any) any { return v.(int64) < 1000 })).(Bools),
+					df.C("Number of employees").Map(func(v any) any { return v.(int64) < 1000 })).(series.Bools),
 		)
 	}
 	b.StopTimer()
@@ -703,13 +706,13 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	resBexp := []string{"e", "f", "g"}
 	resCexp := []string{"h", "i", "i"}
 
-	if !checkEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Inner Join") {
+	if !utils.CheckEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Inner Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.At(0).Data().([]int64))
 	}
-	if !checkEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Inner Join") {
+	if !utils.CheckEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Inner Join") {
 		t.Errorf("Expected %v, got %v", resBexp, res.At(1).Data().([]string))
 	}
-	if !checkEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Inner Join") {
+	if !utils.CheckEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Inner Join") {
 		t.Errorf("Expected %v, got %v", resCexp, res.At(2).Data().([]string))
 	}
 
@@ -733,13 +736,13 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	resBexp = []string{"a", "b", "c", "d", "e", "f", "g"}
 	resCexp = []string{NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, "h", "i", "i"}
 
-	if !checkEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Left Join") {
+	if !utils.CheckEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Left Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.At(0).Data().([]int64))
 	}
-	if !checkEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Left Join") {
+	if !utils.CheckEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Left Join") {
 		t.Errorf("Expected %v, got %v", resBexp, res.At(1).Data().([]string))
 	}
-	if !checkEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Left Join") {
+	if !utils.CheckEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Left Join") {
 		t.Errorf("Expected %v, got %v", resCexp, res.At(2).Data().([]string))
 	}
 
@@ -763,13 +766,13 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	resBexp = []string{"e", "f", "g", NA_TEXT, NA_TEXT}
 	resCexp = []string{"h", "i", "i", "j", "k"}
 
-	if !checkEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Right Join") {
+	if !utils.CheckEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Right Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.At(0).Data().([]int64))
 	}
-	if !checkEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Right Join") {
+	if !utils.CheckEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Right Join") {
 		t.Errorf("Expected %v, got %v", resBexp, res.At(1).Data().([]string))
 	}
-	if !checkEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Right Join") {
+	if !utils.CheckEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Right Join") {
 		t.Errorf("Expected %v, got %v", resCexp, res.At(2).Data().([]string))
 	}
 
@@ -793,13 +796,13 @@ func Test_BaseDataFrame_Join(t *testing.T) {
 	resBexp = []string{"a", "b", "c", "d", "e", "f", "g", NA_TEXT, NA_TEXT}
 	resCexp = []string{NA_TEXT, NA_TEXT, NA_TEXT, NA_TEXT, "h", "i", "i", "j", "k"}
 
-	if !checkEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Full Join") {
+	if !utils.CheckEqSliceInt64(resAexp, res.At(0).Data().([]int64), nil, "Full Join") {
 		t.Errorf("Expected %v, got %v", resAexp, res.At(0).Data().([]int64))
 	}
-	if !checkEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Full Join") {
+	if !utils.CheckEqSliceString(resBexp, res.At(1).Data().([]string), nil, "Full Join") {
 		t.Errorf("Expected %v, got %v", resBexp, res.At(1).Data().([]string))
 	}
-	if !checkEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Full Join") {
+	if !utils.CheckEqSliceString(resCexp, res.At(2).Data().([]string), nil, "Full Join") {
 		t.Errorf("Expected %v, got %v", resCexp, res.At(2).Data().([]string))
 	}
 }
@@ -814,170 +817,170 @@ func Test_BaseDataFrame_Sort(t *testing.T) {
 		AddSeriesFromBools("D", []bool{true, false, true, true, false, true, true, false, true, false}, nil, false)
 
 	res = df.OrderBy(Asc("A"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort, column A asc failed")
 	}
 
 	res = df.OrderBy(Desc("A"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort, column A desc failed")
 	}
 
 	res = df.OrderBy(Asc("B"))
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "a", "b", "b", "c", "c", "d", "e", "f", "g"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "a", "b", "b", "c", "c", "d", "e", "f", "g"}, nil, "") {
 		t.Error("BaseDataFrame Sort, column B asc failed")
 	}
 
 	res = df.OrderBy(Desc("B"))
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"g", "f", "e", "d", "c", "c", "b", "b", "a", "a"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"g", "f", "e", "d", "c", "c", "b", "b", "a", "a"}, nil, "") {
 		t.Error("BaseDataFrame Sort, column B desc failed")
 	}
 
 	res = df.OrderBy(Asc("C"))
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{1.2, 1.2, 2.3, 2.3, 3.4, 3.4, 4.5, 5.6, 7.8, 8.9}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{1.2, 1.2, 2.3, 2.3, 3.4, 3.4, 4.5, 5.6, 7.8, 8.9}, nil, "") {
 		t.Error("BaseDataFrame Sort, column C asc failed")
 	}
 
 	res = df.OrderBy(Desc("C"))
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{8.9, 7.8, 5.6, 4.5, 3.4, 3.4, 2.3, 2.3, 1.2, 1.2}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{8.9, 7.8, 5.6, 4.5, 3.4, 3.4, 2.3, 2.3, 1.2, 1.2}, nil, "") {
 		t.Error("BaseDataFrame Sort, column C desc failed")
 	}
 
 	res = df.OrderBy(Asc("D"))
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{false, false, false, false, true, true, true, true, true, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{false, false, false, false, true, true, true, true, true, true}, nil, "") {
 		t.Error("BaseDataFrame Sort, column D asc failed")
 	}
 
 	res = df.OrderBy(Desc("D"))
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{true, true, true, true, true, true, false, false, false, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{true, true, true, true, true, true, false, false, false, false}, nil, "") {
 		t.Error("BaseDataFrame Sort, column D desc failed")
 	}
 
 	////////////////////////			.Sort() with 2 columns
 
 	res = df.OrderBy(Asc("A"), Asc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Desc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc: B failed")
 	}
 
 	res = df.OrderBy(Desc("A"), Asc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, B asc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"b", "g", "e", "b", "c", "a", "a", "c", "d", "f"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"b", "g", "e", "b", "c", "a", "a", "c", "d", "f"}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, B asc: B failed")
 	}
 
 	res = df.OrderBy(Desc("A"), Desc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, B desc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"g", "b", "e", "c", "b", "f", "d", "c", "a", "a"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"g", "b", "e", "c", "b", "f", "d", "c", "a", "a"}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, B desc: B failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Asc("C"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, C asc: A failed")
 	}
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{1.2, 1.2, 3.4, 4.5, 7.8, 2.3, 3.4, 5.6, 2.3, 8.9}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{1.2, 1.2, 3.4, 4.5, 7.8, 2.3, 3.4, 5.6, 2.3, 8.9}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, C asc: C failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Desc("C"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, C desc: A failed")
 	}
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{7.8, 4.5, 3.4, 1.2, 1.2, 3.4, 2.3, 5.6, 8.9, 2.3}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{7.8, 4.5, 3.4, 1.2, 1.2, 3.4, 2.3, 5.6, 8.9, 2.3}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, C desc: C failed")
 	}
 
 	res = df.OrderBy(Desc("A"), Asc("C"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, C asc: A failed")
 	}
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{2.3, 8.9, 5.6, 2.3, 3.4, 1.2, 1.2, 3.4, 4.5, 7.8}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{2.3, 8.9, 5.6, 2.3, 3.4, 1.2, 1.2, 3.4, 4.5, 7.8}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, C asc: C failed")
 	}
 
 	res = df.OrderBy(Desc("A"), Desc("C"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{5, 5, 4, 2, 2, 1, 1, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, C desc: A failed")
 	}
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{8.9, 2.3, 5.6, 3.4, 2.3, 7.8, 4.5, 3.4, 1.2, 1.2}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{8.9, 2.3, 5.6, 3.4, 2.3, 7.8, 4.5, 3.4, 1.2, 1.2}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc, C desc: C failed")
 	}
 
 	////////////////////////			.Sort() with 3 columns
 
 	res = df.OrderBy(Asc("A"), Asc("B"), Asc("D"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D asc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D asc: B failed")
 	}
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{false, true, false, true, true, true, true, false, false, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{false, true, false, true, true, true, true, false, false, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D asc: D failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Asc("B"), Desc("D"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D desc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "a", "c", "d", "f", "b", "c", "e", "b", "g"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D desc: B failed")
 	}
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{true, false, false, true, true, true, true, false, false, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{true, false, false, true, true, true, true, false, false, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc, D desc: D failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Desc("B"), Asc("D"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D asc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D asc: B failed")
 	}
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{true, true, false, false, true, true, true, false, true, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{true, true, false, false, true, true, true, false, true, false}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D asc: D failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Desc("B"), Desc("D"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 1, 1, 2, 2, 4, 5, 5}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D desc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"f", "d", "c", "a", "a", "c", "b", "e", "g", "b"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D desc: B failed")
 	}
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{true, true, false, true, false, true, true, false, true, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{true, true, false, true, false, true, true, false, true, false}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B desc, D desc: D failed")
 	}
 
 	////////////////////////
 
 	res = df.OrderBy(Desc("D"), Asc("C"), Desc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 2, 2, 1, 1, 5, 1, 5, 1, 4}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 2, 2, 1, 1, 5, 1, 5, 1, 4}, nil, "") {
 		t.Error("BaseDataFrame Sort D desc, C asc, B desc: A failed")
 	}
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "b", "c", "d", "f", "g", "a", "b", "c", "e"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "b", "c", "d", "f", "g", "a", "b", "c", "e"}, nil, "") {
 		t.Error("BaseDataFrame Sort D desc, C asc, B desc: B failed")
 	}
-	if !checkEqSliceFloat64(res.C("C").(Float64s).Float64s(), []float64{1.2, 2.3, 3.4, 4.5, 7.8, 8.9, 1.2, 2.3, 3.4, 5.6}, nil, "") {
+	if !utils.CheckEqSliceFloat64(res.C("C").(series.Float64s).Float64s(), []float64{1.2, 2.3, 3.4, 4.5, 7.8, 8.9, 1.2, 2.3, 3.4, 5.6}, nil, "") {
 		t.Error("BaseDataFrame Sort D desc, C asc, B desc: C failed")
 	}
-	if !checkEqSliceBool(res.C("D").(Bools).Bools(), []bool{true, true, true, true, true, true, false, false, false, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("D").(series.Bools).Bools(), []bool{true, true, true, true, true, true, false, false, false, false}, nil, "") {
 		t.Error("BaseDataFrame Sort D desc, C asc, B desc: D failed")
 	}
 }
@@ -985,13 +988,13 @@ func Test_BaseDataFrame_Sort(t *testing.T) {
 func Test_BaseDataFrame_Sort_Nulls(t *testing.T) {
 	var res DataFrame
 
-	a := NewSeriesInt64([]int64{1, 4, 2, 1, 4, 1, 4, 1, 2, 1}, nil, true, ctx).
+	a := series.NewSeriesInt64([]int64{1, 4, 2, 1, 4, 1, 4, 1, 2, 1}, nil, true, ctx).
 		SetNullMask([]bool{false, false, false, false, false, true, false, false, true, true})
-	b := NewSeriesString([]string{"a", "b", "c", "d", "e", "f", "g", "a", "b", "c"}, nil, true, ctx).
+	b := series.NewSeriesString([]string{"a", "b", "c", "d", "e", "f", "g", "a", "b", "c"}, nil, true, ctx).
 		SetNullMask([]bool{true, true, false, false, false, true, false, false, false, false})
-	c := NewSeriesFloat64([]float64{1.2, 2.3, 3.4, 4.5, 5.6, 7.8, 8.9, 1.2, 2.3, 3.4}, nil, true, ctx).
+	c := series.NewSeriesFloat64([]float64{1.2, 2.3, 3.4, 4.5, 5.6, 7.8, 8.9, 1.2, 2.3, 3.4}, nil, true, ctx).
 		SetNullMask([]bool{false, false, false, false, false, true, false, false, true, true})
-	d := NewSeriesBool([]bool{true, false, true, true, false, true, true, false, true, false}, nil, true, ctx).
+	d := series.NewSeriesBool([]bool{true, false, true, true, false, true, true, false, true, false}, nil, true, ctx).
 		SetNullMask([]bool{false, false, false, false, false, true, false, false, true, true})
 
 	df := NewBaseDataFrame(ctx).
@@ -1001,48 +1004,48 @@ func Test_BaseDataFrame_Sort_Nulls(t *testing.T) {
 		AddSeries("D", d)
 
 	res = df.OrderBy(Asc("A"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 1, 2, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 1, 2, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc: A failed")
 	}
-	if !checkEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc: A nullmask failed")
 	}
 
 	res = df.OrderBy(Desc("A"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 2, 1, 4, 4, 4, 2, 1, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 2, 1, 4, 4, 4, 2, 1, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc: A failed")
 	}
-	if !checkEqSliceBool(res.C("A").GetNullMask(), []bool{true, true, true, false, false, false, false, false, false, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("A").GetNullMask(), []bool{true, true, true, false, false, false, false, false, false, false}, nil, "") {
 		t.Error("BaseDataFrame Sort A desc: A nullmask failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Asc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 2, 1, 1}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 2, 1, 1}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: A failed")
 	}
-	if !checkEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc: A nullmask failed")
 	}
 
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{"a", "d", NA_TEXT, "c", "e", "g", NA_TEXT, "b", "c", NA_TEXT}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{"a", "d", NA_TEXT, "c", "e", "g", NA_TEXT, "b", "c", NA_TEXT}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B failed")
 	}
-	if !checkEqSliceBool(res.C("B").GetNullMask(), []bool{false, false, true, false, false, false, true, false, false, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("B").GetNullMask(), []bool{false, false, true, false, false, false, true, false, false, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B nullmask failed")
 	}
 
 	res = df.OrderBy(Asc("A"), Desc("B"))
-	if !checkEqSliceInt64(res.C("A").(Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 1, 1, 2}, nil, "") {
+	if !utils.CheckEqSliceInt64(res.C("A").(series.Int64s).Int64s(), []int64{1, 1, 1, 2, 4, 4, 4, 1, 1, 2}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: A failed")
 	}
-	if !checkEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("A").GetNullMask(), []bool{false, false, false, false, false, false, false, true, true, true}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc: A nullmask failed")
 	}
 
-	if !checkEqSliceString(res.C("B").(Strings).Strings(), []string{NA_TEXT, "d", "a", "c", NA_TEXT, "g", "e", NA_TEXT, "c", "b"}, nil, "") {
+	if !utils.CheckEqSliceString(res.C("B").(series.Strings).Strings(), []string{NA_TEXT, "d", "a", "c", NA_TEXT, "g", "e", NA_TEXT, "c", "b"}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B failed")
 	}
-	if !checkEqSliceBool(res.C("B").GetNullMask(), []bool{true, false, false, false, true, false, false, true, false, false}, nil, "") {
+	if !utils.CheckEqSliceBool(res.C("B").GetNullMask(), []bool{true, false, false, false, true, false, false, true, false, false}, nil, "") {
 		t.Error("BaseDataFrame Sort A asc, B asc: B nullmask failed")
 	}
 }
