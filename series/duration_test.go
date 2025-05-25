@@ -74,9 +74,9 @@ func Test_SeriesDuration_Append(t *testing.T) {
 		case 1:
 			s = s.Append([]time.Duration{time.Duration(i)}).(Durations)
 		case 2:
-			s = s.Append(gandalff.NullableDuration{true, time.Duration(i)}).(Durations)
+			s = s.Append(gandalff.NullableDuration{Valid: true, Value: time.Duration(i)}).(Durations)
 		case 3:
-			s = s.Append([]gandalff.NullableDuration{{false, time.Duration(i)}}).(Durations)
+			s = s.Append([]gandalff.NullableDuration{{Valid: false, Value: time.Duration(i)}}).(Durations)
 		}
 
 		if s.Get(i) != time.Duration(i) {
@@ -109,7 +109,7 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableDuration{false, time.Second}).(Durations)
+		s = s.Append(gandalff.NullableDuration{Valid: false, Value: time.Second}).(Durations)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -119,7 +119,7 @@ func Test_SeriesDuration_Append(t *testing.T) {
 	s = NewSeriesDuration([]time.Duration{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableDuration{{false, time.Second}}).(Durations)
+		s = s.Append([]gandalff.NullableDuration{{Valid: false, Value: time.Second}}).(Durations)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}

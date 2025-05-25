@@ -305,9 +305,9 @@ func Test_SeriesInt64_Append(t *testing.T) {
 		case 1:
 			s = s.Append([]int64{r}).(Int64s)
 		case 2:
-			s = s.Append(gandalff.NullableInt64{true, r}).(Int64s)
+			s = s.Append(gandalff.NullableInt64{Valid: true, Value: r}).(Int64s)
 		case 3:
-			s = s.Append([]gandalff.NullableInt64{{false, r}}).(Int64s)
+			s = s.Append([]gandalff.NullableInt64{{Valid: false, Value: r}}).(Int64s)
 		}
 
 		if s.Get(i) != r {
@@ -340,7 +340,7 @@ func Test_SeriesInt64_Append(t *testing.T) {
 	s = NewSeriesInt64([]int64{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableInt64{false, 1}).(Int64s)
+		s = s.Append(gandalff.NullableInt64{Valid: false, Value: 1}).(Int64s)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -350,7 +350,7 @@ func Test_SeriesInt64_Append(t *testing.T) {
 	s = NewSeriesInt64([]int64{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableInt64{{false, 1}}).(Int64s)
+		s = s.Append([]gandalff.NullableInt64{{Valid: false, Value: 1}}).(Int64s)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}

@@ -305,9 +305,9 @@ func Test_SeriesInt_Append(t *testing.T) {
 		case 1:
 			s = s.Append([]int{r}).(Ints)
 		case 2:
-			s = s.Append(gandalff.NullableInt{true, r}).(Ints)
+			s = s.Append(gandalff.NullableInt{Valid: true, Value: r}).(Ints)
 		case 3:
-			s = s.Append([]gandalff.NullableInt{{false, r}}).(Ints)
+			s = s.Append([]gandalff.NullableInt{{Valid: false, Value: r}}).(Ints)
 		}
 
 		if s.Get(i) != r {
@@ -340,7 +340,7 @@ func Test_SeriesInt_Append(t *testing.T) {
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableInt{false, 1}).(Ints)
+		s = s.Append(gandalff.NullableInt{Valid: false, Value: 1}).(Ints)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -350,7 +350,7 @@ func Test_SeriesInt_Append(t *testing.T) {
 	s = NewSeriesInt([]int{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableInt{{false, 1}}).(Ints)
+		s = s.Append([]gandalff.NullableInt{{Valid: false, Value: 1}}).(Ints)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}

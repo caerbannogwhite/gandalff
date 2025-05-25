@@ -208,9 +208,9 @@ func Test_SeriesFloat64_Append(t *testing.T) {
 		case 1:
 			s = s.Append([]float64{r}).(Float64s)
 		case 2:
-			s = s.Append(gandalff.NullableFloat64{true, r}).(Float64s)
+			s = s.Append(gandalff.NullableFloat64{Valid: true, Value: r}).(Float64s)
 		case 3:
-			s = s.Append([]gandalff.NullableFloat64{{false, r}}).(Float64s)
+			s = s.Append([]gandalff.NullableFloat64{{Valid: false, Value: r}}).(Float64s)
 		}
 
 		if s.Get(i) != r {
@@ -243,7 +243,7 @@ func Test_SeriesFloat64_Append(t *testing.T) {
 	s = NewSeriesFloat64([]float64{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableFloat64{false, 1}).(Float64s)
+		s = s.Append(gandalff.NullableFloat64{Valid: false, Value: 1}).(Float64s)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -253,7 +253,7 @@ func Test_SeriesFloat64_Append(t *testing.T) {
 	s = NewSeriesFloat64([]float64{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableFloat64{{false, 1}}).(Float64s)
+		s = s.Append([]gandalff.NullableFloat64{{Valid: false, Value: 1}}).(Float64s)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}

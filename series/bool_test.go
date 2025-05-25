@@ -207,9 +207,9 @@ func Test_SeriesBool_Append(t *testing.T) {
 			case 1:
 				s = s.Append([]bool{true}).(Bools)
 			case 2:
-				s = s.Append(gandalff.NullableBool{true, true}).(Bools)
+				s = s.Append(gandalff.NullableBool{Valid: true, Value: true}).(Bools)
 			case 3:
-				s = s.Append([]gandalff.NullableBool{{false, true}}).(Bools)
+				s = s.Append([]gandalff.NullableBool{{Valid: true, Value: false}}).(Bools)
 			}
 
 			if s.Get(i) != true {

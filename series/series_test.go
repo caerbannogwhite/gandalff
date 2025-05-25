@@ -11,7 +11,7 @@ func Test_Series(t *testing.T) {
 	s := NewSeries([]bool{true, false, true, false, true, false, true, false, true, false}, nil, true, false, ctx)
 
 	r := s.Append(true).
-		Append([]gandalff.NullableBool{{true, true}, {true, false}}).
+		Append([]gandalff.NullableBool{{Valid: true, Value: true}, {Valid: true, Value: false}}).
 		Filter([]bool{true, false, true, false, true, false, true, false, true, false, true, true, false})
 
 	if e, ok := r.(Errors); ok {
