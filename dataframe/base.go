@@ -549,7 +549,7 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 				values[i] = series.data[group[0]]
 			}
 
-			result.series = append(result.series, Float64s{
+			result.series = append(result.series, series.Float64s{
 				isNullable: series.isNullable,
 				nullMask:   __binVecInit(len(indeces), false),
 				data:       values,
@@ -561,7 +561,7 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 				values[i] = series.data[group[0]]
 			}
 
-			result.series = append(result.series, Strings{
+			result.series = append(result.series, series.Strings{
 				isNullable: series.isNullable,
 				nullMask:   __binVecInit(len(indeces), false),
 				data:       values,
@@ -1293,7 +1293,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		case meta.IntType, meta.Int64Type, meta.Float64Type, meta.DurationType:
 			formatters[i] = formatter.NewNumericFormatter().
 				SetUseLipGloss(params.useLipGloss).
-				SetNaText(df.ctx.naText).
+				SetNaText(df.ctx.GetNaText()).
 				SetTruncateOutput(true)
 		}
 
@@ -1538,8 +1538,24 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 
 ////////////////////////			IO
 
+func FromIoData(iod *io.IoData) DataFrame {
+	df := NewBaseDataFrame(iod.GetContext()).(BaseDataFrame)
+
+	if iod.Error != nil {
+		df.err = iod.Error
+	}
+
+	for i, s := range iod.Series {
+		df.AddSeries(iod.SeriesMeta[i].Name, s)
+	}
+
+	return df
+}
+
 func (df BaseDataFrame) toIoData() *io.IoData {
 	iod := io.NewIoData(df.ctx)
+
+	iod.Error = df.GetError()
 
 	for i, s := range df.series {
 		iod.AddSeries(s, io.SeriesMeta{
@@ -1557,7 +1573,7 @@ func (df BaseDataFrame) FromCsv() *io.CsvReader {
 func (df BaseDataFrame) ToCsv() *io.CsvWriter {
 	return io.NewCsvWriter().
 		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.naText)
+		SetNaText(df.ctx.GetNaText())
 }
 
 func (df BaseDataFrame) FromJson() *io.JsonReader {
@@ -1585,17 +1601,17 @@ func (df BaseDataFrame) FromXlsx() *io.XlsxReader {
 func (df BaseDataFrame) ToXlsx() *io.XlsxWriter {
 	return io.NewXlsxWriter().
 		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.naText)
+		SetNaText(df.ctx.GetNaText())
 }
 
 func (df BaseDataFrame) ToHtml() *io.HtmlWriter {
 	return io.NewHtmlWriter().
 		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.naText)
+		SetNaText(df.ctx.GetNaText())
 }
 
 func (df BaseDataFrame) ToMarkDown() *io.MarkDownWriter {
 	return io.NewMarkDownWriter().
 		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.naText)
+		SetNaText(df.ctx.GetNaText())
 }

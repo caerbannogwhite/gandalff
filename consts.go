@@ -27,6 +27,8 @@ const (
 
 	INF_TEXT        = "Inf"
 	NA_TEXT         = "Na"
+	EOL             = "\n"
+	QUOTE           = "\""
 	BOOL_TRUE_TEXT  = "true"
 	BOOL_FALSE_TEXT = "false"
 

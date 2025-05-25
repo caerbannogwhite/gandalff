@@ -435,7 +435,7 @@ func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandal
 		data:       data,
 		nullMask:   nullMask_,
 		ctx:        ctx,
-		timeFormat: ctx.TimeFormat,
+		timeFormat: ctx.GetTimeFormat(),
 	}
 }
 

@@ -10,10 +10,9 @@ type Context struct {
 	// This is used to reduce the number of allocations and to allow for fast comparisons.
 	StringPool *StringPool
 
-	TimeFormat string
-
 	threadsNumber int
 	naText        string
+	timeFormat    string
 }
 
 func NewContext() *Context {
@@ -21,7 +20,7 @@ func NewContext() *Context {
 		StringPool:    NewStringPool().SetNaText(NA_TEXT),
 		threadsNumber: THREADS_NUMBER,
 		naText:        NA_TEXT,
-		TimeFormat:    "2006-01-02 15:04:05",
+		timeFormat:    "2006-01-02 15:04:05",
 	}
 }
 
@@ -45,11 +44,11 @@ func (ctx *Context) SetNaText(s string) *Context {
 }
 
 func (ctx *Context) GetTimeFormat() string {
-	return ctx.TimeFormat
+	return ctx.timeFormat
 }
 
 func (ctx *Context) SetTimeFormat(s string) *Context {
-	ctx.TimeFormat = s
+	ctx.timeFormat = s
 	return ctx
 }
 
