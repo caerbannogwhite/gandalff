@@ -275,7 +275,6 @@ Charlie,33,95.0,t
 func Benchmark_FromCsv_100000Rows(b *testing.B) {
 
 	// Create a new dataframe from the CSV data.
-	var err error
 	var iod *IoData
 
 	b.ResetTimer()
@@ -292,13 +291,13 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 			SetGuessDataTypeLen(100).
 			Read()
 
+		if err != nil {
+			b.Error(err)
+		}
+
 		f.Close()
 	}
 	b.StopTimer()
-
-	if err != nil {
-		b.Error(err)
-	}
 
 	// Check the number of rows.
 	if iod.NRows() != 100000 {
@@ -359,7 +358,6 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 
 func Benchmark_FromCsv_500000Rows(b *testing.B) {
 	// Create a new dataframe from the CSV data.
-	var err error
 	var iod *IoData
 
 	b.ResetTimer()
@@ -376,13 +374,13 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 			SetGuessDataTypeLen(100).
 			Read()
 
+		if err != nil {
+			b.Error(err)
+		}
+
 		f.Close()
 	}
 	b.StopTimer()
-
-	if err != nil {
-		b.Error(err)
-	}
 
 	// Check the number of rows.
 	if iod.NRows() != 500000 {
