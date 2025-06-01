@@ -480,6 +480,11 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 5	Member header data
+	dsName := string(content[offset+8 : offset+16])
+	fileMeta.SasDsName = strings.Trim(dsName, " ")
+
+	sasDataVersion := string(content[offset+24 : offset+32])
+	fileMeta.SasDataVersion = strings.Trim(sasDataVersion, " ")
 
 	// skip the member header data
 	offset += 80
@@ -504,13 +509,19 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	///////////////////////////////////////
 	// 7	Namestr records
 
-	names := make([]string, varsNum)
-	namestrs := make([]__NAMESTRv56, varsNum)
+	seriesMeta := make([]SeriesMeta, varsNum)
+	namestrs := make([]__NAMESTRv89, varsNum)
 
 	// read namestr
 	for i := 0; i < varsNum; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
-		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
+		seriesMeta[i] = SeriesMeta{
+			Name:   strings.Trim(string(namestrs[i].nname[:]), " "),
+			Label:  strings.Trim(string(namestrs[i].nlabel[:]), " "),
+			Length: int(namestrs[i].nlng),
+			Type:   meta.BaseType(namestrs[i].ntype),
+		}
+
 		offset += namestrSize
 	}
 
@@ -598,7 +609,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 			// CHAR
 			case 2:
-				s := string(tmp)
+				s := strings.Trim(string(tmp), " ")
 
 				nulls[i] = append(nulls[i], false)
 				values[i] = append(values[i].([]string), s)
@@ -608,14 +619,6 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 		offset += rowLen
 		rowCounter++
-	}
-
-	seriesMeta := make([]SeriesMeta, varsNum)
-	for i := 0; i < varsNum; i++ {
-		seriesMeta[i] = SeriesMeta{
-			Name: names[i],
-			Type: meta.BaseType(namestrs[i].ntype),
-		}
 	}
 
 	_series := make([]series.Series, varsNum)
@@ -823,7 +826,6 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
 	switch v := strings.Split(sasLibVersion, ".")[0]; v {
 	case "8", "9":
-		fmt.Println(sasLibVersion)
 		fileMeta.SasLibVersion = sasLibVersion
 
 	default:
@@ -875,6 +877,11 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 5	Member header data
+	dsName := string(content[offset+8 : offset+16])
+	fileMeta.SasDsName = strings.Trim(dsName, " ")
+
+	sasDataVersion := string(content[offset+24 : offset+32])
+	fileMeta.SasDataVersion = strings.Trim(sasDataVersion, " ")
 
 	// skip the member header data
 	offset += 80
@@ -899,13 +906,19 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	///////////////////////////////////////
 	// 7	Namestr records
 
-	names := make([]string, varsNum)
+	seriesMeta := make([]SeriesMeta, varsNum)
 	namestrs := make([]__NAMESTRv89, varsNum)
 
 	// read namestr
 	for i := 0; i < varsNum; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
-		names[i] = strings.Trim(string(namestrs[i].nname[:]), " ")
+		seriesMeta[i] = SeriesMeta{
+			Name:   strings.Trim(string(namestrs[i].nname[:]), " "),
+			Label:  strings.Trim(string(namestrs[i].nlabel[:]), " "),
+			Length: int(namestrs[i].nlng),
+			Type:   meta.BaseType(namestrs[i].ntype),
+		}
+
 		offset += namestrSize
 	}
 
@@ -998,7 +1011,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 			// CHAR
 			case 2:
-				s := string(tmp)
+				s := strings.Trim(string(tmp), " ")
 
 				nulls[i] = append(nulls[i], false)
 				values[i] = append(values[i].([]string), s)
@@ -1008,14 +1021,6 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 		offset += rowLen
 		rowCounter++
-	}
-
-	seriesMeta := make([]SeriesMeta, varsNum)
-	for i := 0; i < varsNum; i++ {
-		seriesMeta[i] = SeriesMeta{
-			Name: names[i],
-			Type: meta.BaseType(namestrs[i].ntype),
-		}
 	}
 
 	_series := make([]series.Series, varsNum)
@@ -1043,11 +1048,11 @@ func writeXPTv89(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) e
 
 	const xptV89Template = "" +
 		"HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000  " +
-		"SAS     SAS     SASLIB  {{.Vrs}}{{.Ops}}                        {{.SasCreateDt}}" +
+		"SAS     SAS     SASLIB  {{.SasLibVersion}}{{.SasOs}}                        {{.SasCreateDt}}" +
 		"{{.SasCreateDt}}                                                                " +
 		"HEADER RECORD*******MEMBER  HEADER RECORD!!!!!!!000000000000000001600000000140  " +
 		"HEADER RECORD*******DSCRPTR HEADER RECORD!!!!!!!000000000000000000000000000000  " +
-		"SAS     VALUES  SASDATA {{.Vrs}}{{.Ops}}                        {{.SasCreateDt}}" +
+		"SAS     VALUES  SASDATA {{.SasDataVersion}}{{.SasOs}}                        {{.SasCreateDt}}" +
 		"{{.SasCreateDt}}                                                                " +
 		"HEADER RECORD*******NAMESTR HEADER RECORD!!!!!!!{{.VarsN}}00000000000000000000  "
 
@@ -1055,10 +1060,12 @@ func writeXPTv89(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) e
 		"HEADER RECORD*******OBS     HEADER RECORD!!!!!!!000000000000000000000000000000  "
 
 	type xptV89TemplateData struct {
-		Vrs         string
-		Ops         string
-		SasCreateDt string
-		VarsN       string
+		SasLibVersion     string
+		SasDataVersion    string
+		SasOs             string
+		SasCreateDt       string
+		SasLastModifiedDt string
+		VarsN             string
 	}
 
 	tmpl, err := template.New("xptV89").Parse(xptV89Template)
@@ -1067,10 +1074,12 @@ func writeXPTv89(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) e
 	}
 
 	err = tmpl.Execute(writer, xptV89TemplateData{
-		Vrs:         "9.4     ",
-		Ops:         "X64_10HO",
-		SasCreateDt: formatDateTimeSAS(time.Now()),
-		VarsN:       fmt.Sprintf("%010d", ioData.NCols()),
+		SasLibVersion:     "9.4     ",
+		SasDataVersion:    "9.4     ",
+		SasOs:             "X64_10HO",
+		SasCreateDt:       formatDateTimeSAS(time.Now()),
+		SasLastModifiedDt: formatDateTimeSAS(time.Now()),
+		VarsN:             fmt.Sprintf("%010d", ioData.NCols()),
 	})
 	if err != nil {
 		return err

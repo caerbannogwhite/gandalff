@@ -27,10 +27,11 @@ type FileMeta struct {
 	SasLibVersion  string
 	SasDataVersion string
 	SasOs          string
+	SasDsName      string
 }
 
-func (fileMeta *FileMeta) ToString() string {
-	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s}", fileMeta.FileName, fileMeta.FilePath, fileMeta.Label, fileMeta.Created, fileMeta.LastModified, fileMeta.SasLibVersion, fileMeta.SasDataVersion, fileMeta.SasOs)
+func (fileMeta *FileMeta) String() string {
+	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}", fileMeta.FileName, fileMeta.FilePath, fileMeta.Label, fileMeta.Created, fileMeta.LastModified, fileMeta.SasLibVersion, fileMeta.SasDataVersion, fileMeta.SasOs, fileMeta.SasDsName)
 }
 
 func (fileMeta *FileMeta) PrettyPrint() {
@@ -44,6 +45,7 @@ func (fileMeta *FileMeta) PrettyPrint() {
 	fmt.Println("Sas Lib Version: ", fileMeta.SasLibVersion)
 	fmt.Println("Sas Data Version: ", fileMeta.SasDataVersion)
 	fmt.Println("Sas Os: ", fileMeta.SasOs)
+	fmt.Println("Sas Ds Name: ", fileMeta.SasDsName)
 }
 
 type SeriesMeta struct {
@@ -53,6 +55,21 @@ type SeriesMeta struct {
 	KeySequence int
 	Name        string
 	Type        meta.BaseType
+}
+
+func (seriesMeta *SeriesMeta) String() string {
+	return fmt.Sprintf("SeriesMeta{Format: %s, Label: %s, Length: %d, KeySequence: %d, Name: %s, Type: %s}", seriesMeta.Format, seriesMeta.Label, seriesMeta.Length, seriesMeta.KeySequence, seriesMeta.Name, seriesMeta.Type)
+}
+
+func (seriesMeta *SeriesMeta) PrettyPrint() {
+	fmt.Println("Series Meta")
+	fmt.Println("--------------------------------")
+	fmt.Println("Format: ", seriesMeta.Format)
+	fmt.Println("Label: ", seriesMeta.Label)
+	fmt.Println("Length: ", seriesMeta.Length)
+	fmt.Println("Key Sequence: ", seriesMeta.KeySequence)
+	fmt.Println("Name: ", seriesMeta.Name)
+	fmt.Println("Type: ", seriesMeta.Type)
 }
 
 func (iod *IoData) AddSeries(series series.Series, meta SeriesMeta) {
