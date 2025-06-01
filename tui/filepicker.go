@@ -29,7 +29,7 @@ func (f Filepicker) View() string {
 }
 
 func (f Filepicker) DidSelectFile(msg tea.Msg) (bool, string) {
-	if msg, ok := msg.(type); ok && msg.String() == "enter" {
+	if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "enter" {
 		return true, ""
 	} else {
 		return false, ""
@@ -37,7 +37,7 @@ func (f Filepicker) DidSelectFile(msg tea.Msg) (bool, string) {
 }
 
 func (f Filepicker) DidSelectDisabledFile(msg tea.Msg) (bool, string) {
-	if msg, ok := msg.(type); ok && msg.String() == "enter" {
+	if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "enter" {
 		return true, ""
 	} else {
 		return false, ""
