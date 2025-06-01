@@ -515,11 +515,16 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// read namestr
 	for i := 0; i < varsNum; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
+		type_ := meta.Float64Type
+		if namestrs[i].ntype == 2 {
+			type_ = meta.StringType
+		}
+
 		seriesMeta[i] = SeriesMeta{
 			Name:   strings.Trim(string(namestrs[i].nname[:]), " "),
 			Label:  strings.Trim(string(namestrs[i].nlabel[:]), " "),
 			Length: int(namestrs[i].nlng),
-			Type:   meta.BaseType(namestrs[i].ntype),
+			Type:   type_,
 		}
 
 		offset += namestrSize
@@ -600,12 +605,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 					nulls[i] = append(nulls[i], false)
 				}
 
-				// TODO: waiting for float32 support
-				// if namestrs[i].nlng <= 4 {
-				// 	values[i] = append(values[i].([]float32), float32(f))
-				// } else {
 				values[i] = append(values[i].([]float64), f)
-				// }
 
 			// CHAR
 			case 2:
@@ -912,11 +912,16 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// read namestr
 	for i := 0; i < varsNum; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
+		type_ := meta.Float64Type
+		if namestrs[i].ntype == 2 {
+			type_ = meta.StringType
+		}
+
 		seriesMeta[i] = SeriesMeta{
 			Name:   strings.Trim(string(namestrs[i].nname[:]), " "),
 			Label:  strings.Trim(string(namestrs[i].nlabel[:]), " "),
 			Length: int(namestrs[i].nlng),
-			Type:   meta.BaseType(namestrs[i].ntype),
+			Type:   type_,
 		}
 
 		offset += namestrSize
@@ -948,12 +953,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 		switch namestrs[i].ntype {
 		case 1:
-			// TODO: waiting for float32 support
-			// if namestrs[i].nlng <= 4 {
-			// 	values[i] = make([]float32, 0)
-			// } else {
 			values[i] = make([]float64, 0)
-			// }
 		case 2:
 			values[i] = make([]string, 0)
 		default:
@@ -1002,12 +1002,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 					nulls[i] = append(nulls[i], false)
 				}
 
-				// TODO: waiting for float32 support
-				// if namestrs[i].nlng <= 4 {
-				// 	values[i] = append(values[i].([]float32), float32(f))
-				// } else {
 				values[i] = append(values[i].([]float64), f)
-				// }
 
 			// CHAR
 			case 2:
@@ -1026,9 +1021,6 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	_series := make([]series.Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
-		// TODO: waiting for float32 support
-		// case []float32:
-		// 	series[i] = NewSeriesFloat32(t, nulls[i], false, ctx)
 		case []float64:
 			_series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
 		case []string:
