@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/meta"
 	"github.com/caerbannogwhite/gandalff/series"
 )
 
@@ -28,6 +29,7 @@ const (
 )
 
 type XptReader struct {
+	guessVersion    bool
 	maxObservations int
 	version         XptVersionType
 	byteOrder       binary.ByteOrder
@@ -38,6 +40,7 @@ type XptReader struct {
 
 func NewXptReader(ctx *gandalff.Context) *XptReader {
 	return &XptReader{
+		guessVersion:    false,
 		maxObservations: -1,
 		version:         XPT_VERSION_8,
 		byteOrder:       binary.BigEndian,
@@ -54,6 +57,11 @@ func (r *XptReader) SetMaxObservations(maxObservations int) *XptReader {
 
 func (r *XptReader) SetVersion(version XptVersionType) *XptReader {
 	r.version = version
+	return r
+}
+
+func (r *XptReader) GuessVersion() *XptReader {
+	r.guessVersion = true
 	return r
 }
 
@@ -90,26 +98,28 @@ func (r *XptReader) Read() *IoData {
 		return &IoData{Error: fmt.Errorf("XptReader: no context specified")}
 	}
 
+	if r.guessVersion {
+		version, err := guessXptVersion(r.reader, r.ctx)
+		if err != nil {
+			return &IoData{Error: err}
+		}
+		r.version = version
+	}
+
 	var err error
-	var names []string
-	var series []series.Series
+	var ioData *IoData
 
 	switch r.version {
 	case XPT_VERSION_5, XPT_VERSION_6:
-		names, series, err = readXPTv56(r.reader, r.maxObservations, r.byteOrder, r.ctx)
+		ioData, err = readXptV56(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	case XPT_VERSION_8, XPT_VERSION_9:
-		names, series, err = readXPTv89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
+		ioData, err = readXptV89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	default:
 		return &IoData{Error: fmt.Errorf("XptReader: unknown version")}
 	}
 
 	if err != nil {
 		return &IoData{Error: err}
-	}
-
-	ioData := NewIoData(r.ctx)
-	for i, name := range names {
-		ioData.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
 	return ioData
@@ -166,7 +176,7 @@ func (w *XptWriter) Write() error {
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return err
+			return fmt.Errorf("XptWriter: %w", err)
 		}
 		defer file.Close()
 		w.writer = file
@@ -187,7 +197,7 @@ func (w *XptWriter) Write() error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("XptWriter: %w", err)
 	}
 
 	return nil
@@ -198,6 +208,57 @@ const (
 	valueSAS         = "SAS     "
 	valueLIB         = "SASLIB  "
 )
+
+// This functions guesses the version of a SAS XPT file.
+func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, error) {
+	if ctx == nil {
+		return 0, fmt.Errorf("guessXptVersion: no context specified")
+	}
+
+	var err error
+
+	content := make([]byte, 0)
+	buffer := make([]byte, 1024)
+	for n, err := reader.Read(buffer); err == nil; n, err = reader.Read(buffer) {
+		content = append(content, buffer[:n]...)
+	}
+
+	if err != nil && err != io.EOF {
+		return 0, fmt.Errorf("guessXptVersion: %w", err)
+	}
+
+	offset := 0
+
+	///////////////////////////////////////
+	// 1	The first header record consists ofthe following characterstring, in ASCII:
+	// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
+	if string(content[0:20]) != valueHeaderStart {
+		return XPT_VERSION_8, nil
+	}
+	offset += 80
+
+	///////////////////////////////////////
+	// 2	The first real header record
+	if string(content[offset:offset+8]) != valueSAS ||
+		string(content[offset+8:offset+16]) != valueSAS ||
+		string(content[offset+16:offset+24]) != valueLIB {
+		return XPT_VERSION_8, nil
+	}
+
+	version := strings.Trim(string(content[offset+24:offset+32]), " ")
+	switch strings.Split(version, ".")[0] {
+	case "5":
+		return XPT_VERSION_5, nil
+	case "6":
+		return XPT_VERSION_6, nil
+	case "8":
+		return XPT_VERSION_8, nil
+	case "9":
+		return XPT_VERSION_9, nil
+	default:
+		return 0, fmt.Errorf("guessXptVersion: invalid version '%s'", version)
+	}
+}
 
 ///////////////////////////////////////     SAS XPT v5/6
 //
@@ -332,11 +393,12 @@ func (nms *__NAMESTRv56) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 5/6).
-func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) ([]string, []series.Series, error) {
+func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) (*IoData, error) {
 	if ctx == nil {
-		return nil, nil, fmt.Errorf("readXPTv56: no context specified")
+		return nil, fmt.Errorf("readXptV56: no context specified")
 	}
 	var err error
+	var fileMeta FileMeta
 
 	content := make([]byte, 0)
 	buffer := make([]byte, 1024)
@@ -345,7 +407,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	}
 
 	if err != nil && err != io.EOF {
-		return nil, nil, err
+		return nil, fmt.Errorf("readXptV56: %w", err)
 	}
 
 	offset := 0
@@ -354,7 +416,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 1	The first header record consists ofthe following characterstring, in ASCII:
 	// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
 	if string(content[0:20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid header")
+		return nil, fmt.Errorf("readXptV56: invalid header")
 	}
 	offset += 80
 
@@ -363,15 +425,20 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	if string(content[offset:offset+8]) != valueSAS ||
 		string(content[offset+8:offset+16]) != valueSAS ||
 		string(content[offset+16:offset+24]) != valueLIB {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid first real header")
+		return nil, fmt.Errorf("readXptV56: invalid first real header")
 	}
 
 	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch strings.Split(version, ".")[0] {
+	switch v := strings.Split(version, ".")[0]; v {
 	case "5", "6":
+		verNum, err := strconv.ParseInt(v, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("readXptV56: invalid version '%s'", version)
+		}
+		fileMeta.SasXptVersion = XptVersionType(verNum)
 
 	default:
-		return nil, nil, fmt.Errorf("readXPTv56: invalid version '%s'", version)
+		return nil, fmt.Errorf("readXptV56: invalid version '%s'", version)
 	}
 
 	///////////////////////////////////////
@@ -381,7 +448,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	///////////////////////////////////////
 	// 4	Member header records
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid member header")
+		return nil, fmt.Errorf("readXptV56: invalid member header")
 	}
 
 	namestrSize := 140
@@ -402,13 +469,13 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 6	Namestr headerrecord
 	var varsNum int
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid namestr header")
+		return nil, fmt.Errorf("readXptV56: invalid namestr header")
 	}
 
 	// get number of variables
 	n, err := strconv.ParseInt(string(content[offset+48:offset+58]), 10, 32)
 	if err != nil {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid number of variables '%s'", string(content[offset+24:offset+32]))
+		return nil, fmt.Errorf("readXptV56: invalid number of variables '%s'", string(content[offset+24:offset+32]))
 	}
 	varsNum = int(n)
 	offset += 80
@@ -435,7 +502,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 8	Observation header
 
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv56: invalid observation header")
+		return nil, fmt.Errorf("readXptV56: invalid observation header")
 	}
 
 	// skip the observation header
@@ -456,7 +523,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		case 2:
 			values[i] = make([]string, 0)
 		default:
-			return nil, nil, fmt.Errorf("readXPTv56: invalid variable type '%d'", namestrs[i].ntype)
+			return nil, fmt.Errorf("readXptV56: invalid variable type '%d'", namestrs[i].ntype)
 		}
 	}
 
@@ -492,7 +559,7 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 			case 1:
 				f, err := NewSasFloat(tmp).ToIeee(byteOrder)
 				if err != nil {
-					return nil, nil, err
+					return nil, fmt.Errorf("readXptV56: %w", err)
 				}
 
 				if math.IsNaN(f) {
@@ -522,6 +589,14 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
+	seriesMeta := make([]SeriesMeta, varsNum)
+	for i := 0; i < varsNum; i++ {
+		seriesMeta[i] = SeriesMeta{
+			Name: names[i],
+			Type: meta.BaseType(namestrs[i].ntype),
+		}
+	}
+
 	_series := make([]series.Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
@@ -532,13 +607,17 @@ func readXPTv56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		}
 	}
 
-	return names, _series, nil
+	return &IoData{
+		FileMeta:   fileMeta,
+		SeriesMeta: seriesMeta,
+		Series:     _series,
+	}, nil
 }
 
 // This functions writes a SAS XPT file (versions 5/6).
 func writeXPTv56(ioData *IoData, writer io.Writer, byteOrder binary.ByteOrder) error {
 	// TODO: implement
-	return nil
+	return fmt.Errorf("writeXPTv56: not implemented")
 }
 
 ///////////////////////////////////////     SAS XPT v8/9
@@ -684,11 +763,12 @@ func (nms *__NAMESTRv89) String() string {
 }
 
 // This functions reads a SAS XPT file (versions 8/9).
-func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) ([]string, []series.Series, error) {
+func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) (*IoData, error) {
 	if ctx == nil {
-		return nil, nil, fmt.Errorf("readXPTv89: no context specified")
+		return nil, fmt.Errorf("readXptV89: no context specified")
 	}
 	var err error
+	var fileMeta FileMeta
 
 	content := make([]byte, 0)
 	buffer := make([]byte, 1024)
@@ -697,7 +777,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	}
 
 	if err != nil && err != io.EOF {
-		return nil, nil, err
+		return nil, fmt.Errorf("readXptV89: %w", err)
 	}
 
 	offset := 0
@@ -706,7 +786,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 1	The first header record consists ofthe following characterstring, in ASCII:
 	// 		HEADER RECORD*******LIBV8 HEADER RECORD!!!!!!!000000000000000000000000000000
 	if string(content[0:20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid header")
+		return nil, fmt.Errorf("readXptV89: invalid header")
 	}
 	offset += 80
 
@@ -715,15 +795,20 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	if string(content[offset:offset+8]) != valueSAS ||
 		string(content[offset+8:offset+16]) != valueSAS ||
 		string(content[offset+16:offset+24]) != valueLIB {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid first real header")
+		return nil, fmt.Errorf("readXptV89: invalid first real header")
 	}
 
 	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch strings.Split(version, ".")[0] {
+	switch v := strings.Split(version, ".")[0]; v {
 	case "8", "9":
+		verNum, err := strconv.ParseInt(v, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("readXptV89: invalid version '%s'", version)
+		}
+		fileMeta.SasXptVersion = XptVersionType(verNum)
 
 	default:
-		return nil, nil, fmt.Errorf("readXPTv89: invalid version '%s'", version)
+		return nil, fmt.Errorf("readXptV89: invalid version '%s'", version)
 	}
 
 	offset += 80
@@ -735,12 +820,12 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	///////////////////////////////////////
 	// 4	Member header records
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid member header")
+		return nil, fmt.Errorf("readXptV89: invalid member header")
 	}
 
 	namestrSize, err := strconv.Atoi(string(content[offset+74 : offset+78]))
 	if err != nil {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid NAMESTR size '%s'", string(content[offset+74:offset+78]))
+		return nil, fmt.Errorf("readXptV89: invalid NAMESTR size '%s'", string(content[offset+74:offset+78]))
 	}
 	offset += 80
 
@@ -748,7 +833,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	case 140:
 		// TODO: read namestr
 	default:
-		return nil, nil, fmt.Errorf("readXPTv89: invalid NAMESTR size '%d'", namestrSize)
+		return nil, fmt.Errorf("readXptV89: invalid NAMESTR size '%d'", namestrSize)
 	}
 
 	// skip the member header
@@ -766,13 +851,13 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 6	Namestr headerrecord
 	var varsNum int
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid namestr header")
+		return nil, fmt.Errorf("readXptV89: invalid namestr header")
 	}
 
 	// get number of variables
 	n, err := strconv.ParseInt(string(content[offset+48:offset+58]), 10, 32)
 	if err != nil {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid number of variables '%s'", string(content[offset+24:offset+32]))
+		return nil, fmt.Errorf("readXptV89: invalid number of variables '%s'", string(content[offset+24:offset+32]))
 	}
 	varsNum = int(n)
 	offset += 80
@@ -799,7 +884,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// 8	Observation header
 
 	if string(content[offset:offset+20]) != valueHeaderStart {
-		return nil, nil, fmt.Errorf("readXPTv89: invalid observation header")
+		return nil, fmt.Errorf("readXptV89: invalid observation header")
 	}
 
 	// skip the observation header
@@ -825,7 +910,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		case 2:
 			values[i] = make([]string, 0)
 		default:
-			return nil, nil, fmt.Errorf("readXPTv89: invalid variable type '%d'", namestrs[i].ntype)
+			return nil, fmt.Errorf("readXptV89: invalid variable type '%d'", namestrs[i].ntype)
 		}
 	}
 
@@ -861,7 +946,7 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 			case 1:
 				f, err := NewSasFloat(tmp).ToIeee(byteOrder)
 				if err != nil {
-					return nil, nil, err
+					return nil, fmt.Errorf("readXptV89: %w", err)
 				}
 
 				if math.IsNaN(f) {
@@ -891,6 +976,14 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
+	seriesMeta := make([]SeriesMeta, varsNum)
+	for i := 0; i < varsNum; i++ {
+		seriesMeta[i] = SeriesMeta{
+			Name: names[i],
+			Type: meta.BaseType(namestrs[i].ntype),
+		}
+	}
+
 	_series := make([]series.Series, varsNum)
 	for i := 0; i < varsNum; i++ {
 		switch t := values[i].(type) {
@@ -904,7 +997,11 @@ func readXPTv89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		}
 	}
 
-	return names, _series, nil
+	return &IoData{
+		FileMeta:   fileMeta,
+		SeriesMeta: seriesMeta,
+		Series:     _series,
+	}, nil
 }
 
 // This functions writes a SAS XPT file (versions 8/9).

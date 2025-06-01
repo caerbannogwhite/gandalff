@@ -18,11 +18,12 @@ type IoData struct {
 }
 
 type FileMeta struct {
-	FileName     string
-	FilePath     string
-	Label        string
-	Created      time.Time
-	LastModified time.Time
+	FileName      string
+	FilePath      string
+	Label         string
+	Created       time.Time
+	LastModified  time.Time
+	SasXptVersion XptVersionType
 }
 
 type SeriesMeta struct {
