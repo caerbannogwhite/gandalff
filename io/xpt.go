@@ -21,6 +21,8 @@ import (
 
 type XptVersionType uint8
 
+const SAS_YEAR_THRESHOLD = 50
+
 const (
 	XPT_VERSION_5 XptVersionType = iota + 5
 	XPT_VERSION_6
@@ -98,15 +100,20 @@ func (r *XptReader) Read() *IoData {
 		return &IoData{Error: fmt.Errorf("XptReader: no context specified")}
 	}
 
+	var version XptVersionType
+	var content []byte
+	var err error
+
 	if r.guessVersion {
-		version, err := guessXptVersion(r.reader, r.ctx)
+		version, content, err = guessXptVersion(r.reader, r.ctx)
 		if err != nil {
 			return &IoData{Error: err}
 		}
+
 		r.version = version
+		r.reader = bytes.NewReader(content)
 	}
 
-	var err error
 	var ioData *IoData
 
 	switch r.version {
@@ -205,14 +212,15 @@ func (w *XptWriter) Write() error {
 
 const (
 	valueHeaderStart = "HEADER RECORD*******"
-	valueSAS         = "SAS     "
-	valueLIB         = "SASLIB  "
+	valueSas         = "SAS     "
+	valueSasLib      = "SASLIB  "
+	valueSasData     = "SASDATA "
 )
 
 // This functions guesses the version of a SAS XPT file.
-func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, error) {
+func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, []byte, error) {
 	if ctx == nil {
-		return 0, fmt.Errorf("guessXptVersion: no context specified")
+		return 0, nil, fmt.Errorf("guessXptVersion: no context specified")
 	}
 
 	var err error
@@ -224,7 +232,7 @@ func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, e
 	}
 
 	if err != nil && err != io.EOF {
-		return 0, fmt.Errorf("guessXptVersion: %w", err)
+		return 0, nil, fmt.Errorf("guessXptVersion: %w", err)
 	}
 
 	offset := 0
@@ -233,30 +241,30 @@ func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, e
 	// 1	The first header record consists ofthe following characterstring, in ASCII:
 	// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
 	if string(content[0:20]) != valueHeaderStart {
-		return XPT_VERSION_8, nil
+		return XPT_VERSION_8, content, nil
 	}
 	offset += 80
 
 	///////////////////////////////////////
 	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSAS ||
-		string(content[offset+8:offset+16]) != valueSAS ||
-		string(content[offset+16:offset+24]) != valueLIB {
-		return XPT_VERSION_8, nil
+	if string(content[offset:offset+8]) != valueSas ||
+		string(content[offset+8:offset+16]) != valueSas ||
+		string(content[offset+16:offset+24]) != valueSasLib {
+		return XPT_VERSION_8, content, nil
 	}
 
-	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch strings.Split(version, ".")[0] {
+	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
+	switch strings.Split(sasLibVersion, ".")[0] {
 	case "5":
-		return XPT_VERSION_5, nil
+		return XPT_VERSION_5, content, nil
 	case "6":
-		return XPT_VERSION_6, nil
+		return XPT_VERSION_6, content, nil
 	case "8":
-		return XPT_VERSION_8, nil
+		return XPT_VERSION_8, content, nil
 	case "9":
-		return XPT_VERSION_9, nil
+		return XPT_VERSION_9, content, nil
 	default:
-		return 0, fmt.Errorf("guessXptVersion: invalid version '%s'", version)
+		return 0, nil, fmt.Errorf("guessXptVersion: invalid version '%s'", sasLibVersion)
 	}
 }
 
@@ -422,27 +430,40 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSAS ||
-		string(content[offset+8:offset+16]) != valueSAS ||
-		string(content[offset+16:offset+24]) != valueLIB {
+	if string(content[offset:offset+8]) != valueSas ||
+		string(content[offset+8:offset+16]) != valueSas ||
+		string(content[offset+16:offset+24]) != valueSasLib {
 		return nil, fmt.Errorf("readXptV56: invalid first real header")
 	}
 
-	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch v := strings.Split(version, ".")[0]; v {
+	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
+	switch v := strings.Split(sasLibVersion, ".")[0]; v {
 	case "5", "6":
-		verNum, err := strconv.ParseInt(v, 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("readXptV56: invalid version '%s'", version)
-		}
-		fileMeta.SasXptVersion = XptVersionType(verNum)
+		fileMeta.SasLibVersion = sasLibVersion
 
 	default:
-		return nil, fmt.Errorf("readXptV56: invalid version '%s'", version)
+		return nil, fmt.Errorf("readXptV56: invalid version '%s'", sasLibVersion)
 	}
+
+	// Read SAS OS
+	fileMeta.SasOs = string(content[offset+32 : offset+40])
+
+	// Read Creation Date
+	// ie: 04APR12:22:16:21
+	creationDate := strings.Trim(string(content[offset+64:offset+80]), " ")
+	fileMeta.Created, err = parseSasDate(creationDate)
+	if err != nil {
+		return nil, fmt.Errorf("readXptV56: invalid creation date '%s'", creationDate)
+	}
+	offset += 80
 
 	///////////////////////////////////////
 	// 3	Second real header record: ddMMMyy:hh:mm:ss
+	lastModifiedDate := strings.Trim(string(content[offset:offset+80]), " ")
+	fileMeta.LastModified, err = parseSasDate(lastModifiedDate)
+	if err != nil {
+		return nil, fmt.Errorf("readXptV56: invalid last modified date '%s'", lastModifiedDate)
+	}
 	offset += 80
 
 	///////////////////////////////////////
@@ -767,6 +788,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	if ctx == nil {
 		return nil, fmt.Errorf("readXptV89: no context specified")
 	}
+
 	var err error
 	var fileMeta FileMeta
 
@@ -792,29 +814,41 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSAS ||
-		string(content[offset+8:offset+16]) != valueSAS ||
-		string(content[offset+16:offset+24]) != valueLIB {
+	if string(content[offset:offset+8]) != valueSas ||
+		string(content[offset+8:offset+16]) != valueSas ||
+		string(content[offset+16:offset+24]) != valueSasLib {
 		return nil, fmt.Errorf("readXptV89: invalid first real header")
 	}
 
-	version := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch v := strings.Split(version, ".")[0]; v {
+	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
+	switch v := strings.Split(sasLibVersion, ".")[0]; v {
 	case "8", "9":
-		verNum, err := strconv.ParseInt(v, 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("readXptV89: invalid version '%s'", version)
-		}
-		fileMeta.SasXptVersion = XptVersionType(verNum)
+		fmt.Println(sasLibVersion)
+		fileMeta.SasLibVersion = sasLibVersion
 
 	default:
-		return nil, fmt.Errorf("readXptV89: invalid version '%s'", version)
+		return nil, fmt.Errorf("readXptV89: invalid version '%s'", sasLibVersion)
 	}
 
+	// Read SAS OS
+	fileMeta.SasOs = string(content[offset+32 : offset+40])
+
+	// Read Creation Date
+	// ie: 04APR12:22:16:21
+	creationDate := strings.Trim(string(content[offset+64:offset+80]), " ")
+	fileMeta.Created, err = parseSasDate(creationDate)
+	if err != nil {
+		return nil, fmt.Errorf("readXptV89: invalid creation date '%s'", creationDate)
+	}
 	offset += 80
 
 	///////////////////////////////////////
 	// 3	Second real header record: ddMMMyy:hh:mm:ss
+	lastModifiedDate := strings.Trim(string(content[offset:offset+80]), " ")
+	fileMeta.LastModified, err = parseSasDate(lastModifiedDate)
+	if err != nil {
+		return nil, fmt.Errorf("readXptV89: invalid last modified date '%s'", lastModifiedDate)
+	}
 	offset += 80
 
 	///////////////////////////////////////

@@ -211,3 +211,28 @@ func formatDateTimeSAS(t time.Time) string {
 		t.Year()%100,
 		t.Hour(), t.Minute(), t.Second())
 }
+
+// Parse a SAS date string in the format "04APR12:22:16:21" to a time.Time object
+func parseSasDate(dateStr string) (time.Time, error) {
+	// Go's layout: "02Jan06:15:04:05"
+	layout := "02Jan06:15:04:05"
+
+	// Parse the date
+	t, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// Extract the two-digit year
+	year := t.Year() % 100
+	if year < SAS_YEAR_THRESHOLD {
+		year += 2000
+	} else {
+		year += 1900
+	}
+
+	// Construct new time with adjusted year
+	adjusted := time.Date(year, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+
+	return adjusted, nil
+}

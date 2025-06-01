@@ -1,6 +1,7 @@
 package io
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/caerbannogwhite/gandalff"
@@ -18,12 +19,31 @@ type IoData struct {
 }
 
 type FileMeta struct {
-	FileName      string
-	FilePath      string
-	Label         string
-	Created       time.Time
-	LastModified  time.Time
-	SasXptVersion XptVersionType
+	FileName       string
+	FilePath       string
+	Label          string
+	Created        time.Time
+	LastModified   time.Time
+	SasLibVersion  string
+	SasDataVersion string
+	SasOs          string
+}
+
+func (fileMeta *FileMeta) ToString() string {
+	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s}", fileMeta.FileName, fileMeta.FilePath, fileMeta.Label, fileMeta.Created, fileMeta.LastModified, fileMeta.SasLibVersion, fileMeta.SasDataVersion, fileMeta.SasOs)
+}
+
+func (fileMeta *FileMeta) PrettyPrint() {
+	fmt.Println("File Meta")
+	fmt.Println("--------------------------------")
+	fmt.Println("File Name: ", fileMeta.FileName)
+	fmt.Println("File Path: ", fileMeta.FilePath)
+	fmt.Println("Label: ", fileMeta.Label)
+	fmt.Println("Created: ", fileMeta.Created)
+	fmt.Println("Last Modified: ", fileMeta.LastModified)
+	fmt.Println("Sas Lib Version: ", fileMeta.SasLibVersion)
+	fmt.Println("Sas Data Version: ", fileMeta.SasDataVersion)
+	fmt.Println("Sas Os: ", fileMeta.SasOs)
 }
 
 type SeriesMeta struct {
