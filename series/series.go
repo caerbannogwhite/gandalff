@@ -80,14 +80,14 @@ type Series interface {
 	// Filter out the elements by the given mask.
 	// Mask can be a bool series, a slice of bools or a slice of ints.
 	Filter(mask any) Series
-	filterIntSlice(mask []int, check bool) Series
+	FilterIntSlice(mask []int, check bool) Series
 
 	// Apply the given function to each element of the series.
 	Map(f gandalff.MapFunc) Series
 	MapNull(f gandalff.MapFuncNull) Series
 
 	// Group the elements in the series.
-	group() Series
+	Group() Series
 	GroupBy(gp SeriesPartition) Series
 	UnGroup() Series
 
@@ -96,7 +96,7 @@ type Series interface {
 
 	// Sort Interface.
 	Less(i, j int) bool
-	equal(i, j int) bool
+	Equal(i, j int) bool
 	Swap(i, j int)
 
 	// Sort the elements of the series.
@@ -147,8 +147,8 @@ type SeriesNumeric interface {
 
 type SeriesPartition interface {
 	// Return the number partitions.
-	getSize() int
+	GetSize() int
 
 	// Return the indices of the groups.
-	getMap() map[int64][]int
+	GetMap() map[int64][]int
 }

@@ -23,7 +23,7 @@ func floatToString(f float64) string {
 	return strconv.FormatFloat(f, 'f', -1, 64)
 }
 
-func seriesTakePreprocess(type_ string, size int, params ...int) ([]int, error) {
+func SeriesTakePreprocess(type_ string, size int, params ...int) ([]int, error) {
 	switch len(params) {
 	case 1:
 		// only one parameter, so it must be the number of elements to take
@@ -88,7 +88,7 @@ func seriesTakePreprocess(type_ string, size int, params ...int) ([]int, error) 
 }
 
 func debugPrintPartition(p SeriesPartition, series ...Series) {
-	map_ := p.getMap()
+	map_ := p.GetMap()
 
 	header := ""
 	separators := ""

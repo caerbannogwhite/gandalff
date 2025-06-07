@@ -369,7 +369,7 @@ func Test_SeriesBool_Cast(t *testing.T) {
 	castError := s.Cast(meta.ErrorType)
 
 	// Check the message.
-	if castError.(Errors).msg != "Bools.Cast: invalid type Error" {
+	if castError.(Errors).Msg_ != "Bools.Cast: invalid type Error" {
 		t.Errorf("Expected error, got %v", castError)
 	}
 }
@@ -718,9 +718,9 @@ func Test_SeriesBool_Group(t *testing.T) {
 
 	// Test 1
 	s1 := NewSeriesBool(data1, data1Mask, true, ctx).
-		group()
+		Group()
 
-	p1 := s1.GetPartition().getMap()
+	p1 := s1.GetPartition().GetMap()
 	if len(p1) != 2 {
 		t.Errorf("Expected 2 groups, got %d", len(p1))
 	}
@@ -737,7 +737,7 @@ func Test_SeriesBool_Group(t *testing.T) {
 	s2 := NewSeriesBool(data2, data2Mask, true, ctx).
 		GroupBy(s1.GetPartition())
 
-	p2 := s2.GetPartition().getMap()
+	p2 := s2.GetPartition().GetMap()
 	if len(p2) != 6 {
 		t.Errorf("Expected 6 groups, got %d", len(p2))
 	}
@@ -758,7 +758,7 @@ func Test_SeriesBool_Group(t *testing.T) {
 	s3 := NewSeriesBool(data3, data3Mask, true, ctx).
 		GroupBy(s2.GetPartition())
 
-	p3 := s3.GetPartition().getMap()
+	p3 := s3.GetPartition().GetMap()
 	if len(p3) != 7 {
 		t.Errorf("Expected 7 groups, got %d", len(p3))
 	}

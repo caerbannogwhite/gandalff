@@ -7,7 +7,7 @@ import (
 
 // Dummy series for error handling.
 type Errors struct {
-	msg string
+	Msg_ string
 }
 
 func (s Errors) printInfo() {}
@@ -43,7 +43,7 @@ func (s Errors) IsError() bool {
 
 // Returns the error message of the series.
 func (s Errors) GetError() string {
-	return s.msg
+	return s.Msg_
 }
 
 // Makes the series nullable.
@@ -129,7 +129,7 @@ func (s Errors) DataAsNullable() any {
 
 // Returns the data of the series as a slice of strings.
 func (s Errors) DataAsString() []string {
-	return []string{s.msg}
+	return []string{s.Msg_}
 }
 
 // Casts the series to a given type.
@@ -150,7 +150,7 @@ func (s Errors) Filter(mask any) Series {
 	return s
 }
 
-func (s Errors) filterIntSlice(mask []int, check bool) Series {
+func (s Errors) FilterIntSlice(mask []int, check bool) Series {
 	return s
 }
 
@@ -163,7 +163,7 @@ func (s Errors) MapNull(f gandalff.MapFuncNull) Series {
 }
 
 // Group the elements in the series.
-func (s Errors) group() Series {
+func (s Errors) Group() Series {
 	return s
 }
 
@@ -184,7 +184,7 @@ func (s Errors) Less(i, j int) bool {
 	return false
 }
 
-func (s Errors) equal(i, j int) bool {
+func (s Errors) Equal(i, j int) bool {
 	return false
 }
 

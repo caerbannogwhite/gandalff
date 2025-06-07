@@ -6,20 +6,21 @@ import (
 
 	"github.com/caerbannogwhite/gandalff"
 	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/gandalff/utils"
 )
 
-// NAs represents a series with no data.
+// NAs represents a series with no Data_.
 type NAs struct {
-	size      int
-	partition *SeriesNAPartition
-	ctx       *gandalff.Context
+	size       int
+	Partition_ *SeriesNAPartition
+	Ctx_       *gandalff.Context
 }
 
 func (s NAs) printInfo() {}
 
 // Return the context of the series.
 func (s NAs) GetContext() *gandalff.Context {
-	return s.ctx
+	return s.Ctx_
 }
 
 // Returns the length of the series.
@@ -29,7 +30,7 @@ func (s NAs) Len() int {
 
 // Returns if the series is grouped.
 func (s NAs) IsGrouped() bool {
-	return s.partition != nil
+	return s.Partition_ != nil
 }
 
 // Returns if the series admits null values.
@@ -88,11 +89,11 @@ func (s NAs) IsNull(i int) bool {
 
 // Returns the null mask of the series.
 func (s NAs) GetNullMask() []bool {
-	nullMask := make([]bool, s.size)
+	NullMask_ := make([]bool, s.size)
 	for i := 0; i < s.size; i++ {
-		nullMask[i] = true
+		NullMask_[i] = true
 	}
-	return nullMask
+	return NullMask_
 }
 
 // Sets the null mask of the series.
@@ -121,7 +122,7 @@ func (s NAs) Take(params ...int) Series {
 
 // Append elements to the series.
 func (s NAs) Append(v any) Series {
-	var nullMask []byte
+	var NullMask_ []byte
 	switch v := v.(type) {
 	case nil:
 		s.size++
@@ -132,251 +133,251 @@ func (s NAs) Append(v any) Series {
 		return s
 
 	case bool, gandalff.NullableBool, []bool, []gandalff.NullableBool, Bools:
-		var data []bool
+		var Data_ []bool
 		switch v := v.(type) {
 		case bool:
-			data = make([]bool, s.size+1)
-			data[s.size] = v
-			nullMask = __binVecInit(s.size+1, true)
-			nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+			Data_ = make([]bool, s.size+1)
+			Data_[s.size] = v
+			NullMask_ = utils.BinVecInit(s.size+1, true)
+			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
 		case gandalff.NullableBool:
-			data = make([]bool, s.size+1)
-			nullMask = __binVecInit(s.size+1, true)
+			Data_ = make([]bool, s.size+1)
+			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
-				data[s.size] = v.Value
-				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+				Data_[s.size] = v.Value
+				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			}
 
 		case []bool:
-			data = append(make([]bool, s.size), v...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), false, make([]uint8, 0))
+			Data_ = append(make([]bool, s.size), v...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
 		case []gandalff.NullableBool:
-			data = make([]bool, s.size+len(v))
-			nullMask = __binVecInit(len(v), false)
+			Data_ = make([]bool, s.size+len(v))
+			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
 				if v.Valid {
-					data[s.size+i] = v.Value
+					Data_[s.size+i] = v.Value
 				} else {
-					nullMask[i>>3] |= 1 << uint(i%8)
+					NullMask_[i>>3] |= 1 << uint(i%8)
 				}
 			}
 
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), true, NullMask_)
 
 		case Bools:
-			data = append(make([]bool, s.size), v.data...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
+			Data_ = append(make([]bool, s.size), v.Data_...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), v.Len(), v.IsNullable(), v.NullMask_)
 		}
 
 		return Bools{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int, gandalff.NullableInt, []int, []gandalff.NullableInt, Ints:
-		var data []int
+		var Data_ []int
 		switch v := v.(type) {
 		case int:
-			data = make([]int, s.size+1)
-			data[s.size] = v
-			nullMask = __binVecInit(s.size+1, true)
-			nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+			Data_ = make([]int, s.size+1)
+			Data_[s.size] = v
+			NullMask_ = utils.BinVecInit(s.size+1, true)
+			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
 		case gandalff.NullableInt:
-			data = make([]int, s.size+1)
-			nullMask = __binVecInit(s.size+1, true)
+			Data_ = make([]int, s.size+1)
+			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
-				data[s.size] = v.Value
-				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+				Data_[s.size] = v.Value
+				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			}
 
 		case []int:
-			data = append(make([]int, s.size), v...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), false, make([]uint8, 0))
+			Data_ = append(make([]int, s.size), v...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
 		case []gandalff.NullableInt:
-			data = make([]int, s.size+len(v))
-			nullMask = __binVecInit(len(v), false)
+			Data_ = make([]int, s.size+len(v))
+			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
 				if v.Valid {
-					data[s.size+i] = v.Value
+					Data_[s.size+i] = v.Value
 				} else {
-					nullMask[i>>3] |= 1 << uint(i%8)
+					NullMask_[i>>3] |= 1 << uint(i%8)
 				}
 			}
 
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), true, NullMask_)
 
 		case Ints:
-			data = append(make([]int, s.size), v.data...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
+			Data_ = append(make([]int, s.size), v.Data_...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), v.Len(), v.IsNullable(), v.NullMask_)
 		}
 
 		return Ints{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int64, gandalff.NullableInt64, []int64, []gandalff.NullableInt64, Int64s:
-		var data []int64
+		var Data_ []int64
 		switch v := v.(type) {
 		case int64:
-			data = make([]int64, s.size+1)
-			data[s.size] = v
-			nullMask = __binVecInit(s.size+1, true)
-			nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+			Data_ = make([]int64, s.size+1)
+			Data_[s.size] = v
+			NullMask_ = utils.BinVecInit(s.size+1, true)
+			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
 		case gandalff.NullableInt64:
-			data = make([]int64, s.size+1)
-			nullMask = __binVecInit(s.size+1, true)
+			Data_ = make([]int64, s.size+1)
+			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
-				data[s.size] = v.Value
-				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+				Data_[s.size] = v.Value
+				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			}
 
 		case []int64:
-			data = append(make([]int64, s.size), v...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), false, make([]uint8, 0))
+			Data_ = append(make([]int64, s.size), v...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
 		case []gandalff.NullableInt64:
-			data = make([]int64, s.size+len(v))
-			nullMask = __binVecInit(len(v), false)
+			Data_ = make([]int64, s.size+len(v))
+			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
 				if v.Valid {
-					data[s.size+i] = v.Value
+					Data_[s.size+i] = v.Value
 				} else {
-					nullMask[i>>3] |= 1 << uint(i%8)
+					NullMask_[i>>3] |= 1 << uint(i%8)
 				}
 			}
 
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), true, NullMask_)
 
 		case Int64s:
-			data = append(make([]int64, s.size), v.data...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
+			Data_ = append(make([]int64, s.size), v.Data_...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), v.Len(), v.IsNullable(), v.NullMask_)
 		}
 
 		return Int64s{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case float64, gandalff.NullableFloat64, []float64, []gandalff.NullableFloat64, Float64s:
-		var data []float64
+		var Data_ []float64
 		switch v := v.(type) {
 		case float64:
-			data = make([]float64, s.size+1)
-			data[s.size] = v
-			nullMask = __binVecInit(s.size+1, true)
-			nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+			Data_ = make([]float64, s.size+1)
+			Data_[s.size] = v
+			NullMask_ = utils.BinVecInit(s.size+1, true)
+			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
 		case gandalff.NullableFloat64:
-			data = make([]float64, s.size+1)
-			nullMask = __binVecInit(s.size+1, true)
+			Data_ = make([]float64, s.size+1)
+			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
-				data[s.size] = v.Value
-				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+				Data_[s.size] = v.Value
+				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			}
 
 		case []float64:
-			data = append(make([]float64, s.size), v...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), false, make([]uint8, 0))
+			Data_ = append(make([]float64, s.size), v...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
 		case []gandalff.NullableFloat64:
-			data = make([]float64, s.size+len(v))
-			nullMask = __binVecInit(len(v), false)
+			Data_ = make([]float64, s.size+len(v))
+			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
 				if v.Valid {
-					data[s.size+i] = v.Value
+					Data_[s.size+i] = v.Value
 				} else {
-					nullMask[i>>3] |= 1 << uint(i%8)
+					NullMask_[i>>3] |= 1 << uint(i%8)
 				}
 			}
 
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), true, NullMask_)
 
 		case Float64s:
-			data = append(make([]float64, s.size), v.data...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
+			Data_ = append(make([]float64, s.size), v.Data_...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), v.Len(), v.IsNullable(), v.NullMask_)
 		}
 
 		return Float64s{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case string, gandalff.NullableString, []string, []gandalff.NullableString, Strings:
-		data := make([]*string, s.size)
+		Data_ := make([]*string, s.size)
 		for i := 0; i < s.size; i++ {
-			data[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT)
+			Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
 		}
 
 		switch v := v.(type) {
 		case string:
-			data = append(data, s.ctx.StringPool.Put(v))
-			nullMask = __binVecInit(s.size+1, true)
-			nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+			Data_ = append(Data_, s.Ctx_.StringPool.Put(v))
+			NullMask_ = utils.BinVecInit(s.size+1, true)
+			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
 		case gandalff.NullableString:
-			nullMask = __binVecInit(s.size+1, true)
+			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
-				data = append(data, s.ctx.StringPool.Put(v.Value))
-				nullMask[s.size>>3] &= ^(1 << uint(s.size%8))
+				Data_ = append(Data_, s.Ctx_.StringPool.Put(v.Value))
+				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			} else {
-				data = append(data, s.ctx.StringPool.Put(gandalff.NA_TEXT))
+				Data_ = append(Data_, s.Ctx_.StringPool.Put(gandalff.NA_TEXT))
 			}
 
 		case []string:
-			data = append(data, make([]*string, len(v))...)
+			Data_ = append(Data_, make([]*string, len(v))...)
 			for i, v := range v {
-				data[s.size+i] = s.ctx.StringPool.Put(v)
+				Data_[s.size+i] = s.Ctx_.StringPool.Put(v)
 			}
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), false, make([]uint8, 0))
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
 		case []gandalff.NullableString:
-			data = append(data, make([]*string, len(v))...)
-			nullMask = __binVecInit(len(v), false)
+			Data_ = append(Data_, make([]*string, len(v))...)
+			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
 				if v.Valid {
-					data[s.size+i] = s.ctx.StringPool.Put(v.Value)
+					Data_[s.size+i] = s.Ctx_.StringPool.Put(v.Value)
 				} else {
-					nullMask[i>>3] |= 1 << uint(i%8)
-					data[s.size+i] = s.ctx.StringPool.Put(gandalff.NA_TEXT)
+					NullMask_[i>>3] |= 1 << uint(i%8)
+					Data_[s.size+i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
 				}
 			}
 
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), len(v), true, nullMask)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), true, NullMask_)
 
 		case Strings:
-			data = append(data, v.data...)
-			_, nullMask = __mergeNullMasks(s.size, true, __binVecInit(s.size, true), v.Len(), v.IsNullable(), v.nullMask)
+			Data_ = append(Data_, v.Data_...)
+			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), v.Len(), v.IsNullable(), v.NullMask_)
 		}
 
 		return Strings{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	default:
@@ -384,25 +385,25 @@ func (s NAs) Append(v any) Series {
 	}
 }
 
-// All-data accessors.
+// All-Data_ accessors.
 
-// Returns the actual data of the series.
+// Returns the actual Data_ of the series.
 func (s NAs) Data() any {
 	return make([]bool, s.size)
 }
 
-// Returns the nullable data of the series.
+// Returns the nullable Data_ of the series.
 func (s NAs) DataAsNullable() any {
 	return make([]gandalff.NullableBool, s.size)
 }
 
-// Returns the data of the series as a slice of strings.
+// Returns the Data_ of the series as a slice of strings.
 func (s NAs) DataAsString() []string {
-	data := make([]string, s.size)
+	Data_ := make([]string, s.size)
 	for i := 0; i < s.size; i++ {
-		data[i] = gandalff.NA_TEXT
+		Data_[i] = gandalff.NA_TEXT
 	}
-	return data
+	return Data_
 }
 
 // Casts the series to a given type.
@@ -413,72 +414,72 @@ func (s NAs) Cast(t meta.BaseType) Series {
 
 	case meta.BoolType:
 		return Bools{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]bool, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]bool, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.IntType:
 		return Ints{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]int, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]int, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.Int64Type:
 		return Int64s{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]int64, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]int64, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.Float64Type:
 		return Float64s{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]float64, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]float64, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.StringType:
 		return Strings{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]*string, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]*string, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.TimeType:
 		return Times{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]time.Time, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]time.Time, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.DurationType:
 		return Durations{
-			isNullable: true,
-			sorted:     gandalff.SORTED_NONE,
-			data:       make([]time.Duration, s.size),
-			nullMask:   __binVecInit(s.size, true),
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: true,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       make([]time.Duration, s.size),
+			NullMask_:   utils.BinVecInit(s.size, true),
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	default:
@@ -502,7 +503,7 @@ func (s NAs) Filter(mask any) Series {
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
-		return s.filterIntSlice(mask, true)
+		return s.FilterIntSlice(mask, true)
 	default:
 		return Errors{fmt.Sprintf("NAs.Filter: invalid type %T", mask)}
 	}
@@ -510,7 +511,7 @@ func (s NAs) Filter(mask any) Series {
 
 func (s NAs) filterBool(mask Bools) Series {
 	elementCount := 0
-	for _, v := range mask.data {
+	for _, v := range mask.Data_ {
 		if v {
 			elementCount++
 		}
@@ -532,7 +533,7 @@ func (s NAs) filterBoolSlice(mask []bool) Series {
 	return s
 }
 
-func (s NAs) filterIntSlice(indexes []int, check bool) Series {
+func (s NAs) FilterIntSlice(indexes []int, check bool) Series {
 	// check if indexes are in range
 	if check {
 		for _, v := range indexes {
@@ -555,19 +556,19 @@ func (s NAs) MapNull(f gandalff.MapFuncNull) Series {
 }
 
 type SeriesNAPartition struct {
-	partition map[int64][]int
+	Partition_ map[int64][]int
 }
 
-func (gp *SeriesNAPartition) getSize() int {
-	return len(gp.partition)
+func (gp *SeriesNAPartition) GetSize() int {
+	return len(gp.Partition_)
 }
 
-func (gp *SeriesNAPartition) getMap() map[int64][]int {
-	return gp.partition
+func (gp *SeriesNAPartition) GetMap() map[int64][]int {
+	return gp.Partition_
 }
 
 // Group the elements in the series.
-func (s NAs) group() Series {
+func (s NAs) Group() Series {
 	return s
 }
 
@@ -580,7 +581,7 @@ func (s NAs) UnGroup() Series {
 }
 
 func (s NAs) GetPartition() SeriesPartition {
-	return s.partition
+	return s.Partition_
 }
 
 // Sort interface.
@@ -588,7 +589,7 @@ func (s NAs) Less(i, j int) bool {
 	return false
 }
 
-func (s NAs) equal(i, j int) bool {
+func (s NAs) Equal(i, j int) bool {
 	return false
 }
 

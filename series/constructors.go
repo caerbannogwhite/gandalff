@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/utils"
 )
 
 // Build a Series from a generic interface.
@@ -174,7 +175,7 @@ func NewSeries(data interface{}, nullMask []bool, makeCopy bool, memOpt bool, ct
 
 // Build an Error Series
 func NewSeriesError(err string) Errors {
-	return Errors{msg: err}
+	return Errors{Msg_: err}
 }
 
 // Build an NA Series
@@ -187,7 +188,7 @@ func NewSeriesNA(size int, ctx *gandalff.Context) NAs {
 		size = 0
 	}
 
-	return NAs{size: size, ctx: ctx}
+	return NAs{size: size, Ctx_: ctx}
 }
 
 // Build a Bool Series, if nullMask is nil then the series is not nullable
@@ -205,7 +206,7 @@ func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Co
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -218,10 +219,10 @@ func NewSeriesBool(data []bool, nullMask []bool, makeCopy bool, ctx *gandalff.Co
 	}
 
 	return Bools{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -240,7 +241,7 @@ func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Cont
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -253,10 +254,10 @@ func NewSeriesInt(data []int, nullMask []bool, makeCopy bool, ctx *gandalff.Cont
 	}
 
 	return Ints{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -275,7 +276,7 @@ func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -288,10 +289,10 @@ func NewSeriesInt64(data []int64, nullMask []bool, makeCopy bool, ctx *gandalff.
 	}
 
 	return Int64s{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -310,7 +311,7 @@ func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *ganda
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -323,10 +324,10 @@ func NewSeriesFloat64(data []float64, nullMask []bool, makeCopy bool, ctx *ganda
 	}
 
 	return Float64s{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -345,7 +346,7 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalf
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -367,10 +368,10 @@ func NewSeriesString(data []string, nullMask []bool, makeCopy bool, ctx *gandalf
 	}
 
 	return Strings{
-		isNullable: isNullable,
-		data:       actualData,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       actualData,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -389,17 +390,17 @@ func NewSeriesStringFromPtrs(data []*string, nullMask []bool, makeCopy bool, ctx
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
 	}
 
 	return Strings{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }
 
@@ -418,7 +419,7 @@ func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandal
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -431,11 +432,11 @@ func NewSeriesTime(data []time.Time, nullMask []bool, makeCopy bool, ctx *gandal
 	}
 
 	return Times{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
-		timeFormat: ctx.GetTimeFormat(),
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
+		timeFormat:  ctx.GetTimeFormat(),
 	}
 }
 
@@ -454,7 +455,7 @@ func NewSeriesDuration(data []time.Duration, nullMask []bool, makeCopy bool, ctx
 		} else if len(nullMask) > len(data) {
 			nullMask = nullMask[:len(data)]
 		}
-		nullMask_ = __binVecFromBools(nullMask)
+		nullMask_ = utils.BinVecFromBools(nullMask)
 	} else {
 		isNullable = false
 		nullMask_ = make([]uint8, 0)
@@ -467,9 +468,9 @@ func NewSeriesDuration(data []time.Duration, nullMask []bool, makeCopy bool, ctx
 	}
 
 	return Durations{
-		isNullable: isNullable,
-		data:       data,
-		nullMask:   nullMask_,
-		ctx:        ctx,
+		IsNullable_: isNullable,
+		Data_:       data,
+		NullMask_:   nullMask_,
+		Ctx_:        ctx,
 	}
 }

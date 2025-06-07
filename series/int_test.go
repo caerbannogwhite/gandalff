@@ -452,7 +452,7 @@ func Test_SeriesInt_Cast(t *testing.T) {
 	castError := s.Cast(meta.ErrorType)
 
 	// Check the message.
-	if castError.(Errors).msg != "Ints.Cast: invalid type Error" {
+	if castError.(Errors).Msg_ != "Ints.Cast: invalid type Error" {
 		t.Errorf("Expected error, got %v", castError)
 	}
 }
@@ -704,9 +704,9 @@ func Test_SeriesInt_Group(t *testing.T) {
 
 	// Test 1
 	s1 := NewSeriesInt(data1, data1Mask, true, ctx).
-		group()
+		Group()
 
-	p1 := s1.GetPartition().getMap()
+	p1 := s1.GetPartition().GetMap()
 	if len(p1) != 2 {
 		t.Errorf("Expected 2 groups, got %d", len(p1))
 	}
@@ -723,7 +723,7 @@ func Test_SeriesInt_Group(t *testing.T) {
 	s2 := NewSeriesInt(data2, data2Mask, true, ctx).
 		GroupBy(s1.GetPartition())
 
-	p2 := s2.GetPartition().getMap()
+	p2 := s2.GetPartition().GetMap()
 	if len(p2) != 6 {
 		t.Errorf("Expected 6 groups, got %d", len(p2))
 	}
@@ -744,7 +744,7 @@ func Test_SeriesInt_Group(t *testing.T) {
 	s3 := NewSeriesInt(data3, data3Mask, true, ctx).
 		GroupBy(s2.GetPartition())
 
-	p3 := s3.GetPartition().getMap()
+	p3 := s3.GetPartition().GetMap()
 	if len(p3) != 8 {
 		t.Errorf("Expected 8 groups, got %d", len(p3))
 	}

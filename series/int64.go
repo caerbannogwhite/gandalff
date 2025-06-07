@@ -11,236 +11,236 @@ import (
 
 // Int64s represents a series of ints.
 type Int64s struct {
-	isNullable bool
-	sorted     gandalff.SeriesSortOrder
-	data       []int64
-	nullMask   []uint8
-	partition  *SeriesInt64Partition
-	ctx        *gandalff.Context
+	IsNullable_ bool
+	Sorted_     gandalff.SeriesSortOrder
+	Data_       []int64
+	NullMask_   []uint8
+	Partition_  *SeriesInt64Partition
+	Ctx_        *gandalff.Context
 }
 
 // Get the element at index i as a string.
 func (s Int64s) GetAsString(i int) string {
-	if s.isNullable && s.IsNull(i) {
+	if s.IsNullable_ && s.IsNull(i) {
 		return gandalff.NA_TEXT
 	}
-	return intToString(s.data[i])
+	return intToString(s.Data_[i])
 }
 
 // Set the element at index i. The value v can be any belonging to types:
 // int8, int16, int, int, int64 and their nullable versions.
 func (s Int64s) Set(i int, v any) Series {
-	if s.partition != nil {
+	if s.Partition_ != nil {
 		return Errors{"Int64s.Set: cannot set values on a grouped Series"}
 	}
 
 	switch val := v.(type) {
 	case nil:
 		s = s.MakeNullable().(Int64s)
-		s.nullMask[i>>3] |= 1 << uint(i%8)
+		s.NullMask_[i>>3] |= 1 << uint(i%8)
 
 	case int8:
-		s.data[i] = int64(val)
+		s.Data_[i] = int64(val)
 
 	case int16:
-		s.data[i] = int64(val)
+		s.Data_[i] = int64(val)
 
 	case int:
-		s.data[i] = int64(val)
+		s.Data_[i] = int64(val)
 
 	case int32:
-		s.data[i] = int64(val)
+		s.Data_[i] = int64(val)
 
 	case int64:
-		s.data[i] = val
+		s.Data_[i] = val
 
 	case gandalff.NullableInt8:
 		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt8).Valid {
-			s.data[i] = int64(val.Value)
+			s.Data_[i] = int64(val.Value)
 		} else {
-			s.data[i] = 0
-			s.nullMask[i>>3] |= 1 << uint(i%8)
+			s.Data_[i] = 0
+			s.NullMask_[i>>3] |= 1 << uint(i%8)
 		}
 
 	case gandalff.NullableInt16:
 		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt16).Valid {
-			s.data[i] = int64(val.Value)
+			s.Data_[i] = int64(val.Value)
 		} else {
-			s.data[i] = 0
-			s.nullMask[i>>3] |= 1 << uint(i%8)
+			s.Data_[i] = 0
+			s.NullMask_[i>>3] |= 1 << uint(i%8)
 		}
 
 	case gandalff.NullableInt:
 		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt).Valid {
-			s.data[i] = int64(val.Value)
+			s.Data_[i] = int64(val.Value)
 		} else {
-			s.data[i] = 0
-			s.nullMask[i>>3] |= 1 << uint(i%8)
+			s.Data_[i] = 0
+			s.NullMask_[i>>3] |= 1 << uint(i%8)
 		}
 
 	case gandalff.NullableInt64:
 		s = s.MakeNullable().(Int64s)
 		if v.(gandalff.NullableInt64).Valid {
-			s.data[i] = val.Value
+			s.Data_[i] = val.Value
 		} else {
-			s.data[i] = 0
-			s.nullMask[i>>3] |= 1 << uint(i%8)
+			s.Data_[i] = 0
+			s.NullMask_[i>>3] |= 1 << uint(i%8)
 		}
 
 	default:
 		return Errors{fmt.Sprintf("Int64s.Set: invalid type %T", v)}
 	}
 
-	s.sorted = gandalff.SORTED_NONE
+	s.Sorted_ = gandalff.SORTED_NONE
 	return s
 }
 
 ////////////////////////			ALL DATA ACCESSORS
 
-// Return the underlying data as a slice of int64.
+// Return the underlying Data_ as a slice of int64.
 func (s Int64s) Int64s() []int64 {
-	return s.data
+	return s.Data_
 }
 
-// Return the underlying data as a slice of NullableInt64.
+// Return the underlying Data_ as a slice of NullableInt64.
 func (s Int64s) DataAsNullable() any {
-	data := make([]gandalff.NullableInt64, len(s.data))
-	for i, v := range s.data {
-		data[i] = gandalff.NullableInt64{Valid: !s.IsNull(i), Value: v}
+	Data_ := make([]gandalff.NullableInt64, len(s.Data_))
+	for i, v := range s.Data_ {
+		Data_[i] = gandalff.NullableInt64{Valid: !s.IsNull(i), Value: v}
 	}
-	return data
+	return Data_
 }
 
-// Return the underlying data as a slice of strings.
+// Return the underlying Data_ as a slice of strings.
 func (s Int64s) DataAsString() []string {
-	data := make([]string, len(s.data))
-	if s.isNullable {
-		for i, v := range s.data {
+	Data_ := make([]string, len(s.Data_))
+	if s.IsNullable_ {
+		for i, v := range s.Data_ {
 			if s.IsNull(i) {
-				data[i] = gandalff.NA_TEXT
+				Data_[i] = gandalff.NA_TEXT
 			} else {
-				data[i] = intToString(v)
+				Data_[i] = intToString(v)
 			}
 		}
 	} else {
-		for i, v := range s.data {
-			data[i] = intToString(v)
+		for i, v := range s.Data_ {
+			Data_[i] = intToString(v)
 		}
 	}
-	return data
+	return Data_
 }
 
 // Casts the series to a given type.
 func (s Int64s) Cast(t meta.BaseType) Series {
 	switch t {
 	case meta.BoolType:
-		data := make([]bool, len(s.data))
-		for i, v := range s.data {
-			data[i] = v != 0
+		Data_ := make([]bool, len(s.Data_))
+		for i, v := range s.Data_ {
+			Data_[i] = v != 0
 		}
 
 		return Bools{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.IntType:
-		data := make([]int, len(s.data))
-		for i, v := range s.data {
-			data[i] = int(v)
+		Data_ := make([]int, len(s.Data_))
+		for i, v := range s.Data_ {
+			Data_[i] = int(v)
 		}
 
 		return Ints{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.Int64Type:
 		return s
 
 	case meta.Float64Type:
-		data := make([]float64, len(s.data))
-		for i, v := range s.data {
-			data[i] = float64(v)
+		Data_ := make([]float64, len(s.Data_))
+		for i, v := range s.Data_ {
+			Data_[i] = float64(v)
 		}
 
 		return Float64s{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.StringType:
-		if s.ctx.StringPool == nil {
+		if s.Ctx_.StringPool == nil {
 			return Errors{"Int64s.Cast: StringPool is nil"}
 		}
 
-		data := make([]*string, len(s.data))
-		if s.isNullable {
-			for i, v := range s.data {
+		Data_ := make([]*string, len(s.Data_))
+		if s.IsNullable_ {
+			for i, v := range s.Data_ {
 				if s.IsNull(i) {
-					data[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT)
+					Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
 				} else {
-					data[i] = s.ctx.StringPool.Put(intToString(v))
+					Data_[i] = s.Ctx_.StringPool.Put(intToString(v))
 				}
 			}
 		} else {
-			for i, v := range s.data {
-				data[i] = s.ctx.StringPool.Put(intToString(v))
+			for i, v := range s.Data_ {
+				Data_[i] = s.Ctx_.StringPool.Put(intToString(v))
 			}
 		}
 
 		return Strings{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.TimeType:
-		data := make([]time.Time, len(s.data))
-		for i, v := range s.data {
-			data[i] = time.Unix(0, v)
+		Data_ := make([]time.Time, len(s.Data_))
+		for i, v := range s.Data_ {
+			Data_[i] = time.Unix(0, v)
 		}
 
 		return Times{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case meta.DurationType:
-		data := make([]time.Duration, len(s.data))
-		for i, v := range s.data {
-			data[i] = time.Duration(v)
+		Data_ := make([]time.Duration, len(s.Data_))
+		for i, v := range s.Data_ {
+			Data_[i] = time.Duration(v)
 		}
 
 		return Durations{
-			isNullable: s.isNullable,
-			sorted:     gandalff.SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+			IsNullable_: s.IsNullable_,
+			Sorted_:     gandalff.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	default:
@@ -250,58 +250,58 @@ func (s Int64s) Cast(t meta.BaseType) Series {
 
 ////////////////////////			GROUPING OPERATIONS
 
-// A SeriesInt64Partition is a partition of a Int64s.
+// A SeriesInt64Partition is a Partition_ of a Int64s.
 // Each key is a hash of a bool value, and each value is a slice of indices
 // of the original series that are set to that value.
 type SeriesInt64Partition struct {
-	partition           map[int64][]int
-	isDense             bool
-	partitionDenseMin   int64
-	partitionDense      [][]int
-	partitionDenseNulls []int
+	Partition_           map[int64][]int
+	isDense              bool
+	Partition_DenseMin   int64
+	Partition_Dense      [][]int
+	Partition_DenseNulls []int
 }
 
-func (gp *SeriesInt64Partition) getSize() int {
+func (gp *SeriesInt64Partition) GetSize() int {
 	if gp.isDense {
-		if gp.partitionDenseNulls != nil && len(gp.partitionDenseNulls) > 0 {
-			return len(gp.partitionDense) + 1
+		if gp.Partition_DenseNulls != nil && len(gp.Partition_DenseNulls) > 0 {
+			return len(gp.Partition_Dense) + 1
 		}
-		return len(gp.partitionDense)
+		return len(gp.Partition_Dense)
 	}
-	return len(gp.partition)
+	return len(gp.Partition_)
 }
 
-func (gp *SeriesInt64Partition) getMap() map[int64][]int {
+func (gp *SeriesInt64Partition) GetMap() map[int64][]int {
 	if gp.isDense {
-		map_ := make(map[int64][]int, len(gp.partitionDense))
-		for i, part := range gp.partitionDense {
-			map_[int64(i)+gp.partitionDenseMin] = part
+		map_ := make(map[int64][]int, len(gp.Partition_Dense))
+		for i, part := range gp.Partition_Dense {
+			map_[int64(i)+gp.Partition_DenseMin] = part
 		}
 
 		// Merge the nulls to the map
-		if gp.partitionDenseNulls != nil && len(gp.partitionDenseNulls) > 0 {
+		if gp.Partition_DenseNulls != nil && len(gp.Partition_DenseNulls) > 0 {
 			nullKey := __series_get_nullkey(map_, gandalff.HASH_NULL_KEY)
-			map_[nullKey] = gp.partitionDenseNulls
+			map_[nullKey] = gp.Partition_DenseNulls
 		}
 
 		return map_
 	}
 
-	return gp.partition
+	return gp.Partition_
 }
 
-func (s Int64s) group() Series {
+func (s Int64s) Group() Series {
 	var useDenseMap bool
 	var min, max int64
-	var partition SeriesInt64Partition
+	var Partition_ SeriesInt64Partition
 
 	// If the number of elements is small,
 	// look for the minimum and maximum values
-	// if len(s.data) < MINIMUM_PARALLEL_SIZE_2 {
+	// if len(s.Data_) < MINIMUM_PARALLEL_SIZE_2 {
 	// 	useDenseMap = true
-	// 	max = s.data[0]
-	// 	min = s.data[0]
-	// 	for _, v := range s.data {
+	// 	max = s.Data_[0]
+	// 	min = s.Data_[0]
+	// 	for _, v := range s.Data_ {
 	// 		if v > max {
 	// 			max = v
 	// 		}
@@ -327,7 +327,7 @@ func (s Int64s) group() Series {
 
 	// 	if s.HasNull() {
 	// 		nulls = make([]int, 0, DEFAULT_DENSE_MAP_ARRAY_INITIAL_CAPACITY)
-	// 		for i, v := range s.data {
+	// 		for i, v := range s.Data_ {
 	// 			if s.IsNull(i) {
 	// 				nulls = append(nulls, i)
 	// 			} else {
@@ -335,16 +335,16 @@ func (s Int64s) group() Series {
 	// 			}
 	// 		}
 	// 	} else {
-	// 		for i, v := range s.data {
+	// 		for i, v := range s.Data_ {
 	// 			map_[v-min] = append(map_[v-min], i)
 	// 		}
 	// 	}
 
-	// 	partition = SeriesInt64Partition{
+	// 	Partition_ = SeriesInt64Partition{
 	// 		isDense:             true,
-	// 		partitionDenseMin:   min,
-	// 		partitionDense:      map_,
-	// 		partitionDenseNulls: nulls,
+	// 		Partition_DenseMin:   min,
+	// 		Partition_Dense:      map_,
+	// 		Partition_DenseNulls: nulls,
 	// 	}
 	// } else
 
@@ -354,26 +354,26 @@ func (s Int64s) group() Series {
 		worker := func(threadNum, start, end int, map_ map[int64][]int) {
 			up := end - ((end - start) % 8)
 			for i := start; i < up; {
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				i++
 			}
 
 			for i := up; i < end; i++ {
-				map_[s.data[i]] = append(map_[s.data[i]], i)
+				map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 			}
 		}
 
@@ -383,31 +383,31 @@ func (s Int64s) group() Series {
 				if s.IsNull(i) {
 					(*nulls) = append((*nulls), i)
 				} else {
-					map_[s.data[i]] = append(map_[s.data[i]], i)
+					map_[s.Data_[i]] = append(map_[s.Data_[i]], i)
 				}
 			}
 		}
 
-		partition = SeriesInt64Partition{
+		Partition_ = SeriesInt64Partition{
 			isDense: false,
-			partition: __series_groupby(
-				gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_2, len(s.data), s.HasNull(),
+			Partition_: __series_groupby(
+				gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_2, len(s.Data_), s.HasNull(),
 				worker, workerNulls),
 		}
 	}
 
-	s.partition = &partition
+	s.Partition_ = &Partition_
 
 	return s
 }
 
-func (s Int64s) GroupBy(partition SeriesPartition) Series {
-	if partition == nil {
+func (s Int64s) GroupBy(Partition_ SeriesPartition) Series {
+	if Partition_ == nil {
 		return s
 	}
 
 	// collect all keys
-	otherIndeces := partition.getMap()
+	otherIndeces := Partition_.GetMap()
 	keys := make([]int64, len(otherIndeces))
 	i := 0
 	for k := range otherIndeces {
@@ -420,7 +420,7 @@ func (s Int64s) GroupBy(partition SeriesPartition) Series {
 		var newHash int64
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
-				newHash = s.data[index] + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+				newHash = s.Data_[index] + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				map_[newHash] = append(map_[newHash], index)
 			}
 		}
@@ -434,7 +434,7 @@ func (s Int64s) GroupBy(partition SeriesPartition) Series {
 				if s.IsNull(index) {
 					newHash = gandalff.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
 				} else {
-					newHash = s.data[index] + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+					newHash = s.Data_[index] + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				}
 				map_[newHash] = append(map_[newHash], index)
 			}
@@ -442,12 +442,12 @@ func (s Int64s) GroupBy(partition SeriesPartition) Series {
 	}
 
 	newPartition := SeriesInt64Partition{
-		partition: __series_groupby(
+		Partition_: __series_groupby(
 			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_2, len(keys), s.HasNull(),
 			worker, workerNulls),
 	}
 
-	s.partition = &newPartition
+	s.Partition_ = &newPartition
 
 	return s
 }
@@ -455,61 +455,61 @@ func (s Int64s) GroupBy(partition SeriesPartition) Series {
 ////////////////////////			SORTING OPERATIONS
 
 func (s Int64s) Less(i, j int) bool {
-	if s.isNullable {
-		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 {
+	if s.IsNullable_ {
+		if s.NullMask_[i>>3]&(1<<uint(i%8)) > 0 {
 			return false
 		}
-		if s.nullMask[j>>3]&(1<<uint(j%8)) > 0 {
+		if s.NullMask_[j>>3]&(1<<uint(j%8)) > 0 {
 			return true
 		}
 	}
 
-	return s.data[i] < s.data[j]
+	return s.Data_[i] < s.Data_[j]
 }
 
-func (s Int64s) equal(i, j int) bool {
-	if s.isNullable {
-		if (s.nullMask[i>>3] & (1 << uint(i%8))) > 0 {
-			return (s.nullMask[j>>3] & (1 << uint(j%8))) > 0
+func (s Int64s) Equal(i, j int) bool {
+	if s.IsNullable_ {
+		if (s.NullMask_[i>>3] & (1 << uint(i%8))) > 0 {
+			return (s.NullMask_[j>>3] & (1 << uint(j%8))) > 0
 		}
-		if (s.nullMask[j>>3] & (1 << uint(j%8))) > 0 {
+		if (s.NullMask_[j>>3] & (1 << uint(j%8))) > 0 {
 			return false
 		}
 	}
 
-	return s.data[i] == s.data[j]
+	return s.Data_[i] == s.Data_[j]
 }
 
 func (s Int64s) Swap(i, j int) {
-	if s.isNullable {
+	if s.IsNullable_ {
 		// i is null, j is not null
-		if s.nullMask[i>>3]&(1<<uint(i%8)) > 0 && s.nullMask[j>>3]&(1<<uint(j%8)) == 0 {
-			s.nullMask[i>>3] &= ^(1 << uint(i%8))
-			s.nullMask[j>>3] |= 1 << uint(j%8)
+		if s.NullMask_[i>>3]&(1<<uint(i%8)) > 0 && s.NullMask_[j>>3]&(1<<uint(j%8)) == 0 {
+			s.NullMask_[i>>3] &= ^(1 << uint(i%8))
+			s.NullMask_[j>>3] |= 1 << uint(j%8)
 		} else
 
 		// i is not null, j is null
-		if s.nullMask[i>>3]&(1<<uint(i%8)) == 0 && s.nullMask[j>>3]&(1<<uint(j%8)) > 0 {
-			s.nullMask[i>>3] |= 1 << uint(i%8)
-			s.nullMask[j>>3] &= ^(1 << uint(j%8))
+		if s.NullMask_[i>>3]&(1<<uint(i%8)) == 0 && s.NullMask_[j>>3]&(1<<uint(j%8)) > 0 {
+			s.NullMask_[i>>3] |= 1 << uint(i%8)
+			s.NullMask_[j>>3] &= ^(1 << uint(j%8))
 		}
 	}
 
-	s.data[i], s.data[j] = s.data[j], s.data[i]
+	s.Data_[i], s.Data_[j] = s.Data_[j], s.Data_[i]
 }
 
 func (s Int64s) Sort() Series {
-	if s.sorted != gandalff.SORTED_ASC {
+	if s.Sorted_ != gandalff.SORTED_ASC {
 		sort.Sort(s)
-		s.sorted = gandalff.SORTED_ASC
+		s.Sorted_ = gandalff.SORTED_ASC
 	}
 	return s
 }
 
 func (s Int64s) SortRev() Series {
-	if s.sorted != gandalff.SORTED_DESC {
+	if s.Sorted_ != gandalff.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
-		s.sorted = gandalff.SORTED_DESC
+		s.Sorted_ = gandalff.SORTED_DESC
 	}
 	return s
 }

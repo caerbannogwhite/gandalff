@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/utils"
 )
 
 func (s NAs) Not() Series {
@@ -15,10 +16,10 @@ func (s NAs) And(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -70,10 +71,10 @@ func (s NAs) Or(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -101,56 +102,56 @@ func (s NAs) Or(other any) Series {
 				resultSize := o.Len()
 				result := make([]bool, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, o.nullMask[0] == 1)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, o.NullMask_[0] == 1)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
-				result[0] = o.data[0]
-				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				result[0] = o.Data_[0]
+				return Bools{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			} else {
 				resultSize := o.Len()
 				result := make([]bool, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, false)
-					copy(resultNullMask, o.nullMask)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, false)
+					copy(resultNullMask, o.NullMask_)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = o.data[i]
+					result[i] = o.Data_[i]
 				}
-				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
 				result := make([]bool, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, o.nullMask[0] == 1)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, o.NullMask_[0] == 1)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = o.data[0]
+					result[i] = o.Data_[0]
 				}
-				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
 				result := make([]bool, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, false)
-					copy(resultNullMask, o.nullMask)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, false)
+					copy(resultNullMask, o.NullMask_)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = o.data[i]
+					result[i] = o.Data_[i]
 				}
-				return Bools{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Bools{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			}
 			return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
@@ -165,10 +166,10 @@ func (s NAs) Mul(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -277,10 +278,10 @@ func (s NAs) Div(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -389,10 +390,10 @@ func (s NAs) Mod(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -501,10 +502,10 @@ func (s NAs) Exp(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -613,10 +614,10 @@ func (s NAs) Add(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -720,56 +721,56 @@ func (s NAs) Add(other any) Series {
 				resultSize := o.Len()
 				result := make([]*string, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, o.nullMask[0] == 1)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, o.NullMask_[0] == 1)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
-				result[0] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[0])
-				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				result[0] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT + *o.Data_[0])
+				return Strings{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			} else {
 				resultSize := o.Len()
 				result := make([]*string, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, false)
-					copy(resultNullMask, o.nullMask)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, false)
+					copy(resultNullMask, o.NullMask_)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[i])
+					result[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT + *o.Data_[i])
 				}
-				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			}
 		} else {
 			if o.Len() == 1 {
 				resultSize := s.Len()
 				result := make([]*string, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, o.nullMask[0] == 1)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, o.NullMask_[0] == 1)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[0])
+					result[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT + *o.Data_[0])
 				}
-				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			} else if s.Len() == o.Len() {
 				resultSize := s.Len()
 				result := make([]*string, resultSize)
 				var resultNullMask []uint8
-				if o.isNullable {
-					resultNullMask = __binVecInit(resultSize, false)
-					copy(resultNullMask, o.nullMask)
+				if o.IsNullable_ {
+					resultNullMask = utils.BinVecInit(resultSize, false)
+					copy(resultNullMask, o.NullMask_)
 				} else {
 					resultNullMask = make([]uint8, 0)
 				}
 				for i := 0; i < resultSize; i++ {
-					result[i] = s.ctx.StringPool.Put(gandalff.NA_TEXT + *o.data[i])
+					result[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT + *o.Data_[i])
 				}
-				return Strings{isNullable: false, nullMask: resultNullMask, data: result, ctx: s.ctx}
+				return Strings{IsNullable_: false, NullMask_: resultNullMask, Data_: result, Ctx_: s.Ctx_}
 			}
 			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
 		}
@@ -822,10 +823,10 @@ func (s NAs) Sub(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -972,10 +973,10 @@ func (s NAs) Eq(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -1141,10 +1142,10 @@ func (s NAs) Ne(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -1310,10 +1311,10 @@ func (s NAs) Gt(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -1479,10 +1480,10 @@ func (s NAs) Ge(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -1648,10 +1649,10 @@ func (s NAs) Lt(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
@@ -1817,10 +1818,10 @@ func (s NAs) Le(other any) Series {
 	if _, ok := other.(Series); ok {
 		otherSeries = other.(Series)
 	} else {
-		otherSeries = NewSeries(other, nil, false, false, s.ctx)
+		otherSeries = NewSeries(other, nil, false, false, s.Ctx_)
 	}
-	if s.ctx != otherSeries.GetContext() {
-		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.ctx, otherSeries.GetContext())}
+	if s.Ctx_ != otherSeries.GetContext() {
+		return Errors{fmt.Sprintf("Cannot operate on series with different contexts: %v and %v", s.Ctx_, otherSeries.GetContext())}
 	}
 	switch o := otherSeries.(type) {
 	case NAs:
