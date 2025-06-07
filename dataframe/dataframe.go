@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/io"
 	"github.com/caerbannogwhite/gandalff/meta"
 	"github.com/caerbannogwhite/gandalff/series"
 )
@@ -105,18 +104,18 @@ type DataFrame interface {
 	// Pretty print the dataframe.
 	PPrint(params PPrintParams) DataFrame
 
-	FromCsv() *io.CsvReader
-	ToCsv() *io.CsvWriter
+	FromCsv() *csvReaderWrapper
+	ToCsv() *csvWriterWrapper
 
-	FromJson() *io.JsonReader
-	ToJson() *io.JsonWriter
+	FromJson() *jsonReaderWrapper
+	ToJson() *jsonWriterWrapper
 
-	FromXpt() *io.XptReader
-	ToXpt() *io.XptWriter
+	FromXpt() *xptReaderWrapper
+	ToXpt() *xptWriterWrapper
 
-	FromXlsx() *io.XlsxReader
-	ToXlsx() *io.XlsxWriter
+	FromXlsx() *xlsxReaderWrapper
+	ToXlsx() *xlsxWriterWrapper
 
-	ToHtml() *io.HtmlWriter
-	ToMarkDown() *io.MarkDownWriter
+	ToHtml() *htmlWriterWrapper
+	ToMarkDown() *markDownWriterWrapper
 }

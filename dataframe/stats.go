@@ -23,7 +23,7 @@ import (
 
 // 			case Ints:
 // 				sum_ := int(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -31,7 +31,7 @@ import (
 
 // 			case Int64s:
 // 				sum_ := int64(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -39,7 +39,7 @@ import (
 
 // 			case Float64s:
 // 				sum_ := float64(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -55,7 +55,7 @@ import (
 
 // 			case Ints:
 // 				sum_ := int(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -63,7 +63,7 @@ import (
 
 // 			case Int64s:
 // 				sum_ := int64(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -71,7 +71,7 @@ import (
 
 // 			case Float64s:
 // 				sum_ := float64(0)
-// 				data := series.getDataPtr()
+// 				data := series.GetDataPtr()
 // 				for _, i := range td.indeces {
 // 					sum_ += (*data)[i]
 // 				}
@@ -88,7 +88,7 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 	switch _series := s.(type) {
 	case series.Bools:
 		if s.IsNullable() {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else if v {
@@ -96,7 +96,7 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 				}
 			}
 		} else {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if v {
 					dataF64[i] = 1.0
 				}
@@ -105,7 +105,7 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 
 	case series.Ints:
 		if s.IsNullable() {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
@@ -113,14 +113,14 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 				}
 			}
 		} else {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				dataF64[i] = float64(v)
 			}
 		}
 
 	case series.Int64s:
 		if s.IsNullable() {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
@@ -128,14 +128,14 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 				}
 			}
 		} else {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				dataF64[i] = float64(v)
 			}
 		}
 
 	case series.Float64s:
 		if s.IsNullable() {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
@@ -143,12 +143,12 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 				}
 			}
 		} else {
-			dataF64 = _series.getData()
+			dataF64 = _series.GetData()
 		}
 
 	case series.Durations:
 		if s.IsNullable() {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				if _series.IsNull(i) {
 					dataF64[i] = math.NaN()
 				} else {
@@ -156,7 +156,7 @@ func __gdl_stats_preprocess(s series.Series) []float64 {
 				}
 			}
 		} else {
-			for i, v := range _series.getData() {
+			for i, v := range _series.GetData() {
 				dataF64[i] = float64(v)
 			}
 		}

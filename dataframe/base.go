@@ -8,9 +8,9 @@ import (
 
 	"github.com/caerbannogwhite/gandalff"
 	"github.com/caerbannogwhite/gandalff/formatter"
-	"github.com/caerbannogwhite/gandalff/io"
 	"github.com/caerbannogwhite/gandalff/meta"
 	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/gandalff/utils"
 )
 
 type BaseDataFramePartitionEntry struct {
@@ -34,7 +34,7 @@ func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
 		return BaseDataFrame{err: fmt.Errorf("NewBaseDataFrame: context is nil")}
 	}
 
-	return &BaseDataFrame{
+	return BaseDataFrame{
 		series: make([]series.Series, 0),
 		ctx:    ctx,
 	}
@@ -275,7 +275,7 @@ func (df BaseDataFrame) C(name string) series.Series {
 		}
 	}
 
-	return series.Errors{msg: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
+	return series.Errors{Msg_: fmt.Sprintf("BaseDataFrame.C: series \"%s\" not found", name)}
 }
 
 // Returns the series with the given name.
@@ -293,7 +293,7 @@ func (df BaseDataFrame) __series(name string) series.Series {
 // Returns the series at the given index.
 func (df BaseDataFrame) At(index int) series.Series {
 	if index < 0 || index >= len(df.series) {
-		return series.Errors{msg: fmt.Sprintf("BaseDataFrame.SeriesAt: index %d out of bounds", index)}
+		return series.Errors{Msg_: fmt.Sprintf("BaseDataFrame.SeriesAt: index %d out of bounds", index)}
 	}
 	return df.series[index]
 }
@@ -373,9 +373,8 @@ func (df BaseDataFrame) Filter(mask any) DataFrame {
 		maskSeries = mask.(series.Bools)
 
 	} else {
-		s := series.NewSeriesBool(mask, nil, false, df.ctx)
-		if _, ok := s.(series.Bools); ok {
-			maskSeries = s.(series.Bools)
+		if mask, ok := mask.([]bool); ok {
+			maskSeries = series.NewSeriesBool(mask, nil, false, df.ctx)
 		} else {
 			df.err = fmt.Errorf("BaseDataFrame.Filter: mask is not a bool series")
 			return df
@@ -437,7 +436,7 @@ func (df BaseDataFrame) GroupBy(by ...string) DataFrame {
 				df.partitions[partitionsIndex] = BaseDataFramePartitionEntry{
 					index:     i,
 					name:      name,
-					partition: series.group().GetPartition(),
+					partition: series.Group().GetPartition(),
 				}
 			} else
 
@@ -489,12 +488,12 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 		seriesIndices[i] = true
 	}
 
-	result := NewBaseDataFrame(df.ctx).(*BaseDataFrame)
+	result := NewBaseDataFrame(df.ctx).(BaseDataFrame)
 
 	// The last partition tells us how many groups there are
 	// and how many rows are in each group
-	indeces := make([][]int, 0, df.partitions[len(df.partitions)-1].partition.getSize())
-	for _, group := range df.partitions[len(df.partitions)-1].partition.getMap() {
+	indeces := make([][]int, 0, df.partitions[len(df.partitions)-1].partition.GetSize())
+	for _, group := range df.partitions[len(df.partitions)-1].partition.GetMap() {
 		indeces = append(indeces, group)
 	}
 
@@ -510,62 +509,66 @@ func (df BaseDataFrame) groupHelper() (DataFrame, [][]int, []int, []int) {
 		case series.Bools:
 			values := make([]bool, len(indeces))
 			for i, group := range indeces {
-				values[i] = _series.data[group[0]]
+				values[i] = _series.Data_[group[0]]
 			}
 
 			result.series = append(result.series, series.Bools{
-				isNullable: _series.isNullable,
-				nullMask:   __binVecInit(len(indeces), false),
-				data:       values,
+				IsNullable_: _series.IsNullable(),
+				NullMask_:   utils.BinVecInit(len(indeces), false),
+				Data_:       values,
+				Ctx_:        _series.GetContext(),
 			})
 
 		case series.Ints:
 			values := make([]int, len(indeces))
 			for i, group := range indeces {
-				values[i] = series.data[group[0]]
+				values[i] = _series.Data_[group[0]]
 			}
 
 			result.series = append(result.series, series.Ints{
-				isNullable: series.isNullable,
-				nullMask:   __binVecInit(len(indeces), false),
-				data:       values,
+				IsNullable_: _series.IsNullable(),
+				NullMask_:   utils.BinVecInit(len(indeces), false),
+				Data_:       values,
+				Ctx_:        _series.GetContext(),
 			})
 
 		case series.Int64s:
 			values := make([]int64, len(indeces))
 			for i, group := range indeces {
-				values[i] = series.data[group[0]]
+				values[i] = _series.Data_[group[0]]
 			}
 
 			result.series = append(result.series, series.Int64s{
-				isNullable: _series.isNullable,
-				nullMask:   __binVecInit(len(indeces), false),
-				data:       values,
+				IsNullable_: _series.IsNullable(),
+				NullMask_:   utils.BinVecInit(len(indeces), false),
+				Data_:       values,
+				Ctx_:        _series.GetContext(),
 			})
 
 		case series.Float64s:
 			values := make([]float64, len(indeces))
 			for i, group := range indeces {
-				values[i] = series.data[group[0]]
+				values[i] = _series.Data_[group[0]]
 			}
 
 			result.series = append(result.series, series.Float64s{
-				isNullable: series.isNullable,
-				nullMask:   __binVecInit(len(indeces), false),
-				data:       values,
+				IsNullable_: _series.IsNullable(),
+				NullMask_:   utils.BinVecInit(len(indeces), false),
+				Data_:       values,
+				Ctx_:        _series.GetContext(),
 			})
 
 		case series.Strings:
 			values := make([]*string, len(indeces))
 			for i, group := range indeces {
-				values[i] = series.data[group[0]]
+				values[i] = _series.Data_[group[0]]
 			}
 
 			result.series = append(result.series, series.Strings{
-				isNullable: series.isNullable,
-				nullMask:   __binVecInit(len(indeces), false),
-				data:       values,
-				ctx:        series.ctx,
+				IsNullable_: _series.IsNullable(),
+				NullMask_:   utils.BinVecInit(len(indeces), false),
+				Data_:       values,
+				Ctx_:        _series.GetContext(),
 			})
 		}
 	}
@@ -728,8 +731,8 @@ func (df BaseDataFrame) Join(how DataFrameJoinType, other DataFrame, on ...strin
 	pB := otherGrouped.getPartitions()
 
 	// Get the maps, keys and sort them
-	mapA := pA[len(pA)-1].getMap()
-	mapB := pB[len(pB)-1].getMap()
+	mapA := pA[len(pA)-1].GetMap()
+	mapB := pB[len(pB)-1].GetMap()
 
 	keysA := make([]int64, 0, len(mapA))
 	keysB := make([]int64, 0, len(mapB))
@@ -1090,7 +1093,7 @@ func (df BaseDataFrame) Take(params ...int) DataFrame {
 		return df
 	}
 
-	indeces, err := seriesTakePreprocess("BaseDataFrame", df.NRows(), params...)
+	indeces, err := series.SeriesTakePreprocess("BaseDataFrame", df.NRows(), params...)
 	if err != nil {
 		df.err = err
 		return df
@@ -1098,7 +1101,7 @@ func (df BaseDataFrame) Take(params ...int) DataFrame {
 
 	taken := NewBaseDataFrame(df.ctx)
 	for idx, series := range df.series {
-		taken = taken.AddSeries(df.names[idx], series.filterIntSlice(indeces, false))
+		taken = taken.AddSeries(df.names[idx], series.FilterIntSlice(indeces, false))
 	}
 
 	return taken
@@ -1114,8 +1117,8 @@ func (df BaseDataFrame) Len() int {
 
 func (df BaseDataFrame) Less(i, j int) bool {
 	for _, param := range df.sortParams {
-		if !param.series.equal(i, j) {
-			return (param.asc && param.series.Less(i, j)) || (!param.asc && param.series.Less(j, i))
+		if !param._series.Equal(i, j) {
+			return (param.asc && param._series.Less(i, j)) || (!param.asc && param._series.Less(j, i))
 		}
 	}
 
@@ -1278,7 +1281,6 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	}
 
 	addTail := false
-	fmt.Println(df.NRows(), nRowsOut, params.tailLen)
 	if df.NRows() > nRowsOut+params.tailLen {
 		addTail = true
 		nRowsOut -= params.tailLen
@@ -1409,11 +1411,11 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	buffer += params.indent + "│"
 	if params.useLipGloss {
 		for i, name := range df.names[:nColsOut] {
-			buffer += params.styleNames.Render(fmt.Sprintf(" %-*s ", widths[i], truncate(name, widths[i]))) + "│"
+			buffer += params.styleNames.Render(fmt.Sprintf(" %-*s ", widths[i], utils.Truncate(name, widths[i]))) + "│"
 		}
 	} else {
 		for i, name := range df.names[:nColsOut] {
-			buffer += fmt.Sprintf(" %-*s ", widths[i], truncate(name, widths[i])) + "│"
+			buffer += fmt.Sprintf(" %-*s ", widths[i], utils.Truncate(name, widths[i])) + "│"
 		}
 	}
 	buffer += "\n"
@@ -1483,7 +1485,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 		// separator (bottom)
 		buffer += params.indent + "┊"
 		for j, _ := range df.series[:nColsOut] {
-			buffer += center("⋮", widths[j]+2) + "┊"
+			buffer += utils.Center("⋮", widths[j]+2) + "┊"
 		}
 		buffer += "\n"
 
@@ -1534,84 +1536,4 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	fmt.Println(buffer)
 
 	return df
-}
-
-////////////////////////			IO
-
-func FromIoData(iod *io.IoData) DataFrame {
-	df := NewBaseDataFrame(iod.GetContext()).(BaseDataFrame)
-
-	if iod.Error != nil {
-		df.err = iod.Error
-	}
-
-	for i, s := range iod.Series {
-		df.AddSeries(iod.SeriesMeta[i].Name, s)
-	}
-
-	return df
-}
-
-func (df BaseDataFrame) toIoData() *io.IoData {
-	iod := io.NewIoData(df.ctx)
-
-	iod.Error = df.GetError()
-
-	for i, s := range df.series {
-		iod.AddSeries(s, io.SeriesMeta{
-			Name: df.names[i],
-		})
-	}
-
-	return iod
-}
-
-func (df BaseDataFrame) FromCsv() *io.CsvReader {
-	return io.NewCsvReader(df.ctx)
-}
-
-func (df BaseDataFrame) ToCsv() *io.CsvWriter {
-	return io.NewCsvWriter().
-		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.GetNaText())
-}
-
-func (df BaseDataFrame) FromJson() *io.JsonReader {
-	return io.NewJsonReader(df.ctx)
-}
-
-func (df BaseDataFrame) ToJson() *io.JsonWriter {
-	return io.NewJsonWriter().
-		SetIoData(df.toIoData())
-}
-
-func (df BaseDataFrame) FromXpt() *io.XptReader {
-	return io.NewXptReader(df.ctx)
-}
-
-func (df BaseDataFrame) ToXpt() *io.XptWriter {
-	return io.NewXptWriter().
-		SetIoData(df.toIoData())
-}
-
-func (df BaseDataFrame) FromXlsx() *io.XlsxReader {
-	return io.NewXlsxReader(df.ctx)
-}
-
-func (df BaseDataFrame) ToXlsx() *io.XlsxWriter {
-	return io.NewXlsxWriter().
-		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.GetNaText())
-}
-
-func (df BaseDataFrame) ToHtml() *io.HtmlWriter {
-	return io.NewHtmlWriter().
-		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.GetNaText())
-}
-
-func (df BaseDataFrame) ToMarkDown() *io.MarkDownWriter {
-	return io.NewMarkDownWriter().
-		SetIoData(df.toIoData()).
-		SetNaText(df.ctx.GetNaText())
 }
