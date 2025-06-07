@@ -83,12 +83,19 @@ func (r *XlsxReader) Read() *IoData {
 		return &IoData{Error: err}
 	}
 
-	iod := NewIoData(r.ctx)
+	iod := IoData{
+		FileMeta: FileMeta{
+			FileName: r.path,
+			FilePath: r.path,
+		},
+		ctx: r.ctx,
+	}
+
 	for i, name := range names {
 		iod.AddSeries(series[i], SeriesMeta{Name: name})
 	}
 
-	return iod
+	return &iod
 }
 
 type xlsxRowReader struct {

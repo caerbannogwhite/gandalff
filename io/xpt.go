@@ -125,6 +125,8 @@ func (r *XptReader) Read() *IoData {
 		return &IoData{Error: fmt.Errorf("XptReader: unknown version")}
 	}
 
+	ioData.ctx = r.ctx
+
 	if err != nil {
 		return &IoData{Error: err}
 	}

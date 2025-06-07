@@ -112,6 +112,7 @@ func (r *CsvReader) Read() *IoData {
 			FileName: r.path,
 			FilePath: r.path,
 		},
+		ctx: r.ctx,
 	}
 
 	for i, name := range names {
