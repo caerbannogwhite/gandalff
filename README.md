@@ -30,7 +30,8 @@ package main
 import (
 	"strings"
 
-	gandalff "github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/dataframe"
 )
 
 func main() {
@@ -44,32 +45,29 @@ Mary,28,70.0,false,IT,3
 Oliver,32,90.0,true,HR,1
 Ursula,27,65.0,f,Business,4
 Charlie,33,60.0,t,Business,2
-Megan,26,55.0,F,IT,3
-`
+Megan,26,55.0,F,IT,3`
 
-	gandalff.NewBaseDataFrame(gandalff.NewContext()).
+	dataframe.NewBaseDataFrame(gandalff.NewContext()).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		Read().
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
-		Agg(gandalff.Min("age"), gandalff.Max("weight"), gandalff.Mean("junior"), gandalff.Count()).
-    Run().
-		PrettyPrint(
-      gandalff.NewPrettyPrintParams().
-			  SetUseLipGloss(true))
+		Agg(dataframe.Min("age"), dataframe.Max("weight"), dataframe.Mean("junior"), dataframe.Count()).
+		Run().
+		PPrint(dataframe.NewPPrintParams().SetUseLipGloss(true))
 }
 
-// Output:
-// ╭────────────┬─────────┬─────────┬─────────┬───────╮
-// │ department │ age     │ weight  │ junior  │ n     │
-// ├────────────┼─────────┼─────────┼─────────┼───────┤
-// │ String     │ Float64 │ Float64 │ Float64 │ Int64 │
-// ├────────────┼─────────┼─────────┼─────────┼───────┤
-// │ HR         │   29.00 │   90.00 │  0.5000 │ 2.000 │
-// │ IT         │   25.00 │   85.00 │  0.5000 │ 4.000 │
-// │ Business   │   27.00 │   65.00 │  0.5000 │ 2.000 │
-// ╰────────────┴─────────┴─────────┴─────────┴───────╯
+//   BaseDataFrame: 3 rows, 5 columns
+// ╭────────────┬──────────┬─────────────┬──────────────┬───────╮
+// │ department │ min(age) │ max(weight) │ mean(junior) │ n     │
+// ├────────────┼──────────┼─────────────┼──────────────┼───────┤
+// │ String     │ Float64  │ Float64     │ Float64      │ Int64 │
+// ├────────────┼──────────┼─────────────┼──────────────┼───────┤
+// │ HR         │    29.00 │       90.00 │       0.5000 │ 2.000 │
+// │ IT         │    25.00 │       85.00 │       0.2000 │ 5.000 │
+// │ Business   │    27.00 │       65.00 │       0.5000 │ 2.000 │
+// ╰────────────┴──────────┴─────────────┴──────────────┴───────╯
 ```
 
 ### Supported data types
