@@ -1,5 +1,7 @@
 ## GANDALFF: Golang, ANother DatAframe Library For Fun 🧙‍♂️
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/caerbannogwhite/gandalff.svg)](https://pkg.go.dev/github.com/caerbannogwhite/gandalff)
+
 Or, for short, GDL: Golang Dataframe Library
 
 ### What is it?
