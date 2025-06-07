@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/gandalff/utils"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -272,7 +273,7 @@ func (f *NumericFormatter) Format(width int, val any, isNa bool) string {
 
 func (f *NumericFormatter) render(width int, s string, style lipgloss.Style) string {
 	if f.truncateOutput {
-		s = truncate(s, width)
+		s = utils.Truncate(s, width)
 	}
 
 	if f.useLipGloss {
@@ -341,9 +342,9 @@ func (f *StringFormatter) Format(width int, val any, isNa bool) string {
 	if s, ok := val.(string); ok && !isNa {
 		s = toPrintable(s)
 		if f.useLipGloss {
-			return f.styleString.Render(fmt.Sprintf("%-*s", width, truncate(s, width)))
+			return f.styleString.Render(fmt.Sprintf("%-*s", width, utils.Truncate(s, width)))
 		} else {
-			return fmt.Sprintf("%-*s", width, truncate(s, width))
+			return fmt.Sprintf("%-*s", width, utils.Truncate(s, width))
 		}
 	}
 	return gandalff.NA_TEXT
@@ -356,26 +357,4 @@ func toPrintable(s string) string {
 		}
 		return '.'
 	}, s)
-}
-
-func truncate(s string, n int) string {
-	if len(s) > n {
-		return s[:n-3] + "..."
-	}
-	return s
-}
-
-func center(s string, n int) string {
-	r := []rune(s)
-	l := len(r)
-	if l >= n {
-		return s
-	}
-
-	n += len(s) - l
-
-	left := (n + l) / 2
-	right := n - l - left - 1
-
-	return fmt.Sprintf("%*s%*s", left, string(s), right, "")
 }
