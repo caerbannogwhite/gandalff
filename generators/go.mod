@@ -1,5 +1,7 @@
 module gen
 
-go 1.20
+go 1.24.3
 
-require github.com/caerbannogwhite/preludiometa v0.0.0-20231024224115-46d105a38cdf
+require github.com/caerbannogwhite/gandalff v0.0.0-00010101000000-000000000000
+
+replace github.com/caerbannogwhite/gandalff => ../

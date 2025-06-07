@@ -110,7 +110,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 	// 		},
 	// 		Tok: token.DEFINE,
 	// 		Rhs: []ast.Expr{
-	// 			&ast.Ident{Name: fmt.Sprintf("%s.nullMask", resSizeVariable)},
+	// 			&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", resSizeVariable)},
 	// 		},
 	// 	})
 	// }
@@ -164,7 +164,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 			// The non-null operand is a scalar
 			if nonNullOperandIsScalar {
 				stmts = append(stmts, &ast.IfStmt{
-					Cond: ast.NewIdent(fmt.Sprintf("%s.isNullable", nonNullOperand)),
+					Cond: ast.NewIdent(fmt.Sprintf("%s.IsNullable_", nonNullOperand)),
 					Body: &ast.BlockStmt{List: []ast.Stmt{
 						&ast.AssignStmt{
 							Lhs: []ast.Expr{
@@ -172,7 +172,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 							},
 							Tok: token.ASSIGN,
 							Rhs: []ast.Expr{
-								&ast.Ident{Name: fmt.Sprintf("__binVecInit(%s, %s.nullMask[0] == 1)", RESULT_SIZE_VAR_NAME, nonNullOperand)},
+								&ast.Ident{Name: fmt.Sprintf("utils.BinVecInit(%s, %s.NullMask_[0] == 1)", RESULT_SIZE_VAR_NAME, nonNullOperand)},
 							}},
 					}},
 					Else: &ast.BlockStmt{List: []ast.Stmt{
@@ -192,7 +192,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 			{
 				stmts = append(stmts,
 					&ast.IfStmt{
-						Cond: ast.NewIdent(fmt.Sprintf("%s.isNullable", nonNullOperand)),
+						Cond: ast.NewIdent(fmt.Sprintf("%s.IsNullable_", nonNullOperand)),
 						Body: &ast.BlockStmt{List: []ast.Stmt{
 							&ast.AssignStmt{
 								Lhs: []ast.Expr{
@@ -200,13 +200,13 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 								},
 								Tok: token.ASSIGN,
 								Rhs: []ast.Expr{
-									&ast.Ident{Name: fmt.Sprintf("__binVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, "false")},
+									&ast.Ident{Name: fmt.Sprintf("utils.BinVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, "false")},
 								}},
 							&ast.ExprStmt{X: &ast.CallExpr{
 								Fun: &ast.Ident{Name: "copy"},
 								Args: []ast.Expr{
 									&ast.Ident{Name: RESULT_NULL_MASK_VAR_NAME},
-									&ast.Ident{Name: fmt.Sprintf("%s.nullMask", nonNullOperand)},
+									&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", nonNullOperand)},
 								}}},
 						}},
 						Else: &ast.BlockStmt{List: []ast.Stmt{
@@ -235,28 +235,28 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 					},
 					Tok: token.DEFINE,
 					Rhs: []ast.Expr{
-						&ast.Ident{Name: fmt.Sprintf("__binVecInit(%s, false)", RESULT_SIZE_VAR_NAME)},
+						&ast.Ident{Name: fmt.Sprintf("utils.BinVecInit(%s, false)", RESULT_SIZE_VAR_NAME)},
 					},
 				})
 
-				funcName := "__binVecOrSS"
+				funcName := "utils.BinVecOrSS"
 				switch sizeCase {
 				case 0:
-					funcName = "__binVecOrSS"
+					funcName = "utils.BinVecOrSS"
 				case 1:
-					funcName = "__binVecOrSV"
+					funcName = "utils.BinVecOrSV"
 				case 2:
-					funcName = "__binVecOrVS"
+					funcName = "utils.BinVecOrVS"
 				case 3:
-					funcName = "__binVecOrVV"
+					funcName = "utils.BinVecOrVV"
 				}
 
 				stmts = append(stmts, &ast.ExprStmt{
 					X: &ast.CallExpr{
 						Fun: &ast.Ident{Name: funcName},
 						Args: []ast.Expr{
-							&ast.Ident{Name: fmt.Sprintf("%s.nullMask", info.Op1VarName)},
-							&ast.Ident{Name: fmt.Sprintf("%s.nullMask", info.Op2VarName)},
+							&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", info.Op1VarName)},
+							&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", info.Op2VarName)},
 							&ast.Ident{Name: RESULT_NULL_MASK_VAR_NAME},
 						},
 					},
@@ -270,7 +270,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 				// 		to the value of its null mask
 				nullMaskInitFlag := "false"
 				if info.Op1Scalar {
-					nullMaskInitFlag = fmt.Sprintf("%s.nullMask[0] == 1", info.Op1VarName)
+					nullMaskInitFlag = fmt.Sprintf("%s.NullMask_[0] == 1", info.Op1VarName)
 				}
 
 				// 	2 - call the binary vector init function
@@ -280,7 +280,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 					},
 					Tok: token.DEFINE,
 					Rhs: []ast.Expr{
-						&ast.Ident{Name: fmt.Sprintf("__binVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, nullMaskInitFlag)},
+						&ast.Ident{Name: fmt.Sprintf("utils.BinVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, nullMaskInitFlag)},
 					},
 				})
 
@@ -290,7 +290,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 						Fun: &ast.Ident{Name: "copy"},
 						Args: []ast.Expr{
 							&ast.Ident{Name: RESULT_NULL_MASK_VAR_NAME},
-							&ast.Ident{Name: fmt.Sprintf("%s.nullMask", info.Op1VarName)},
+							&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", info.Op1VarName)},
 						}},
 					})
 				}
@@ -305,7 +305,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 				// 		to the value of its null mask
 				nullMaskInitFlag := "false"
 				if info.Op2Scalar {
-					nullMaskInitFlag = fmt.Sprintf("%s.nullMask[0] == 1", info.Op2VarName)
+					nullMaskInitFlag = fmt.Sprintf("%s.NullMask_[0] == 1", info.Op2VarName)
 				}
 
 				// 	2 - call the binary vector init function
@@ -315,7 +315,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 					},
 					Tok: token.DEFINE,
 					Rhs: []ast.Expr{
-						&ast.Ident{Name: fmt.Sprintf("__binVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, nullMaskInitFlag)},
+						&ast.Ident{Name: fmt.Sprintf("utils.BinVecInit(%s, %s)", RESULT_SIZE_VAR_NAME, nullMaskInitFlag)},
 					},
 				})
 
@@ -325,7 +325,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 						Fun: &ast.Ident{Name: "copy"},
 						Args: []ast.Expr{
 							&ast.Ident{Name: RESULT_NULL_MASK_VAR_NAME},
-							&ast.Ident{Name: fmt.Sprintf("%s.nullMask", info.Op2VarName)},
+							&ast.Ident{Name: fmt.Sprintf("%s.NullMask_", info.Op2VarName)},
 						}},
 					})
 				}
@@ -339,7 +339,7 @@ func generateMakeResultStmt(info BuildInfo) []ast.Stmt {
 					},
 					Tok: token.DEFINE,
 					Rhs: []ast.Expr{
-						&ast.Ident{Name: "__binVecInit(0, false)"},
+						&ast.Ident{Name: "utils.BinVecInit(0, false)"},
 					},
 				})
 			}
@@ -419,11 +419,11 @@ func generateOperation(info BuildInfo) []ast.Stmt {
 	// 3 - Generate the return statement with the result series
 	params := []ast.Expr{
 		&ast.KeyValueExpr{
-			Key:   &ast.Ident{Name: "isNullable"},
+			Key:   &ast.Ident{Name: "IsNullable_"},
 			Value: &ast.Ident{Name: fmt.Sprintf("%v", resIsNullable)},
 		},
 		&ast.KeyValueExpr{
-			Key:   &ast.Ident{Name: "nullMask"},
+			Key:   &ast.Ident{Name: "NullMask_"},
 			Value: &ast.Ident{Name: RESULT_NULL_MASK_VAR_NAME},
 		},
 	}
@@ -442,7 +442,7 @@ func generateOperation(info BuildInfo) []ast.Stmt {
 	// BOOL Memory optimized: convert the result to a binary vector and add the size to the result series
 	case "SeriesBoolMemOpt":
 		params = append(params, &ast.KeyValueExpr{
-			Key:   &ast.Ident{Name: "data"},
+			Key:   &ast.Ident{Name: "Data_"},
 			Value: &ast.Ident{Name: fmt.Sprintf("boolVecToBinVec(%s)", RESULT_VAR_NAME)},
 		})
 
@@ -454,13 +454,13 @@ func generateOperation(info BuildInfo) []ast.Stmt {
 	// Default: just add the data to the result series
 	default:
 		params = append(params, &ast.KeyValueExpr{
-			Key:   &ast.Ident{Name: "data"},
+			Key:   &ast.Ident{Name: "Data_"},
 			Value: &ast.Ident{Name: RESULT_VAR_NAME},
 		})
 
 		params = append(params, &ast.KeyValueExpr{
-			Key:   &ast.Ident{Name: "ctx"},
-			Value: &ast.Ident{Name: fmt.Sprintf("%s.ctx", info.Op1VarName)},
+			Key:   &ast.Ident{Name: "Ctx_"},
+			Value: &ast.Ident{Name: fmt.Sprintf("%s.Ctx_", info.Op1VarName)},
 		})
 	}
 
@@ -486,11 +486,11 @@ func generateNullabilityCheck(info BuildInfo) []ast.Stmt {
 	} else {
 		return []ast.Stmt{
 			&ast.IfStmt{
-				Cond: ast.NewIdent(fmt.Sprintf("%s.isNullable", info.Op1VarName)),
+				Cond: ast.NewIdent(fmt.Sprintf("%s.IsNullable_", info.Op1VarName)),
 				Body: &ast.BlockStmt{
 					List: []ast.Stmt{
 						&ast.IfStmt{
-							Cond: ast.NewIdent(fmt.Sprintf("%s.isNullable", info.Op2VarName)),
+							Cond: ast.NewIdent(fmt.Sprintf("%s.IsNullable_", info.Op2VarName)),
 							Body: &ast.BlockStmt{
 								List: generateOperation(info.UpdateNullableInfo(true, true)),
 							},
@@ -503,7 +503,7 @@ func generateNullabilityCheck(info BuildInfo) []ast.Stmt {
 				Else: &ast.BlockStmt{
 					List: []ast.Stmt{
 						&ast.IfStmt{
-							Cond: ast.NewIdent(fmt.Sprintf("%s.isNullable", info.Op2VarName)),
+							Cond: ast.NewIdent(fmt.Sprintf("%s.IsNullable_", info.Op2VarName)),
 							Body: &ast.BlockStmt{
 								List: generateOperation(info.UpdateNullableInfo(false, true)),
 							},
@@ -625,7 +625,7 @@ func generateSwitchType(
 				&ast.AssignStmt{
 					Lhs: []ast.Expr{ast.NewIdent("otherSeries")},
 					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{ast.NewIdent("NewSeries(other, nil, false, false, s.ctx)")},
+					Rhs: []ast.Expr{ast.NewIdent("NewSeries(other, nil, false, false, s.Ctx_)")},
 				},
 			},
 		},
@@ -634,14 +634,14 @@ func generateSwitchType(
 	// Generate the context check
 	contextCheck := &ast.IfStmt{
 		Cond: &ast.BinaryExpr{
-			X:  &ast.Ident{Name: fmt.Sprintf("%s.ctx", op1VarName)},
+			X:  &ast.Ident{Name: fmt.Sprintf("%s.Ctx_", op1VarName)},
 			Op: token.NEQ,
 			Y:  &ast.Ident{Name: fmt.Sprintf("%s.GetContext()", "otherSeries")},
 		},
 		Body: &ast.BlockStmt{
 			List: []ast.Stmt{
 				&ast.ReturnStmt{
-					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("Errors{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.ctx, %s.GetContext())}", "otherSeries"))},
+					Results: []ast.Expr{ast.NewIdent(fmt.Sprintf("Errors{fmt.Sprintf(\"Cannot operate on series with different contexts: %%v and %%v\", s.Ctx_, %s.GetContext())}", "otherSeries"))},
 				},
 			},
 		},
@@ -720,17 +720,25 @@ func ComputeResInnerType(opCode meta.OPCODE, op1, op2 meta.BaseType) meta.BaseTy
 func generateOperations() {
 	for filename, info := range GenerateOperationsData() {
 
-		src, err := os.ReadFile(filepath.Join("..", filename))
+		src, err := os.ReadFile(filepath.Join(SERIES_FOLDER, filename))
 		if err != nil {
 			panic(err)
 		}
 
 		// Parse the file.
 		fset := token.NewFileSet()
-		fast, err := parser.ParseFile(fset, filepath.Join("..", filename), src, parser.ParseComments)
+		fast, err := parser.ParseFile(fset, filepath.Join(SERIES_FOLDER, filename), src, parser.ParseComments)
 		if err != nil {
 			panic(err)
 		}
+
+		// // Add the utils package
+		// fast.Decls = append(fast.Decls, &ast.GenDecl{
+		// 	Tok: token.IMPORT,
+		// 	Specs: []ast.Spec{
+		// 		&ast.ImportSpec{Path: &ast.BasicLit{Value: `"github.com/caerbannogwhite/gandalff/utils"`}},
+		// 	},
+		// })
 
 		for i, decl := range fast.Decls {
 			if funcDecl, ok := decl.(*ast.FuncDecl); ok {
@@ -841,7 +849,7 @@ func generateOperations() {
 				panic(err)
 			}
 
-			err = os.WriteFile(filepath.Join("..", filename), buf.Bytes(), 0644)
+			err = os.WriteFile(filepath.Join(SERIES_FOLDER, filename), buf.Bytes(), 0644)
 			if err != nil {
 				panic(err)
 			}
@@ -866,7 +874,7 @@ func generateBase() {
 			panic(err)
 		}
 
-		f, err := os.Create(filepath.Join("..", filename))
+		f, err := os.Create(filepath.Join(SERIES_FOLDER, filename))
 		if err != nil {
 			panic(err)
 		}
@@ -888,6 +896,8 @@ func generateBase() {
 		}
 	}
 }
+
+const SERIES_FOLDER = "..\\series"
 
 func main() {
 	generateBase()
