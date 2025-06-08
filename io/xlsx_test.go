@@ -19,16 +19,16 @@ func Test_IoXlsx_ValidWrite(t *testing.T) {
 		Write()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	_, err = os.Stat("test.xlsx")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	err = os.Remove("test.xlsx")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }
