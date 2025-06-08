@@ -1,17 +1,15 @@
-## GANDALFF: Golang, ANother DatAframe Library For Fun 🧙‍♂️
+## Aargh 🧙‍♂️
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/caerbannogwhite/gandalff.svg)](https://pkg.go.dev/github.com/caerbannogwhite/gandalff)
-
-Or, for short, GDL: Golang Dataframe Library
+[![Go Reference](https://pkg.go.dev/badge/github.com/caerbannogwhite/aargh.svg)](https://pkg.go.dev/github.com/caerbannogwhite/aargh)
 
 ### What is it?
 
-Gandalff is a library for data wrangling in Go.
+Aargh is a library for data wrangling in Go.
 The goal is to provide a simple and efficient API for data manipulation in Go,
 similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
 
-Gandalff is a work in progress, and the API is not stable yet.
+Aargh is a work in progress, and the API is not stable yet.
 The DataFrame package is still being developed.
 
 However, it already supports the following formats:
@@ -30,8 +28,8 @@ package main
 import (
 	"strings"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/dataframe"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/dataframe"
 )
 
 func main() {
@@ -47,7 +45,7 @@ Ursula,27,65.0,f,Business,4
 Charlie,33,60.0,t,Business,2
 Megan,26,55.0,F,IT,3`
 
-	dataframe.NewBaseDataFrame(gandalff.NewContext()).
+	dataframe.NewBaseDataFrame(aargh.NewContext()).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		Read().
