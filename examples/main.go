@@ -216,20 +216,20 @@ func Example06() {
 }
 
 func main() {
-	// fmt.Println("Example01:")
-	// Example01()
+	fmt.Println("Example01:")
+	Example01()
 
-	// fmt.Println("Example02:")
-	// Example02()
+	fmt.Println("Example02:")
+	Example02()
 
-	// fmt.Println("Example03:")
-	// Example03()
+	fmt.Println("Example03:")
+	Example03()
 
-	// fmt.Println("Example04:")
-	// Example04()
+	fmt.Println("Example04:")
+	Example04()
 
-	// fmt.Println("Example05:")
-	// Example05()
+	fmt.Println("Example05:")
+	Example05()
 
 	fmt.Println("Example06:")
 	Example06()

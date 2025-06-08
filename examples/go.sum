@@ -1,7 +1,7 @@
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
-github.com/caerbannogwhite/preludiometa v0.0.0-20231024224115-46d105a38cdf h1:q41uzxbOBDBMkpJfUVcDsCWykgRNgjx+xEYRC1wtjh8=
-github.com/caerbannogwhite/preludiometa v0.0.0-20231024224115-46d105a38cdf/go.mod h1:mhPIjCSsjGvbNYpwVE0LcOiJC//L9BIbRuc3MlqTnXs=
+github.com/caerbannogwhite/aargh v0.1.0 h1:/eyYQJH6dKzmQxWB0oiPqFWAWIc0KIgwHJ8o01D+kAg=
+github.com/caerbannogwhite/aargh v0.1.0/go.mod h1:VrRz2vkCFGZt1l/ZWj7fTJzIOZjU2kELIez+uNq3uYI=
 github.com/charmbracelet/lipgloss v0.9.1 h1:PNyd3jvaJbg4jRHKWXnCj1akQm4rh8dbEzN1p/u1KWg=
 github.com/charmbracelet/lipgloss v0.9.1/go.mod h1:1mPmG4cxScwUQALAAnacHaigiiHB9Pmr+v1VEawJl6I=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
