@@ -1,4 +1,4 @@
-package gandalff
+package aargh
 
 import (
 	"time"
@@ -27,6 +27,8 @@ const (
 
 	INF_TEXT        = "Inf"
 	NA_TEXT         = "Na"
+	EOL             = "\n"
+	QUOTE           = "\""
 	BOOL_TRUE_TEXT  = "true"
 	BOOL_FALSE_TEXT = "false"
 
@@ -49,8 +51,6 @@ const (
 	// The series is sorted in descending order.
 	SORTED_DESC
 )
-
-type any interface{}
 
 type MapFunc func(v any) any
 type MapFuncNull func(v any, isNull bool) (any, bool)

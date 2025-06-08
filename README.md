@@ -1,15 +1,17 @@
-## GANDALFF: Golang, ANother DAta Library For Fun 🧙‍♂️
+## Aargh 🧙‍♂️
 
-Or, for short, GDL: Golang Data Library
+[![Go Reference](https://pkg.go.dev/badge/github.com/caerbannogwhite/aargh.svg)](https://pkg.go.dev/github.com/caerbannogwhite/aargh)
 
 ### What is it?
 
-Gandalff is a library for data wrangling in Go.
+Aargh is a library for data wrangling in Go.
 The goal is to provide a simple and efficient API for data manipulation in Go,
 similar to Pandas or Polars in Python, and Dplyr in R.
 It supports nullable types: null data is optimized for memory usage.
 
-Gandalff is a work in progress, and the API is not stable yet.
+Aargh is a work in progress, and the API is not stable yet.
+The DataFrame package is still being developed.
+
 However, it already supports the following formats:
 
 - CSV
@@ -26,7 +28,8 @@ package main
 import (
 	"strings"
 
-	gandalff "github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/dataframe"
 )
 
 func main() {
@@ -40,36 +43,30 @@ Mary,28,70.0,false,IT,3
 Oliver,32,90.0,true,HR,1
 Ursula,27,65.0,f,Business,4
 Charlie,33,60.0,t,Business,2
-Megan,26,55.0,F,IT,3
-`
+Megan,26,55.0,F,IT,3`
 
-	gandalff.NewBaseDataFrame(gandalff.NewContext()).
+	dataframe.NewBaseDataFrame(aargh.NewContext()).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		Read().
 		Select("department", "age", "weight", "junior").
 		GroupBy("department").
-		Agg(gandalff.Min("age"), gandalff.Max("weight"), gandalff.Mean("junior"), gandalff.Count()).
-		PrettyPrint(
-      gandalff.NewPrettyPrintParams().
-			  SetUseLipGloss(true))
+		Agg(dataframe.Min("age"), dataframe.Max("weight"), dataframe.Mean("junior"), dataframe.Count()).
+		Run().
+		PPrint(dataframe.NewPPrintParams().SetUseLipGloss(true))
 }
 
-// Output:
-// ╭────────────┬─────────┬─────────┬─────────┬───────╮
-// │ department │ age     │ weight  │ junior  │ n     │
-// ├────────────┼─────────┼─────────┼─────────┼───────┤
-// │ String     │ Float64 │ Float64 │ Float64 │ Int64 │
-// ├────────────┼─────────┼─────────┼─────────┼───────┤
-// │ HR         │   29.00 │   90.00 │  0.5000 │ 2.000 │
-// │ IT         │   25.00 │   85.00 │  0.5000 │ 4.000 │
-// │ Business   │   27.00 │   65.00 │  0.5000 │ 2.000 │
-// ╰────────────┴─────────┴─────────┴─────────┴───────╯
+//   BaseDataFrame: 3 rows, 5 columns
+// ╭────────────┬──────────┬─────────────┬──────────────┬───────╮
+// │ department │ min(age) │ max(weight) │ mean(junior) │ n     │
+// ├────────────┼──────────┼─────────────┼──────────────┼───────┤
+// │ String     │ Float64  │ Float64     │ Float64      │ Int64 │
+// ├────────────┼──────────┼─────────────┼──────────────┼───────┤
+// │ HR         │    29.00 │       90.00 │       0.5000 │ 2.000 │
+// │ IT         │    25.00 │       85.00 │       0.2000 │ 5.000 │
+// │ Business   │    27.00 │       65.00 │       0.5000 │ 2.000 │
+// ╰────────────┴──────────┴─────────────┴──────────────┴───────╯
 ```
-
-### Community
-
-You can join the [Gandalff community on Discord](https://discord.gg/vPv5bhXY).
 
 ### Supported data types
 
@@ -157,7 +154,7 @@ Built with:
 - [ ] Improve filtering interface.
 - [ ] Improve dataframe PrettyPrint: add parameters, optimize data display, use lipgloss.
 - [ ] Implement string factors.
-- [ ] SeriesTime: set time format.
+- [ ] Times: set time format.
 - [ ] Implement `Set(i []int, v []any) Series`.
 - [ ] Add `Slice(i []int) Series` (using filter?).
 - [ ] Implement memory optimized Bool series with uint64.
@@ -167,7 +164,6 @@ Built with:
 - [ ] Add format option to each writer.
 - [ ] JSON reader by records.
 - [ ] Implement chunked series.
-- [ ] Implement OpenAI interface.
 - [ ] Implement Parquet reader and writer.
 - [ ] Implement SPSS reader and writer.
 - [ ] Implement SAS7BDAT reader and writer (https://cran.r-project.org/web/packages/sas7bdat/vignettes/sas7bdat.pdf)

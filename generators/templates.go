@@ -1,60 +1,62 @@
 package main
 
-var TEMPLATE_BASIC_ACCESSORS = `package gandalff
+var TEMPLATE_BASIC_ACCESSORS = `package series
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/caerbannogwhite/preludiometa"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func (s {{.SeriesName}}) printInfo() {
 	fmt.Println("{{.SeriesName}}")
 	fmt.Println("==========")
-	fmt.Println("IsNullable:", s.isNullable)
-	fmt.Println("Sorted:    ", s.sorted)
-	fmt.Println("Data:      ", s.data)
-	fmt.Println("NullMask:  ", s.nullMask)
-	fmt.Println("Partition: ", s.partition)
-	fmt.Println("Context:   ", s.ctx)
+	fmt.Println("IsNullable:", s.IsNullable_)
+	fmt.Println("Sorted:    ", s.Sorted_)
+	fmt.Println("Data:      ", s.Data_)
+	fmt.Println("NullMask:  ", s.NullMask_)
+	fmt.Println("Partition: ", s.Partition_)
+	fmt.Println("Context:   ", s.Ctx_)
 }
 
 ////////////////////////			BASIC ACCESSORS
 
 // Return the context of the series.
-func (s {{.SeriesName}}) GetContext() *Context {
-	return s.ctx
+func (s {{.SeriesName}}) GetContext() *aargh.Context {
+	return s.Ctx_
 }
 
 // Return the number of elements in the series.
 func (s {{.SeriesName}}) Len() int {
-	return len(s.data)
+	return len(s.Data_)
 }
 
 // Return the type of the series.
-func (s {{.SeriesName}}) Type() preludiometa.BaseType {
-	return preludiometa.{{.SeriesTypeStr}}
+func (s {{.SeriesName}}) Type() meta.BaseType {
+	return meta.{{.SeriesTypeStr}}
 }
 
 // Return the type and cardinality of the series.
-func (s {{.SeriesName}}) TypeCard() preludiometa.BaseTypeCard {
-	return preludiometa.BaseTypeCard{Base: preludiometa.{{.SeriesTypeStr}}, Card: s.Len()}
+func (s {{.SeriesName}}) TypeCard() meta.BaseTypeCard {
+	return meta.BaseTypeCard{Base: meta.{{.SeriesTypeStr}}, Card: s.Len()}
 }
 
 // Return if the series is grouped.
 func (s {{.SeriesName}}) IsGrouped() bool {
-	return s.partition != nil
+	return s.Partition_ != nil
 }
 
 // Return if the series admits null values.
 func (s {{.SeriesName}}) IsNullable() bool {
-	return s.isNullable
+	return s.IsNullable_
 }
 
-// Return if the series is sorted.
-func (s {{.SeriesName}}) IsSorted() SeriesSortOrder {
-	return s.sorted
+// Return if the series is Sorted_.
+func (s {{.SeriesName}}) IsSorted() aargh.SeriesSortOrder {
+	return s.Sorted_
 }
 
 // Return if the series is error.
@@ -67,14 +69,14 @@ func (s {{.SeriesName}}) GetError() string {
 	return ""
 }
 
-// Return the partition of the series.
+// Return the Partition_ of the series.
 func (s {{.SeriesName}}) GetPartition() SeriesPartition {
-	return s.partition
+	return s.Partition_
 }
 
 // Return if the series has null values.
 func (s {{.SeriesName}}) HasNull() bool {
-	for _, v := range s.nullMask {
+	for _, v := range s.NullMask_ {
 		if v != 0 {
 			return true
 		}
@@ -85,7 +87,7 @@ func (s {{.SeriesName}}) HasNull() bool {
 // Return the number of null values in the series.
 func (s {{.SeriesName}}) NullCount() int {
 	count := 0
-	for _, x := range s.nullMask {
+	for _, x := range s.NullMask_ {
 		for ; x != 0; x >>= 1 {
 			count += int(x & 1)
 		}
@@ -95,18 +97,18 @@ func (s {{.SeriesName}}) NullCount() int {
 
 // Return if the element at index i is null.
 func (s {{.SeriesName}}) IsNull(i int) bool {
-	if s.isNullable {
-		return s.nullMask[i>>3]&(1<<uint(i%8)) != 0
+	if s.IsNullable_ {
+		return s.NullMask_[i>>3]&(1<<uint(i%8)) != 0
 	}
 	return false
 }
 
 // Return the null mask of the series.
 func (s {{.SeriesName}}) GetNullMask() []bool {
-	mask := make([]bool, len(s.data))
+	mask := make([]bool, len(s.Data_))
 	idx := 0
-	for _, v := range s.nullMask {
-		for i := 0; i < 8 && idx < len(s.data); i++ {
+	for _, v := range s.NullMask_ {
+		for i := 0; i < 8 && idx < len(s.Data_); i++ {
 			mask[idx] = v&(1<<uint(i)) != 0
 			idx++
 		}
@@ -116,31 +118,31 @@ func (s {{.SeriesName}}) GetNullMask() []bool {
 
 // Set the null mask of the series.
 func (s {{.SeriesName}}) SetNullMask(mask []bool) Series {
-	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.SetNullMask: cannot set values on a grouped series"}
+	if s.Partition_ != nil {
+		return Errors{"{{.SeriesName}}.SetNullMask: cannot set values on a grouped series"}
 	}
 
-	if s.isNullable {
+	if s.IsNullable_ {
 		for k, v := range mask {
 			if v {
-				s.nullMask[k>>3] |= 1 << uint(k%8)
+				s.NullMask_[k>>3] |= 1 << uint(k%8)
 			} else {
-				s.nullMask[k>>3] &= ^(1 << uint(k%8))
+				s.NullMask_[k>>3] &= ^(1 << uint(k%8))
 			}
 		}
 		return s
 	} else {
-		nullMask := __binVecInit(len(s.data), false)
+		NullMask_ := utils.BinVecInit(len(s.Data_), false)
 		for k, v := range mask {
 			if v {
-				nullMask[k>>3] |= 1 << uint(k%8)
+				NullMask_[k>>3] |= 1 << uint(k%8)
 			} else {
-				nullMask[k>>3] &= ^(1 << uint(k%8))
+				NullMask_[k>>3] &= ^(1 << uint(k%8))
 			}
 		}
 
-		s.isNullable = true
-		s.nullMask = nullMask
+		s.IsNullable_ = true
+		s.NullMask_ = NullMask_
 
 		return s
 	}
@@ -148,163 +150,163 @@ func (s {{.SeriesName}}) SetNullMask(mask []bool) Series {
 
 // Make the series nullable.
 func (s {{.SeriesName}}) MakeNullable() Series {
-	if !s.isNullable {
-		s.isNullable = true
-		s.nullMask = __binVecInit(len(s.data), false)
+	if !s.IsNullable_ {
+		s.IsNullable_ = true
+		s.NullMask_ = utils.BinVecInit(len(s.Data_), false)
 	}
 	return s
 }
 
 // Make the series non-nullable.
 func (s {{.SeriesName}}) MakeNonNullable() Series {
-	if s.isNullable {
-		s.isNullable = false
-		s.nullMask = make([]uint8, 0)
+	if s.IsNullable_ {
+		s.IsNullable_ = false
+		s.NullMask_ = make([]uint8, 0)
 	}
 	return s
 }
 
 // Get the element at index i.
 func (s {{.SeriesName}}) Get(i int) any {
-	return {{if .IsGoTypePtr}}*{{end}}s.data[i]
+	return {{if .IsGoTypePtr}}*{{end}}s.Data_[i]
 }
 
 // Append appends a value or a slice of values to the series.
 func (s {{.SeriesName}}) Append(v any) Series {
-	if s.partition != nil {
-		return SeriesError{"{{.SeriesName}}.Append: cannot append values to a grouped series"}
+	if s.Partition_ != nil {
+		return Errors{"{{.SeriesName}}.Append: cannot append values to a grouped series"}
 	}
 
 	switch v := v.(type) {
 	case nil:
-		s.data = append(s.data, {{.DefaultValue}})
+		s.Data_ = append(s.Data_, {{.DefaultValue}})
 		s = s.MakeNullable().({{.SeriesName}})
-		if len(s.data) > len(s.nullMask)<<3 {
-			s.nullMask = append(s.nullMask, 0)
+		if len(s.Data_) > len(s.NullMask_)<<3 {
+			s.NullMask_ = append(s.NullMask_, 0)
 		}
-		s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
+		s.NullMask_[(len(s.Data_)-1)>>3] |= 1 << uint8((len(s.Data_)-1)%8)
 
-	case SeriesNA:
-		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, v.Len(), true, __binVecInit(v.Len(), true))
-		s.data = append(s.data, make([]{{.SeriesGoTypeStr}}, v.Len())...)
+	case NAs:
+		s.IsNullable_, s.NullMask_ = utils.MergeNullMasks(len(s.Data_), s.IsNullable_, s.NullMask_, v.Len(), true, utils.BinVecInit(v.Len(), true))
+		s.Data_ = append(s.Data_, make([]{{.SeriesGoTypeStr}}, v.Len())...)
 
 	case {{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
-		s.data = append(s.data, s.ctx.stringPool.Put(v))
+		{{if eq .SeriesName "Strings" -}}
+		s.Data_ = append(s.Data_, s.Ctx_.StringPool.Put(v))
 		{{- else -}}
-		s.data = append(s.data, v)
+		s.Data_ = append(s.Data_, v)
 		{{- end}}
-		if s.isNullable && len(s.data) > len(s.nullMask)<<3 {
-			s.nullMask = append(s.nullMask, 0)
+		if s.IsNullable_ && len(s.Data_) > len(s.NullMask_)<<3 {
+			s.NullMask_ = append(s.NullMask_, 0)
 		}
 
 	case []{{.SeriesGoOuterTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
-		s.data = append(s.data, make([]*string, len(v))...)
+		{{if eq .SeriesName "Strings" -}}
+		s.Data_ = append(s.Data_, make([]*string, len(v))...)
 		for i, str := range v {
-			s.data[len(s.data)-len(v)+i] = s.ctx.stringPool.Put(str)
+			s.Data_[len(s.Data_)-len(v)+i] = s.Ctx_.StringPool.Put(str)
 		}
 		{{- else -}}
-		s.data = append(s.data, v...)
+		s.Data_ = append(s.Data_, v...)
 		{{- end}}
-		if s.isNullable && len(s.data) > len(s.nullMask)<<3 {
-			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask))...)
+		if s.IsNullable_ && len(s.Data_) > len(s.NullMask_)<<3 {
+			s.NullMask_ = append(s.NullMask_, make([]uint8, (len(s.Data_)>>3)-len(s.NullMask_))...)
 		}
 
 	case {{.SeriesNullableTypeStr}}:
-		{{if eq .SeriesName "SeriesString" -}}
-		s.data = append(s.data, s.ctx.stringPool.Put(v.Value))
+		{{if eq .SeriesName "Strings" -}}
+		s.Data_ = append(s.Data_, s.Ctx_.StringPool.Put(v.Value))
 		{{- else -}}
-		s.data = append(s.data, v.Value)
+		s.Data_ = append(s.Data_, v.Value)
 		{{- end}}
 		s = s.MakeNullable().({{.SeriesName}})
-		if len(s.data) > len(s.nullMask)<<3 {
-			s.nullMask = append(s.nullMask, 0)
+		if len(s.Data_) > len(s.NullMask_)<<3 {
+			s.NullMask_ = append(s.NullMask_, 0)
 		}
 		if !v.Valid {
-			s.nullMask[(len(s.data)-1)>>3] |= 1 << uint8((len(s.data)-1)%8)
+			s.NullMask_[(len(s.Data_)-1)>>3] |= 1 << uint8((len(s.Data_)-1)%8)
 		}
 
 	case []{{.SeriesNullableTypeStr}}:
-		ssize := len(s.data)
-		s.data = append(s.data, make([]{{.SeriesGoTypeStr}}, len(v))...)
+		ssize := len(s.Data_)
+		s.Data_ = append(s.Data_, make([]{{.SeriesGoTypeStr}}, len(v))...)
 		s = s.MakeNullable().({{.SeriesName}})
-		if len(s.data) > len(s.nullMask)<<3 {
-			s.nullMask = append(s.nullMask, make([]uint8, (len(s.data)>>3)-len(s.nullMask)+1)...)
+		if len(s.Data_) > len(s.NullMask_)<<3 {
+			s.NullMask_ = append(s.NullMask_, make([]uint8, (len(s.Data_)>>3)-len(s.NullMask_)+1)...)
 		}
 		for i, b := range v {
-			{{if eq .SeriesName "SeriesString" -}}
-			s.data[ssize+i] = s.ctx.stringPool.Put(b.Value)
+			{{if eq .SeriesName "Strings" -}}
+			s.Data_[ssize+i] = s.Ctx_.StringPool.Put(b.Value)
 			{{- else -}}
-			s.data[ssize+i] = b.Value
+			s.Data_[ssize+i] = b.Value
 			{{- end}}
 			if !b.Valid {
-				s.nullMask[(ssize+i)>>3] |= 1 << uint8((ssize+i)%8)
+				s.NullMask_[(ssize+i)>>3] |= 1 << uint8((ssize+i)%8)
 			}
 		}
 
 	case {{.SeriesName}}:
-		if s.ctx != v.ctx {
-			return SeriesError{"{{.SeriesName}}.Append: cannot append {{.SeriesName}} from different contexts"}
+		if s.Ctx_ != v.Ctx_ {
+			return Errors{"{{.SeriesName}}.Append: cannot append {{.SeriesName}} from different contexts"}
 		}
 
-		s.isNullable, s.nullMask = __mergeNullMasks(len(s.data), s.isNullable, s.nullMask, len(v.data), v.isNullable, v.nullMask)
-		s.data = append(s.data, v.data...)
+		s.IsNullable_, s.NullMask_ = utils.MergeNullMasks(len(s.Data_), s.IsNullable_, s.NullMask_, len(v.Data_), v.IsNullable_, v.NullMask_)
+		s.Data_ = append(s.Data_, v.Data_...)
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Append: invalid type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Append: invalid type %T", v)}
 	}
 
-	s.sorted = SORTED_NONE
+	s.Sorted_ = aargh.SORTED_NONE
 	return s
 }
 
 // Take the elements according to the given interval.
 func (s {{.SeriesName}}) Take(params ...int) Series {
-	indeces, err := seriesTakePreprocess("{{.SeriesName}}", s.Len(), params...)
+	indeces, err := SeriesTakePreprocess("{{.SeriesName}}", s.Len(), params...)
 	if err != nil {
-		return SeriesError{err.Error()}
+		return Errors{err.Error()}
 	}
-	return s.filterIntSlice(indeces, false)
+	return s.FilterIntSlice(indeces, false)
 }
 
 // Return the elements of the series as a slice.
 func (s {{.SeriesName}}) Data() any {
-	{{if eq .SeriesName "SeriesString" -}}
-	data := make([]string, len(s.data))
-	for i, v := range s.data {
-		data[i] = *v
+	{{if eq .SeriesName "Strings" -}}
+	Data_ := make([]string, len(s.Data_))
+	for i, v := range s.Data_ {
+		Data_[i] = *v
 	}
-	return data
+	return Data_
 	{{- else -}}
-	return s.data
+	return s.Data_
 	{{- end}}
 }
 
 // Copy the series.
 func (s {{.SeriesName}}) Copy() Series {
-	data := make([]{{.SeriesGoTypeStr}}, len(s.data))
-	copy(data, s.data)
-	nullMask := make([]uint8, len(s.nullMask))
-	copy(nullMask, s.nullMask)
+	Data_ := make([]{{.SeriesGoTypeStr}}, len(s.Data_))
+	copy(Data_, s.Data_)
+	NullMask_ := make([]uint8, len(s.NullMask_))
+	copy(NullMask_, s.NullMask_)
 
 	return {{.SeriesName}}{
-		isNullable: s.isNullable,
-		sorted:     s.sorted,
-		data:       data,
-		nullMask:   nullMask,
-		partition:  s.partition,
-		ctx:        s.ctx,
+		IsNullable_: s.IsNullable_,
+		Sorted_:     s.Sorted_,
+		Data_:       Data_,
+		NullMask_:   NullMask_,
+		Partition_:  s.Partition_,
+		Ctx_:        s.Ctx_,
 	}
 }
 
-func (s {{.SeriesName}}) getDataPtr() *[]{{.SeriesGoTypeStr}} {
-	return &s.data
+func (s {{.SeriesName}}) GetData() []{{.SeriesGoTypeStr}} {
+	return s.Data_
 }
 
 // Ungroup the series.
 func (s {{.SeriesName}}) UnGroup() Series {
-	s.partition = nil
+	s.Partition_ = nil
 	return s
 }
 `
@@ -313,25 +315,25 @@ var TEMPLATE_FILTERS = `
 ////////////////////////			FILTER OPERATIONS
 
 // Filters out the elements by the given mask.
-// Mask can be SeriesBool, SeriesInt, bool slice or a int slice.
+// Mask can be Bools, Ints, bool slice or a int slice.
 func (s {{.SeriesName}}) Filter(mask any) Series {
 	switch mask := mask.(type) {
-	case SeriesBool:
-		return s.filterBoolSlice(mask.data)
-	case SeriesInt:
-		return s.filterIntSlice(mask.data, true)
+	case Bools:
+		return s.filterBoolSlice(mask.Data_)
+	case Ints:
+		return s.FilterIntSlice(mask.Data_, true)
 	case []bool:
 		return s.filterBoolSlice(mask)
 	case []int:
-		return s.filterIntSlice(mask, true)
+		return s.FilterIntSlice(mask, true)
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: invalid type %T", mask)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: invalid type %T", mask)}
 	}
 }
 
 func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
-	if len(mask) != len(s.data) {
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.data))}
+	if len(mask) != len(s.Data_) {
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: mask length (%d) does not match series length (%d)", len(mask), len(s.Data_))}
 	}
 
 	elementCount := 0
@@ -341,83 +343,83 @@ func (s {{.SeriesName}}) filterBoolSlice(mask []bool) Series {
 		}
 	}
 
-	var data []{{.SeriesGoTypeStr}}
-	var nullMask []uint8
+	var Data_ []{{.SeriesGoTypeStr}}
+	var NullMask_ []uint8
 
-	data = make([]{{.SeriesGoTypeStr}}, elementCount)
+	Data_ = make([]{{.SeriesGoTypeStr}}, elementCount)
 
-	if s.isNullable {
-		nullMask = __binVecInit(elementCount, false)
+	if s.IsNullable_ {
+		NullMask_ = utils.BinVecInit(elementCount, false)
 		dstIdx := 0
 		for srcIdx, v := range mask {
 			if v {
-				data[dstIdx] = s.data[srcIdx]
+				Data_[dstIdx] = s.Data_[srcIdx]
 				if srcIdx%8 > dstIdx%8 {
-					nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) >> uint(srcIdx%8-dstIdx%8))
+					NullMask_[dstIdx>>3] |= ((s.NullMask_[srcIdx>>3] & (1 << uint(srcIdx%8))) >> uint(srcIdx%8-dstIdx%8))
 				} else {
-					nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) << uint(dstIdx%8-srcIdx%8))
+					NullMask_[dstIdx>>3] |= ((s.NullMask_[srcIdx>>3] & (1 << uint(srcIdx%8))) << uint(dstIdx%8-srcIdx%8))
 				}
 				dstIdx++
 			}
 		}
 	} else {
-		nullMask = make([]uint8, 0)
+		NullMask_ = make([]uint8, 0)
 		dstIdx := 0
 		for srcIdx, v := range mask {
 			if v {
-				data[dstIdx] = s.data[srcIdx]
+				Data_[dstIdx] = s.Data_[srcIdx]
 				dstIdx++
 			}
 		}
 	}
 
-	s.data = data
-	s.nullMask = nullMask
+	s.Data_ = Data_
+	s.NullMask_ = NullMask_
 
 	return s
 }
 
-func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
+func (s {{.SeriesName}}) FilterIntSlice(indexes []int, check bool) Series {
 	if len(indexes) == 0 {
-		s.data = make([]{{.SeriesGoTypeStr}}, 0)
-		s.nullMask = make([]uint8, 0)
+		s.Data_ = make([]{{.SeriesGoTypeStr}}, 0)
+		s.NullMask_ = make([]uint8, 0)
 		return s
 	}
 
 	// check if indexes are in range
 	if check {
 		for _, v := range indexes {
-			if v < 0 || v >= len(s.data) {
-				return SeriesError{fmt.Sprintf("{{.SeriesName}}.Filter: index %d is out of range", v)}
+			if v < 0 || v >= len(s.Data_) {
+				return Errors{fmt.Sprintf("{{.SeriesName}}.Filter: index %d is out of range", v)}
 			}
 		}
 	}
 
-	var data []{{.SeriesGoTypeStr}}
-	var nullMask []uint8
+	var Data_ []{{.SeriesGoTypeStr}}
+	var NullMask_ []uint8
 
 	size := len(indexes)
-	data = make([]{{.SeriesGoTypeStr}}, size)
+	Data_ = make([]{{.SeriesGoTypeStr}}, size)
 
-	if s.isNullable {
-		nullMask = __binVecInit(size, false)
+	if s.IsNullable_ {
+		NullMask_ = utils.BinVecInit(size, false)
 		for dstIdx, srcIdx := range indexes {
-			data[dstIdx] = s.data[srcIdx]
+			Data_[dstIdx] = s.Data_[srcIdx]
 			if srcIdx%8 > dstIdx%8 {
-				nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) >> uint(srcIdx%8-dstIdx%8))
+				NullMask_[dstIdx>>3] |= ((s.NullMask_[srcIdx>>3] & (1 << uint(srcIdx%8))) >> uint(srcIdx%8-dstIdx%8))
 			} else {
-				nullMask[dstIdx>>3] |= ((s.nullMask[srcIdx>>3] & (1 << uint(srcIdx%8))) << uint(dstIdx%8-srcIdx%8))
+				NullMask_[dstIdx>>3] |= ((s.NullMask_[srcIdx>>3] & (1 << uint(srcIdx%8))) << uint(dstIdx%8-srcIdx%8))
 			}
 		}
 	} else {
-		nullMask = make([]uint8, 0)
+		NullMask_ = make([]uint8, 0)
 		for dstIdx, srcIdx := range indexes {
-			data[dstIdx] = s.data[srcIdx]
+			Data_[dstIdx] = s.Data_[srcIdx]
 		}
 	}
 
-	s.data = data
-	s.nullMask = nullMask
+	s.Data_ = Data_
+	s.NullMask_ = NullMask_
 
 	return s
 }
@@ -425,277 +427,277 @@ func (s {{.SeriesName}}) filterIntSlice(indexes []int, check bool) Series {
 
 var TEMPLATE_MAPS = `
 // Apply the given function to each element of the series.
-func (s {{.SeriesName}}) Map(f MapFunc) Series {
-	if len(s.data) == 0 {
+func (s {{.SeriesName}}) Map(f aargh.MapFunc) Series {
+	if len(s.Data_) == 0 {
 		return s
 	}
 
 	v := f(s.Get(0))
 	switch v.(type) {
 	case bool:
-		data := make([]bool, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(bool)
+		Data_ := make([]bool, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(bool)
 		}
 
-		return SeriesBool{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Bools{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int:
-		data := make([]int, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int)
+		Data_ := make([]int, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(int)
 		}
 
-		return SeriesInt{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Ints{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int64:
-		data := make([]int64, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(int64)
+		Data_ := make([]int64, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(int64)
 		}
 
-		return SeriesInt64{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Int64s{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case float64:
-		data := make([]float64, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(float64)
+		Data_ := make([]float64, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(float64)
 		}
 
-		return SeriesFloat64{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Float64s{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case string:
-		data := make([]*string, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = s.ctx.stringPool.Put(f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(string))
+		Data_ := make([]*string, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = s.Ctx_.StringPool.Put(f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(string))
 		}
 
-		return SeriesString{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Strings{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case time.Time:
-		data := make([]time.Time, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f({{if .IsGoTypePtr}}*{{end}}s.data[i]).(time.Time)
+		Data_ := make([]time.Time, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i]).(time.Time)
 		}
 
-		return SeriesTime{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Times{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case time.Duration:
-		data := make([]time.Duration, len(s.data))
-		for i := 0; i < len(s.data); i++ {
-			data[i] = f(s.data[i]).(time.Duration)
+		Data_ := make([]time.Duration, len(s.Data_))
+		for i := 0; i < len(s.Data_); i++ {
+			Data_[i] = f(s.Data_[i]).(time.Duration)
 		}
 
-		return SeriesDuration{
-			isNullable: s.isNullable,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   s.nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Durations{
+			IsNullable_: s.IsNullable_,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   s.NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.Map: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.Map: Unsupported type %T", v)}
 	}
 }
 
 // Apply the given function to each element of the series.
-func (s {{.SeriesName}}) MapNull(f MapFuncNull) Series {
-	if len(s.data) == 0 {
+func (s {{.SeriesName}}) MapNull(f aargh.MapFuncNull) Series {
+	if len(s.Data_) == 0 {
 		return s
 	}
 
-	if !s.isNullable {
-		return SeriesError{"{{.SeriesName}}.MapNull: series is not nullable"}
+	if !s.IsNullable_ {
+		return Errors{"{{.SeriesName}}.MapNull: series is not nullable"}
 	}
 
 	v, isNull := f(s.Get(0), s.IsNull(0))
 	switch v.(type) {
 	case bool:
-		data := make([]bool, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = v.(bool)
+		Data_ := make([]bool, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(bool)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesBool{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Bools{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int:
-		data := make([]int, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = v.(int)
+		Data_ := make([]int, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(int)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesInt{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Ints{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case int64:
-		data := make([]int64, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = v.(int64)
+		Data_ := make([]int64, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(int64)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesInt64{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Int64s{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case float64:
-		data := make([]float64, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = v.(float64)
+		Data_ := make([]float64, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(float64)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesFloat64{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Float64s{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case string:
-		data := make([]*string, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = s.ctx.stringPool.Put(v.(string))
+		Data_ := make([]*string, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = s.Ctx_.StringPool.Put(v.(string))
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesString{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Strings{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case time.Time:
-		data := make([]time.Time, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.data[i], s.IsNull(i))
-			data[i] = v.(time.Time)
+		Data_ := make([]time.Time, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f({{if .IsGoTypePtr}}*{{end}}s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(time.Time)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesTime{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Times{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	case time.Duration:
-		data := make([]time.Duration, len(s.data))
-		nullMask := make([]uint8, len(s.nullMask))
-		for i := 0; i < len(s.data); i++ {
-			v, isNull = f(s.data[i], s.IsNull(i))
-			data[i] = v.(time.Duration)
+		Data_ := make([]time.Duration, len(s.Data_))
+		NullMask_ := make([]uint8, len(s.NullMask_))
+		for i := 0; i < len(s.Data_); i++ {
+			v, isNull = f(s.Data_[i], s.IsNull(i))
+			Data_[i] = v.(time.Duration)
 			if isNull {
-				nullMask[i>>3] |= 1 << uint(i%8)
+				NullMask_[i>>3] |= 1 << uint(i%8)
 			}
 		}
 
-		return SeriesDuration{
-			isNullable: true,
-			sorted:     SORTED_NONE,
-			data:       data,
-			nullMask:   nullMask,
-			partition:  nil,
-			ctx:        s.ctx,
+		return Durations{
+			IsNullable_: true,
+			Sorted_:     aargh.SORTED_NONE,
+			Data_:       Data_,
+			NullMask_:   NullMask_,
+			Partition_:  nil,
+			Ctx_:        s.Ctx_,
 		}
 
 	default:
-		return SeriesError{fmt.Sprintf("{{.SeriesName}}.MapNull: Unsupported type %T", v)}
+		return Errors{fmt.Sprintf("{{.SeriesName}}.MapNull: Unsupported type %T", v)}
 	}
 }
 `
