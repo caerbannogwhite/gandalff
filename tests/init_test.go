@@ -1,11 +1,11 @@
 package tests
 
 import (
-	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/aargh"
 )
 
-var ctx *gandalff.Context
+var ctx *aargh.Context
 
 func init() {
-	ctx = gandalff.NewContext()
+	ctx = aargh.NewContext()
 }

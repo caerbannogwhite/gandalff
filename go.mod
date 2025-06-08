@@ -1,4 +1,4 @@
-module github.com/caerbannogwhite/gandalff
+module github.com/caerbannogwhite/aargh
 
 go 1.21.4
 

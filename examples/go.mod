@@ -2,9 +2,9 @@ module examples
 
 go 1.21.4
 
-replace gandalff => ../../gandalff
+replace aargh => ../../aargh
 
-require gandalff v0.0.0-00010101000000-000000000000
+require aargh v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect

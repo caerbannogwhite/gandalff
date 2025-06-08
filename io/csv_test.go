@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 func Test_TypeGuesser(t *testing.T) {
@@ -15,101 +15,101 @@ func Test_TypeGuesser(t *testing.T) {
 
 	// Test the bool type.
 	if tg.guessType("true") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("true").ToString())
+		t.Error("Expected Bool, got", tg.guessType("true").String())
 	}
 
 	if tg.guessType("false") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("false").ToString())
+		t.Error("Expected Bool, got", tg.guessType("false").String())
 	}
 
 	if tg.guessType("True") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("True").ToString())
+		t.Error("Expected Bool, got", tg.guessType("True").String())
 	}
 
 	if tg.guessType("False") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("False").ToString())
+		t.Error("Expected Bool, got", tg.guessType("False").String())
 	}
 
 	if tg.guessType("TRUE") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("TRUE").ToString())
+		t.Error("Expected Bool, got", tg.guessType("TRUE").String())
 	}
 
 	if tg.guessType("FALSE") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("FALSE").ToString())
+		t.Error("Expected Bool, got", tg.guessType("FALSE").String())
 	}
 
 	if tg.guessType("t") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("t").ToString())
+		t.Error("Expected Bool, got", tg.guessType("t").String())
 	}
 
 	if tg.guessType("f") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("f").ToString())
+		t.Error("Expected Bool, got", tg.guessType("f").String())
 	}
 
 	if tg.guessType("T") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("T").ToString())
+		t.Error("Expected Bool, got", tg.guessType("T").String())
 	}
 
 	if tg.guessType("F") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("F").ToString())
+		t.Error("Expected Bool, got", tg.guessType("F").String())
 	}
 
 	if tg.guessType("TrUe") != meta.BoolType {
-		t.Error("Expected Bool, got", tg.guessType("TrUe").ToString())
+		t.Error("Expected Bool, got", tg.guessType("TrUe").String())
 	}
 
 	// Test the int type.
 	if tg.guessType("0") != meta.Int64Type {
-		t.Error("Expected Int64, got", tg.guessType("0").ToString())
+		t.Error("Expected Int64, got", tg.guessType("0").String())
 	}
 
 	if tg.guessType("1") != meta.Int64Type {
-		t.Error("Expected Int64, got", tg.guessType("1").ToString())
+		t.Error("Expected Int64, got", tg.guessType("1").String())
 	}
 
 	if tg.guessType("10000") != meta.Int64Type {
-		t.Error("Expected Int64, got", tg.guessType("10000").ToString())
+		t.Error("Expected Int64, got", tg.guessType("10000").String())
 	}
 
 	if tg.guessType("-1") != meta.Int64Type {
-		t.Error("Expected Int64, got", tg.guessType("-1").ToString())
+		t.Error("Expected Int64, got", tg.guessType("-1").String())
 	}
 
 	if tg.guessType("-10000") != meta.Int64Type {
-		t.Error("Expected Int64, got", tg.guessType("-10000").ToString())
+		t.Error("Expected Int64, got", tg.guessType("-10000").String())
 	}
 
 	// Test the float type.
 	if tg.guessType("0.0") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("0.0").ToString())
+		t.Error("Expected Float64, got", tg.guessType("0.0").String())
 	}
 
 	if tg.guessType("1.0") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("1.0").ToString())
+		t.Error("Expected Float64, got", tg.guessType("1.0").String())
 	}
 
 	if tg.guessType("10000.0") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("10000.0").ToString())
+		t.Error("Expected Float64, got", tg.guessType("10000.0").String())
 	}
 
 	if tg.guessType("-1.0") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("-1.0").ToString())
+		t.Error("Expected Float64, got", tg.guessType("-1.0").String())
 	}
 
 	if tg.guessType("-1e3") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("-1e3").ToString())
+		t.Error("Expected Float64, got", tg.guessType("-1e3").String())
 	}
 
 	if tg.guessType("-1e-3") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("-1e-3").ToString())
+		t.Error("Expected Float64, got", tg.guessType("-1e-3").String())
 	}
 
 	if tg.guessType("2.0E4") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("2.0E4").ToString())
+		t.Error("Expected Float64, got", tg.guessType("2.0E4").String())
 	}
 
 	if tg.guessType("2.0e4") != meta.Float64Type {
-		t.Error("Expected Float64, got", tg.guessType("2.0e4").ToString())
+		t.Error("Expected Float64, got", tg.guessType("2.0e4").String())
 	}
 }
 
@@ -191,19 +191,19 @@ Charlie,33,95.0,t
 
 	// Check the column types.
 	if iod.Types()[0] != meta.StringType {
-		t.Error("Expected String, got", iod.Types()[0].ToString())
+		t.Error("Expected String, got", iod.Types()[0].String())
 	}
 
 	if iod.Types()[1] != meta.Int64Type {
-		t.Error("Expected Int64, got", iod.Types()[1].ToString())
+		t.Error("Expected Int64, got", iod.Types()[1].String())
 	}
 
 	if iod.Types()[2] != meta.Float64Type {
-		t.Error("Expected Float64, got", iod.Types()[2].ToString())
+		t.Error("Expected Float64, got", iod.Types()[2].String())
 	}
 
 	if iod.Types()[3] != meta.BoolType {
-		t.Error("Expected Bool, got", iod.Types()[3].ToString())
+		t.Error("Expected Bool, got", iod.Types()[3].String())
 	}
 
 	// Check the values.
@@ -320,39 +320,39 @@ func Benchmark_FromCsv_100000Rows(b *testing.B) {
 
 	// Check the column types.
 	if iod.Types()[0] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[0].ToString())
+		b.Error("Expected Int64, got", iod.Types()[0].String())
 	}
 
 	if iod.Types()[1] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[1].ToString())
+		b.Error("Expected String, got", iod.Types()[1].String())
 	}
 
 	if iod.Types()[2] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[2].ToString())
+		b.Error("Expected String, got", iod.Types()[2].String())
 	}
 
 	if iod.Types()[3] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[3].ToString())
+		b.Error("Expected String, got", iod.Types()[3].String())
 	}
 
 	if iod.Types()[4] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[4].ToString())
+		b.Error("Expected String, got", iod.Types()[4].String())
 	}
 
 	if iod.Types()[5] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[5].ToString())
+		b.Error("Expected String, got", iod.Types()[5].String())
 	}
 
 	if iod.Types()[6] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[6].ToString())
+		b.Error("Expected Int64, got", iod.Types()[6].String())
 	}
 
 	if iod.Types()[7] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[7].ToString())
+		b.Error("Expected String, got", iod.Types()[7].String())
 	}
 
 	if iod.Types()[8] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[8].ToString())
+		b.Error("Expected Int64, got", iod.Types()[8].String())
 	}
 }
 
@@ -403,39 +403,39 @@ func Benchmark_FromCsv_500000Rows(b *testing.B) {
 
 	// Check the column types.
 	if iod.Types()[0] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[0].ToString())
+		b.Error("Expected Int64, got", iod.Types()[0].String())
 	}
 
 	if iod.Types()[1] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[1].ToString())
+		b.Error("Expected String, got", iod.Types()[1].String())
 	}
 
 	if iod.Types()[2] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[2].ToString())
+		b.Error("Expected String, got", iod.Types()[2].String())
 	}
 
 	if iod.Types()[3] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[3].ToString())
+		b.Error("Expected String, got", iod.Types()[3].String())
 	}
 
 	if iod.Types()[4] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[4].ToString())
+		b.Error("Expected String, got", iod.Types()[4].String())
 	}
 
 	if iod.Types()[5] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[5].ToString())
+		b.Error("Expected String, got", iod.Types()[5].String())
 	}
 
 	if iod.Types()[6] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[6].ToString())
+		b.Error("Expected Int64, got", iod.Types()[6].String())
 	}
 
 	if iod.Types()[7] != meta.StringType {
-		b.Error("Expected String, got", iod.Types()[7].ToString())
+		b.Error("Expected String, got", iod.Types()[7].String())
 	}
 
 	if iod.Types()[8] != meta.Int64Type {
-		b.Error("Expected Int64, got", iod.Types()[8].ToString())
+		b.Error("Expected Int64, got", iod.Types()[8].String())
 	}
 }
 

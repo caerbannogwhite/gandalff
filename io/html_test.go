@@ -5,7 +5,7 @@ import (
 
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 func Test_IoHtml_ValidWrite(t *testing.T) {
@@ -19,16 +19,16 @@ func Test_IoHtml_ValidWrite(t *testing.T) {
 		Write()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	_, err = os.Stat("test.html")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	err = os.Remove("test.html")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }

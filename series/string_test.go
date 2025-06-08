@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func Test_SeriesString_Base(t *testing.T) {
@@ -26,7 +26,7 @@ func Test_SeriesString_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.StringType {
-		t.Errorf("Expected type of StringType, got %s", s.Type().ToString())
+		t.Errorf("Expected type of StringType, got %s", s.Type().String())
 	}
 
 	// Check the data.
@@ -191,9 +191,9 @@ func Test_SeriesString_Append(t *testing.T) {
 		case 1:
 			s = s.Append([]string{r}).(Strings)
 		case 2:
-			s = s.Append(gandalff.NullableString{Valid: true, Value: r}).(Strings)
+			s = s.Append(aargh.NullableString{Valid: true, Value: r}).(Strings)
 		case 3:
-			s = s.Append([]gandalff.NullableString{{Valid: false, Value: r}}).(Strings)
+			s = s.Append([]aargh.NullableString{{Valid: false, Value: r}}).(Strings)
 		}
 
 		if s.Get(i) != r {
@@ -226,7 +226,7 @@ func Test_SeriesString_Append(t *testing.T) {
 	s = NewSeriesString([]string{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append(gandalff.NullableString{Valid: false, Value: "a"}).(Strings)
+		s = s.Append(aargh.NullableString{Valid: false, Value: "a"}).(Strings)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}
@@ -236,7 +236,7 @@ func Test_SeriesString_Append(t *testing.T) {
 	s = NewSeriesString([]string{}, nil, true, ctx)
 
 	for i := 0; i < 100; i++ {
-		s = s.Append([]gandalff.NullableString{{Valid: false, Value: "a"}}).(Strings)
+		s = s.Append([]aargh.NullableString{{Valid: false, Value: "a"}}).(Strings)
 		if !s.IsNull(i) {
 			t.Errorf("Expected %t, got %t at index %d", true, s.IsNull(i), i)
 		}

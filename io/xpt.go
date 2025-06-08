@@ -12,9 +12,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 // https://www.loc.gov/preservation/digital/formats/fdd/fdd000464.shtml
@@ -37,10 +37,10 @@ type XptReader struct {
 	byteOrder       binary.ByteOrder
 	path            string
 	reader          io.Reader
-	ctx             *gandalff.Context
+	ctx             *aargh.Context
 }
 
-func NewXptReader(ctx *gandalff.Context) *XptReader {
+func NewXptReader(ctx *aargh.Context) *XptReader {
 	return &XptReader{
 		guessVersion:    false,
 		maxObservations: -1,
@@ -220,7 +220,7 @@ const (
 )
 
 // This functions guesses the version of a SAS XPT file.
-func guessXptVersion(reader io.Reader, ctx *gandalff.Context) (XptVersionType, []byte, error) {
+func guessXptVersion(reader io.Reader, ctx *aargh.Context) (XptVersionType, []byte, error) {
 	if ctx == nil {
 		return 0, nil, fmt.Errorf("guessXptVersion: no context specified")
 	}
@@ -403,7 +403,7 @@ func (nms *__NAMESTRv56) ToString() string {
 }
 
 // This functions reads a SAS XPT file (versions 5/6).
-func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) (*IoData, error) {
+func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *aargh.Context) (*IoData, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("readXptV56: no context specified")
 	}
@@ -789,7 +789,7 @@ func (nms *__NAMESTRv89) String() string {
 }
 
 // This functions reads a SAS XPT file (versions 8/9).
-func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *gandalff.Context) (*IoData, error) {
+func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *aargh.Context) (*IoData, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("readXptV89: no context specified")
 	}

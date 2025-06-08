@@ -86,12 +86,12 @@ ctrl+c: quit
 	m.infoBox.AddRows([]*flexbox.Row{r1})
 
 	p := tea.NewProgram(&m, tea.WithAltScreen())
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
 func main() {
-
+	run()
 }

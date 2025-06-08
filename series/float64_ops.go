@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func (s Float64s) Neg() Series {
@@ -27,7 +27,7 @@ func (s Float64s) And(other any) Series {
 	}
 	switch o := otherSeries.(type) {
 	default:
-		return Errors{fmt.Sprintf("Cannot AND %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot AND %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -44,7 +44,7 @@ func (s Float64s) Or(other any) Series {
 	}
 	switch o := otherSeries.(type) {
 	default:
-		return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot OR %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -249,7 +249,7 @@ func (s Float64s) Mul(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -408,7 +408,7 @@ func (s Float64s) Mul(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -567,7 +567,7 @@ func (s Float64s) Mul(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -726,7 +726,7 @@ func (s Float64s) Mul(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case NAs:
 		if s.Len() == 1 {
@@ -745,10 +745,10 @@ func (s Float64s) Mul(other any) Series {
 				resultSize := s.Len()
 				return NAs{size: resultSize}
 			}
-			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot multiply %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -985,7 +985,7 @@ func (s Float64s) Div(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -1144,7 +1144,7 @@ func (s Float64s) Div(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -1303,7 +1303,7 @@ func (s Float64s) Div(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -1462,10 +1462,10 @@ func (s Float64s) Div(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot divide %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -1702,7 +1702,7 @@ func (s Float64s) Mod(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -1861,7 +1861,7 @@ func (s Float64s) Mod(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -2020,7 +2020,7 @@ func (s Float64s) Mod(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -2179,10 +2179,10 @@ func (s Float64s) Mod(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot use modulo %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -2419,7 +2419,7 @@ func (s Float64s) Exp(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -2578,7 +2578,7 @@ func (s Float64s) Exp(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -2737,7 +2737,7 @@ func (s Float64s) Exp(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -2896,10 +2896,10 @@ func (s Float64s) Exp(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot use exponentiation %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -3136,7 +3136,7 @@ func (s Float64s) Add(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -3295,7 +3295,7 @@ func (s Float64s) Add(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -3454,7 +3454,7 @@ func (s Float64s) Add(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -3613,7 +3613,7 @@ func (s Float64s) Add(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Strings:
 		if s.Len() == 1 {
@@ -3772,7 +3772,7 @@ func (s Float64s) Add(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case NAs:
 		if s.Len() == 1 {
@@ -3791,10 +3791,10 @@ func (s Float64s) Add(other any) Series {
 				resultSize := s.Len()
 				return NAs{size: resultSize}
 			}
-			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot sum %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -4031,7 +4031,7 @@ func (s Float64s) Sub(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -4190,7 +4190,7 @@ func (s Float64s) Sub(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -4349,7 +4349,7 @@ func (s Float64s) Sub(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -4508,10 +4508,10 @@ func (s Float64s) Sub(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot subtract %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -4684,7 +4684,7 @@ func (s Float64s) Eq(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -4843,7 +4843,7 @@ func (s Float64s) Eq(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -5002,7 +5002,7 @@ func (s Float64s) Eq(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case NAs:
 		if s.Len() == 1 {
@@ -5021,10 +5021,10 @@ func (s Float64s) Eq(other any) Series {
 				resultSize := s.Len()
 				return NAs{size: resultSize}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for equality %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -5197,7 +5197,7 @@ func (s Float64s) Ne(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -5356,7 +5356,7 @@ func (s Float64s) Ne(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -5515,7 +5515,7 @@ func (s Float64s) Ne(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case NAs:
 		if s.Len() == 1 {
@@ -5534,10 +5534,10 @@ func (s Float64s) Ne(other any) Series {
 				resultSize := s.Len()
 				return NAs{size: resultSize}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for inequality %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -5774,7 +5774,7 @@ func (s Float64s) Gt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -5933,7 +5933,7 @@ func (s Float64s) Gt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -6092,7 +6092,7 @@ func (s Float64s) Gt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -6251,10 +6251,10 @@ func (s Float64s) Gt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for greater than %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -6491,7 +6491,7 @@ func (s Float64s) Ge(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -6650,7 +6650,7 @@ func (s Float64s) Ge(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -6809,7 +6809,7 @@ func (s Float64s) Ge(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -6968,10 +6968,10 @@ func (s Float64s) Ge(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for greater than or equal to %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -7208,7 +7208,7 @@ func (s Float64s) Lt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -7367,7 +7367,7 @@ func (s Float64s) Lt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -7526,7 +7526,7 @@ func (s Float64s) Lt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -7685,10 +7685,10 @@ func (s Float64s) Lt(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for less than %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }
@@ -7925,7 +7925,7 @@ func (s Float64s) Le(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Ints:
 		if s.Len() == 1 {
@@ -8084,7 +8084,7 @@ func (s Float64s) Le(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Int64s:
 		if s.Len() == 1 {
@@ -8243,7 +8243,7 @@ func (s Float64s) Le(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	case Float64s:
 		if s.Len() == 1 {
@@ -8402,10 +8402,10 @@ func (s Float64s) Le(other any) Series {
 					}
 				}
 			}
-			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+			return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().String(), o.Type().String())}
 		}
 	default:
-		return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().ToString(), o.Type().ToString())}
+		return Errors{fmt.Sprintf("Cannot compare for less than or equal to %s and %s", s.Type().String(), o.Type().String())}
 	}
 
 }

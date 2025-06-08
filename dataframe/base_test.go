@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh/series"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 const (

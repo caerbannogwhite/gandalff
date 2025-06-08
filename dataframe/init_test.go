@@ -3,18 +3,18 @@ package dataframe
 import (
 	"path/filepath"
 
-	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/aargh"
 )
 
 const (
-	NA_TEXT = gandalff.NA_TEXT
+	NA_TEXT = aargh.NA_TEXT
 )
 
-var ctx *gandalff.Context
+var ctx *aargh.Context
 var testDataDir string
 
 func init() {
-	ctx = gandalff.NewContext()
+	ctx = aargh.NewContext()
 	testDataDir = filepath.Join("..", "testdata")
 
 	read_G1_1e4_1e2_0_0()

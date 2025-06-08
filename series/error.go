@@ -1,8 +1,8 @@
 package series
 
 import (
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 // Dummy series for error handling.
@@ -13,7 +13,7 @@ type Errors struct {
 func (s Errors) printInfo() {}
 
 // Return the context of the series.
-func (s Errors) GetContext() *gandalff.Context {
+func (s Errors) GetContext() *aargh.Context {
 	return nil
 }
 
@@ -32,8 +32,8 @@ func (s Errors) IsNullable() bool {
 	return false
 }
 
-func (s Errors) IsSorted() gandalff.SeriesSortOrder {
-	return gandalff.SORTED_NONE
+func (s Errors) IsSorted() aargh.SeriesSortOrder {
+	return aargh.SORTED_NONE
 }
 
 // Returns if the series is error.
@@ -154,11 +154,11 @@ func (s Errors) FilterIntSlice(mask []int, check bool) Series {
 	return s
 }
 
-func (s Errors) Map(f gandalff.MapFunc) Series {
+func (s Errors) Map(f aargh.MapFunc) Series {
 	return s
 }
 
-func (s Errors) MapNull(f gandalff.MapFuncNull) Series {
+func (s Errors) MapNull(f aargh.MapFuncNull) Series {
 	return s
 }
 

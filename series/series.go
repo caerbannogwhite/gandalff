@@ -1,8 +1,8 @@
 package series
 
 import (
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 type Series interface {
@@ -12,7 +12,7 @@ type Series interface {
 	// Basic accessors.
 
 	// Return the context of the series.
-	GetContext() *gandalff.Context
+	GetContext() *aargh.Context
 	// Return the number of elements in the series.
 	Len() int
 	// Return the type of the series.
@@ -24,7 +24,7 @@ type Series interface {
 	// Return if the series admits null values.
 	IsNullable() bool
 	// Return if the series is sorted.
-	IsSorted() gandalff.SeriesSortOrder
+	IsSorted() aargh.SeriesSortOrder
 	// Return if the series is error.
 	IsError() bool
 	// Return the error message of the series.
@@ -83,8 +83,8 @@ type Series interface {
 	FilterIntSlice(mask []int, check bool) Series
 
 	// Apply the given function to each element of the series.
-	Map(f gandalff.MapFunc) Series
-	MapNull(f gandalff.MapFuncNull) Series
+	Map(f aargh.MapFunc) Series
+	MapNull(f aargh.MapFuncNull) Series
 
 	// Group the elements in the series.
 	Group() Series

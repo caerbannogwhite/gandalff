@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func (s Times) printInfo() {
@@ -23,7 +23,7 @@ func (s Times) printInfo() {
 ////////////////////////			BASIC ACCESSORS
 
 // Return the context of the series.
-func (s Times) GetContext() *gandalff.Context {
+func (s Times) GetContext() *aargh.Context {
 	return s.Ctx_
 }
 
@@ -53,7 +53,7 @@ func (s Times) IsNullable() bool {
 }
 
 // Return if the series is Sorted_.
-func (s Times) IsSorted() gandalff.SeriesSortOrder {
+func (s Times) IsSorted() aargh.SeriesSortOrder {
 	return s.Sorted_
 }
 
@@ -200,7 +200,7 @@ func (s Times) Append(v any) Series {
 			s.NullMask_ = append(s.NullMask_, make([]uint8, (len(s.Data_)>>3)-len(s.NullMask_))...)
 		}
 
-	case gandalff.NullableTime:
+	case aargh.NullableTime:
 		s.Data_ = append(s.Data_, v.Value)
 		s = s.MakeNullable().(Times)
 		if len(s.Data_) > len(s.NullMask_)<<3 {
@@ -210,7 +210,7 @@ func (s Times) Append(v any) Series {
 			s.NullMask_[(len(s.Data_)-1)>>3] |= 1 << uint8((len(s.Data_)-1)%8)
 		}
 
-	case []gandalff.NullableTime:
+	case []aargh.NullableTime:
 		ssize := len(s.Data_)
 		s.Data_ = append(s.Data_, make([]time.Time, len(v))...)
 		s = s.MakeNullable().(Times)
@@ -236,7 +236,7 @@ func (s Times) Append(v any) Series {
 		return Errors{fmt.Sprintf("Times.Append: invalid type %T", v)}
 	}
 
-	s.Sorted_ = gandalff.SORTED_NONE
+	s.Sorted_ = aargh.SORTED_NONE
 	return s
 }
 
@@ -394,7 +394,7 @@ func (s Times) FilterIntSlice(indexes []int, check bool) Series {
 }
 
 // Apply the given function to each element of the series.
-func (s Times) Map(f gandalff.MapFunc) Series {
+func (s Times) Map(f aargh.MapFunc) Series {
 	if len(s.Data_) == 0 {
 		return s
 	}
@@ -409,7 +409,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Bools{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -424,7 +424,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Ints{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -439,7 +439,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Int64s{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -454,7 +454,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Float64s{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -469,7 +469,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Strings{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -484,7 +484,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Times{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -499,7 +499,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 
 		return Durations{
 			IsNullable_: s.IsNullable_,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   s.NullMask_,
 			Partition_:  nil,
@@ -512,7 +512,7 @@ func (s Times) Map(f gandalff.MapFunc) Series {
 }
 
 // Apply the given function to each element of the series.
-func (s Times) MapNull(f gandalff.MapFuncNull) Series {
+func (s Times) MapNull(f aargh.MapFuncNull) Series {
 	if len(s.Data_) == 0 {
 		return s
 	}
@@ -536,7 +536,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Bools{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -556,7 +556,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Ints{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -576,7 +576,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Int64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -596,7 +596,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Float64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -616,7 +616,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Strings{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -636,7 +636,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Times{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -656,7 +656,7 @@ func (s Times) MapNull(f gandalff.MapFuncNull) Series {
 
 		return Durations{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,

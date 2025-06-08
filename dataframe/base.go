@@ -6,11 +6,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/formatter"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/formatter"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 type BaseDataFramePartitionEntry struct {
@@ -26,10 +26,10 @@ type BaseDataFrame struct {
 	series     []series.Series
 	partitions []BaseDataFramePartitionEntry
 	sortParams []SortParam
-	ctx        *gandalff.Context
+	ctx        *aargh.Context
 }
 
-func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
+func NewBaseDataFrame(ctx *aargh.Context) DataFrame {
 	if ctx == nil {
 		return BaseDataFrame{err: fmt.Errorf("NewBaseDataFrame: context is nil")}
 	}
@@ -43,7 +43,7 @@ func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
 ////////////////////////			BASIC ACCESSORS
 
 // GetContext returns the context of the dataframe.
-func (df BaseDataFrame) GetContext() *gandalff.Context {
+func (df BaseDataFrame) GetContext() *aargh.Context {
 	return df.ctx
 }
 
@@ -1266,7 +1266,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 
 	widths := make([]int, df.NCols())
 	for i, name := range df.names {
-		widths[i] = max(len(df.series[i].Type().ToString()), len(name))
+		widths[i] = max(len(df.series[i].Type().String()), len(name))
 		actualWidthsSum += widths[i] + 3
 		if actualWidthsSum > params.width {
 			break
@@ -1436,11 +1436,11 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	buffer += params.indent + "│"
 	if params.useLipGloss {
 		for i, c := range df.series[:nColsOut] {
-			buffer += params.styleTypes.Render(fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString())) + "│"
+			buffer += params.styleTypes.Render(fmt.Sprintf(" %-*s ", widths[i], c.Type().String())) + "│"
 		}
 	} else {
 		for i, c := range df.series[:nColsOut] {
-			buffer += fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString()) + "│"
+			buffer += fmt.Sprintf(" %-*s ", widths[i], c.Type().String()) + "│"
 		}
 	}
 	buffer += "\n"

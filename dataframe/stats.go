@@ -3,7 +3,7 @@ package dataframe
 import (
 	"math"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 // type __numeric_thread_data struct {

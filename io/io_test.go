@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 func Test_IoAll(t *testing.T) {
@@ -17,7 +17,7 @@ func Test_IoAll(t *testing.T) {
 		Read()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// to JSON
@@ -26,7 +26,7 @@ func Test_IoAll(t *testing.T) {
 		Write()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// From JSON
@@ -35,7 +35,7 @@ func Test_IoAll(t *testing.T) {
 		Read()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// to CSV
@@ -46,7 +46,7 @@ func Test_IoAll(t *testing.T) {
 		Write()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// From CSV
@@ -57,7 +57,7 @@ func Test_IoAll(t *testing.T) {
 		Read()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// to Excel
@@ -68,7 +68,7 @@ func Test_IoAll(t *testing.T) {
 		Write()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	// From Excel
@@ -78,7 +78,7 @@ func Test_IoAll(t *testing.T) {
 		Read()
 
 	if iod.Error != nil {
-		t.Errorf(iod.Error.Error())
+		t.Error(iod.Error.Error())
 	}
 
 	os.Remove(filepath.Join(testDataFolder, "test.json"))

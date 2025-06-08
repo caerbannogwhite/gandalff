@@ -35,7 +35,7 @@ const (
 	NonBaseType
 )
 
-func (bt BaseType) ToString() string {
+func (bt BaseType) String() string {
 	switch bt {
 	case NullType:
 		return "NA"
@@ -163,7 +163,7 @@ func (bt BaseType) CanCoerceTo(other BaseType) bool {
 }
 
 func (btc BaseTypeCard) ToString() string {
-	return fmt.Sprintf("%s[%d]", btc.Base.ToString(), btc.Card)
+	return fmt.Sprintf("%s[%d]", btc.Base.String(), btc.Card)
 }
 
 func GoToPreludioTypeString(t interface{}) string {

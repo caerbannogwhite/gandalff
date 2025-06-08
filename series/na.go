@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 // NAs represents a series with no Data_.
 type NAs struct {
 	size       int
 	Partition_ *SeriesNAPartition
-	Ctx_       *gandalff.Context
+	Ctx_       *aargh.Context
 }
 
 func (s NAs) printInfo() {}
 
 // Return the context of the series.
-func (s NAs) GetContext() *gandalff.Context {
+func (s NAs) GetContext() *aargh.Context {
 	return s.Ctx_
 }
 
@@ -38,8 +38,8 @@ func (s NAs) IsNullable() bool {
 	return true
 }
 
-func (s NAs) IsSorted() gandalff.SeriesSortOrder {
-	return gandalff.SORTED_ASC
+func (s NAs) IsSorted() aargh.SeriesSortOrder {
+	return aargh.SORTED_ASC
 }
 
 // Returns if the series is error.
@@ -107,7 +107,7 @@ func (s NAs) Get(i int) any {
 }
 
 func (s NAs) GetAsString(i int) string {
-	return gandalff.NA_TEXT
+	return aargh.NA_TEXT
 }
 
 // Set the element at index i.
@@ -132,7 +132,7 @@ func (s NAs) Append(v any) Series {
 		s.size += v.size
 		return s
 
-	case bool, gandalff.NullableBool, []bool, []gandalff.NullableBool, Bools:
+	case bool, aargh.NullableBool, []bool, []aargh.NullableBool, Bools:
 		var Data_ []bool
 		switch v := v.(type) {
 		case bool:
@@ -141,7 +141,7 @@ func (s NAs) Append(v any) Series {
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
-		case gandalff.NullableBool:
+		case aargh.NullableBool:
 			Data_ = make([]bool, s.size+1)
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
@@ -153,7 +153,7 @@ func (s NAs) Append(v any) Series {
 			Data_ = append(make([]bool, s.size), v...)
 			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
-		case []gandalff.NullableBool:
+		case []aargh.NullableBool:
 			Data_ = make([]bool, s.size+len(v))
 			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
@@ -173,14 +173,14 @@ func (s NAs) Append(v any) Series {
 
 		return Bools{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
 			Ctx_:        s.Ctx_,
 		}
 
-	case int, gandalff.NullableInt, []int, []gandalff.NullableInt, Ints:
+	case int, aargh.NullableInt, []int, []aargh.NullableInt, Ints:
 		var Data_ []int
 		switch v := v.(type) {
 		case int:
@@ -189,7 +189,7 @@ func (s NAs) Append(v any) Series {
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
-		case gandalff.NullableInt:
+		case aargh.NullableInt:
 			Data_ = make([]int, s.size+1)
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
@@ -201,7 +201,7 @@ func (s NAs) Append(v any) Series {
 			Data_ = append(make([]int, s.size), v...)
 			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
-		case []gandalff.NullableInt:
+		case []aargh.NullableInt:
 			Data_ = make([]int, s.size+len(v))
 			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
@@ -221,14 +221,14 @@ func (s NAs) Append(v any) Series {
 
 		return Ints{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
 			Ctx_:        s.Ctx_,
 		}
 
-	case int64, gandalff.NullableInt64, []int64, []gandalff.NullableInt64, Int64s:
+	case int64, aargh.NullableInt64, []int64, []aargh.NullableInt64, Int64s:
 		var Data_ []int64
 		switch v := v.(type) {
 		case int64:
@@ -237,7 +237,7 @@ func (s NAs) Append(v any) Series {
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
-		case gandalff.NullableInt64:
+		case aargh.NullableInt64:
 			Data_ = make([]int64, s.size+1)
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
@@ -249,7 +249,7 @@ func (s NAs) Append(v any) Series {
 			Data_ = append(make([]int64, s.size), v...)
 			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
-		case []gandalff.NullableInt64:
+		case []aargh.NullableInt64:
 			Data_ = make([]int64, s.size+len(v))
 			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
@@ -269,14 +269,14 @@ func (s NAs) Append(v any) Series {
 
 		return Int64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
 			Ctx_:        s.Ctx_,
 		}
 
-	case float64, gandalff.NullableFloat64, []float64, []gandalff.NullableFloat64, Float64s:
+	case float64, aargh.NullableFloat64, []float64, []aargh.NullableFloat64, Float64s:
 		var Data_ []float64
 		switch v := v.(type) {
 		case float64:
@@ -285,7 +285,7 @@ func (s NAs) Append(v any) Series {
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
-		case gandalff.NullableFloat64:
+		case aargh.NullableFloat64:
 			Data_ = make([]float64, s.size+1)
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
@@ -297,7 +297,7 @@ func (s NAs) Append(v any) Series {
 			Data_ = append(make([]float64, s.size), v...)
 			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
-		case []gandalff.NullableFloat64:
+		case []aargh.NullableFloat64:
 			Data_ = make([]float64, s.size+len(v))
 			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
@@ -317,17 +317,17 @@ func (s NAs) Append(v any) Series {
 
 		return Float64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
 			Ctx_:        s.Ctx_,
 		}
 
-	case string, gandalff.NullableString, []string, []gandalff.NullableString, Strings:
+	case string, aargh.NullableString, []string, []aargh.NullableString, Strings:
 		Data_ := make([]*string, s.size)
 		for i := 0; i < s.size; i++ {
-			Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
+			Data_[i] = s.Ctx_.StringPool.Put(aargh.NA_TEXT)
 		}
 
 		switch v := v.(type) {
@@ -336,13 +336,13 @@ func (s NAs) Append(v any) Series {
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 
-		case gandalff.NullableString:
+		case aargh.NullableString:
 			NullMask_ = utils.BinVecInit(s.size+1, true)
 			if v.Valid {
 				Data_ = append(Data_, s.Ctx_.StringPool.Put(v.Value))
 				NullMask_[s.size>>3] &= ^(1 << uint(s.size%8))
 			} else {
-				Data_ = append(Data_, s.Ctx_.StringPool.Put(gandalff.NA_TEXT))
+				Data_ = append(Data_, s.Ctx_.StringPool.Put(aargh.NA_TEXT))
 			}
 
 		case []string:
@@ -352,7 +352,7 @@ func (s NAs) Append(v any) Series {
 			}
 			_, NullMask_ = utils.MergeNullMasks(s.size, true, utils.BinVecInit(s.size, true), len(v), false, make([]uint8, 0))
 
-		case []gandalff.NullableString:
+		case []aargh.NullableString:
 			Data_ = append(Data_, make([]*string, len(v))...)
 			NullMask_ = utils.BinVecInit(len(v), false)
 			for i, v := range v {
@@ -360,7 +360,7 @@ func (s NAs) Append(v any) Series {
 					Data_[s.size+i] = s.Ctx_.StringPool.Put(v.Value)
 				} else {
 					NullMask_[i>>3] |= 1 << uint(i%8)
-					Data_[s.size+i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
+					Data_[s.size+i] = s.Ctx_.StringPool.Put(aargh.NA_TEXT)
 				}
 			}
 
@@ -373,7 +373,7 @@ func (s NAs) Append(v any) Series {
 
 		return Strings{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -394,14 +394,14 @@ func (s NAs) Data() any {
 
 // Returns the nullable Data_ of the series.
 func (s NAs) DataAsNullable() any {
-	return make([]gandalff.NullableBool, s.size)
+	return make([]aargh.NullableBool, s.size)
 }
 
 // Returns the Data_ of the series as a slice of strings.
 func (s NAs) DataAsString() []string {
 	Data_ := make([]string, s.size)
 	for i := 0; i < s.size; i++ {
-		Data_[i] = gandalff.NA_TEXT
+		Data_[i] = aargh.NA_TEXT
 	}
 	return Data_
 }
@@ -415,7 +415,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.BoolType:
 		return Bools{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]bool, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -425,7 +425,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.IntType:
 		return Ints{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]int, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -435,7 +435,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.Int64Type:
 		return Int64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]int64, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -445,7 +445,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.Float64Type:
 		return Float64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]float64, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -455,7 +455,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.StringType:
 		return Strings{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]*string, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -465,7 +465,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.TimeType:
 		return Times{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]time.Time, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -475,7 +475,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 	case meta.DurationType:
 		return Durations{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       make([]time.Duration, s.size),
 			NullMask_:   utils.BinVecInit(s.size, true),
 			Partition_:  nil,
@@ -483,7 +483,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("NAs.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("NAs.Cast: invalid type %s", t.String())}
 	}
 }
 
@@ -547,11 +547,11 @@ func (s NAs) FilterIntSlice(indexes []int, check bool) Series {
 	return s
 }
 
-func (s NAs) Map(f gandalff.MapFunc) Series {
+func (s NAs) Map(f aargh.MapFunc) Series {
 	return s
 }
 
-func (s NAs) MapNull(f gandalff.MapFuncNull) Series {
+func (s NAs) MapNull(f aargh.MapFuncNull) Series {
 	return s
 }
 

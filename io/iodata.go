@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 type IoData struct {
-	ctx *gandalff.Context
+	ctx *aargh.Context
 
 	FileMeta   FileMeta
 	SeriesMeta []SeriesMeta
@@ -31,7 +31,17 @@ type FileMeta struct {
 }
 
 func (fileMeta *FileMeta) String() string {
-	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}", fileMeta.FileName, fileMeta.FilePath, fileMeta.Label, fileMeta.Created, fileMeta.LastModified, fileMeta.SasLibVersion, fileMeta.SasDataVersion, fileMeta.SasOs, fileMeta.SasDsName)
+	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}",
+		fileMeta.FileName,
+		fileMeta.FilePath,
+		fileMeta.Label,
+		fileMeta.Created,
+		fileMeta.LastModified,
+		fileMeta.SasLibVersion,
+		fileMeta.SasDataVersion,
+		fileMeta.SasOs,
+		fileMeta.SasDsName,
+	)
 }
 
 func (fileMeta *FileMeta) PrettyPrint() {
@@ -58,7 +68,14 @@ type SeriesMeta struct {
 }
 
 func (seriesMeta *SeriesMeta) String() string {
-	return fmt.Sprintf("SeriesMeta{Format: %s, Label: %s, Length: %d, KeySequence: %d, Name: %s, Type: %s}", seriesMeta.Format, seriesMeta.Label, seriesMeta.Length, seriesMeta.KeySequence, seriesMeta.Name, seriesMeta.Type)
+	return fmt.Sprintf("SeriesMeta{Format: %s, Label: %s, Length: %d, KeySequence: %d, Name: %s, Type: %s}",
+		seriesMeta.Format,
+		seriesMeta.Label,
+		seriesMeta.Length,
+		seriesMeta.KeySequence,
+		seriesMeta.Name,
+		seriesMeta.Type.String(),
+	)
 }
 
 func (seriesMeta *SeriesMeta) PrettyPrint() {
@@ -102,7 +119,7 @@ func (iod *IoData) Types() []meta.BaseType {
 	return types
 }
 
-func (iod *IoData) GetContext() *gandalff.Context {
+func (iod *IoData) GetContext() *aargh.Context {
 	return iod.ctx
 }
 
@@ -141,7 +158,7 @@ func (iod *IoData) ToXpt() *XptWriter {
 	return NewXptWriter().SetIoData(iod)
 }
 
-func NewIoData(ctx *gandalff.Context) *IoData {
+func NewIoData(ctx *aargh.Context) *IoData {
 	return &IoData{
 		ctx:        ctx,
 		Series:     make([]series.Series, 0),
@@ -150,18 +167,18 @@ func NewIoData(ctx *gandalff.Context) *IoData {
 	}
 }
 
-func FromCsv(ctx *gandalff.Context) *CsvReader {
+func FromCsv(ctx *aargh.Context) *CsvReader {
 	return NewCsvReader(ctx)
 }
 
-func FromJson(ctx *gandalff.Context) *JsonReader {
+func FromJson(ctx *aargh.Context) *JsonReader {
 	return NewJsonReader(ctx)
 }
 
-func FromXlsx(ctx *gandalff.Context) *XlsxReader {
+func FromXlsx(ctx *aargh.Context) *XlsxReader {
 	return NewXlsxReader(ctx)
 }
 
-func FromXpt(ctx *gandalff.Context) *XptReader {
+func FromXpt(ctx *aargh.Context) *XptReader {
 	return NewXptReader(ctx)
 }

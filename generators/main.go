@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 	RESULT_VAR_NAME           = "result"
 	RESULT_SIZE_VAR_NAME      = "resultSize"
 	RESULT_NULL_MASK_VAR_NAME = "resultNullMask"
-	FINAL_RETURN_FMT          = "Errors{fmt.Sprintf(\"Cannot %s %%s and %%s\", s.Type().ToString(), o.Type().ToString())}"
+	FINAL_RETURN_FMT          = "Errors{fmt.Sprintf(\"Cannot %s %%s and %%s\", s.Type().String(), o.Type().String())}"
 )
 
 type BuildInfo struct {
@@ -736,7 +736,7 @@ func generateOperations() {
 		// fast.Decls = append(fast.Decls, &ast.GenDecl{
 		// 	Tok: token.IMPORT,
 		// 	Specs: []ast.Spec{
-		// 		&ast.ImportSpec{Path: &ast.BasicLit{Value: `"github.com/caerbannogwhite/gandalff/utils"`}},
+		// 		&ast.ImportSpec{Path: &ast.BasicLit{Value: `"github.com/caerbannogwhite/aargh/utils"`}},
 		// 	},
 		// })
 

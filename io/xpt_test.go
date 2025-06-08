@@ -8,7 +8,7 @@ import (
 
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 const DELTA = 10e-16
@@ -51,7 +51,7 @@ func Test_IoXpt_Underflow(t *testing.T) {
 func Test_IoXpt_Nan(t *testing.T) {
 	res, err := Roundtrip(math.NaN())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 		t.FailNow()
 	}
 
@@ -68,7 +68,7 @@ func Test_IoXpt_SpecialMissingValues(t *testing.T) {
 		v := math.Float64frombits(binary.BigEndian.Uint64([]byte{i, 0, 0, 0, 0, 0, 0, 0}))
 		res, err := Roundtrip(v)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -81,7 +81,7 @@ func Test_IoXpt_SpecialMissingValues(t *testing.T) {
 	v := math.Float64frombits(binary.BigEndian.Uint64([]byte{byte('_'), 0, 0, 0, 0, 0, 0, 0}))
 	res, err := Roundtrip(v)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 		t.FailNow()
 	}
 
@@ -93,7 +93,7 @@ func Test_IoXpt_SpecialMissingValues(t *testing.T) {
 func Test_IoXpt_Zero(t *testing.T) {
 	res, err := Roundtrip(0)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 		t.FailNow()
 	}
 
@@ -107,7 +107,7 @@ func Test_IoXpt_SmallMagnitudeIntegers(t *testing.T) {
 	for i := -1000; i < 1000; i++ {
 		res, err := Roundtrip(float64(i))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -123,7 +123,7 @@ func Test_IoXpt_LargeMagnitudeFloats(t *testing.T) {
 	for i := n; i < n+100; i++ {
 		res, err := Roundtrip(float64(i))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -140,7 +140,7 @@ func Test_IoXpt_LargeMagnitudeFloatsWithFraction(t *testing.T) {
 		x := (float64(i) / 1e9) + offset
 		res, err := Roundtrip(x)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -156,7 +156,7 @@ func Test_IoXpt_SmallMagnitudeFloats(t *testing.T) {
 		v := float64(i) / 1.0e3
 		res, err := Roundtrip(v)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -172,7 +172,7 @@ func Test_IoXpt_VerySmallMagnitudeFloats(t *testing.T) {
 		v := float64(i) / 1.0e6
 		res, err := Roundtrip(v)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -188,7 +188,7 @@ func Test_IoXpt_VeryVerySmallMagnitudeFloats(t *testing.T) {
 		v := float64(i) / 1.0e9
 		res, err := Roundtrip(v)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			t.FailNow()
 		}
 
@@ -209,16 +209,16 @@ func Test_IoXpt_ValidWrite(t *testing.T) {
 		Write()
 
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	_, err = os.Stat("test.xpt")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	err = os.Remove("test.xpt")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }

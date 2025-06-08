@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 type MarkDownWriter struct {
@@ -24,7 +24,7 @@ func NewMarkDownWriter() *MarkDownWriter {
 		header: true,
 		index:  false,
 		path:   "",
-		naText: gandalff.NA_TEXT,
+		naText: aargh.NA_TEXT,
 		writer: nil,
 		ioData: nil,
 	}

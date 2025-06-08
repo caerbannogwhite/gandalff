@@ -1,13 +1,13 @@
 package series
 
-import "github.com/caerbannogwhite/gandalff"
+import "github.com/caerbannogwhite/aargh"
 
 const (
-	NA_TEXT = gandalff.NA_TEXT
+	NA_TEXT = aargh.NA_TEXT
 )
 
-var ctx *gandalff.Context
+var ctx *aargh.Context
 
 func init() {
-	ctx = gandalff.NewContext()
+	ctx = aargh.NewContext()
 }

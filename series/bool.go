@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 // Bools represents a series of bools.
 // The Data_ is stored as a byte array, with each bit representing a bool.
 type Bools struct {
 	IsNullable_ bool
-	Sorted_     gandalff.SeriesSortOrder
+	Sorted_     aargh.SeriesSortOrder
 	Data_       []bool
 	NullMask_   []uint8
 	Partition_  *SeriesBoolPartition
-	Ctx_        *gandalff.Context
+	Ctx_        *aargh.Context
 }
 
 // Get the element at index i as a string.
 func (s Bools) GetAsString(i int) string {
 	if s.IsNullable_ && s.NullMask_[i>>3]&(1<<uint(i%8)) != 0 {
-		return gandalff.NA_TEXT
+		return aargh.NA_TEXT
 	} else if s.Data_[i] {
-		return gandalff.BOOL_TRUE_TEXT
+		return aargh.BOOL_TRUE_TEXT
 	} else {
-		return gandalff.BOOL_FALSE_TEXT
+		return aargh.BOOL_FALSE_TEXT
 	}
 }
 
@@ -44,7 +44,7 @@ func (s Bools) Set(i int, v any) Series {
 	case bool:
 		s.Data_[i] = v
 
-	case gandalff.NullableBool:
+	case aargh.NullableBool:
 		s = s.MakeNullable().(Bools)
 		if v.Valid {
 			s.Data_[i] = v.Value
@@ -57,7 +57,7 @@ func (s Bools) Set(i int, v any) Series {
 		return Errors{fmt.Sprintf("Bools.Set: invalid type %T", v)}
 	}
 
-	s.Sorted_ = gandalff.SORTED_NONE
+	s.Sorted_ = aargh.SORTED_NONE
 	return s
 }
 
@@ -70,9 +70,9 @@ func (s Bools) Bools() []bool {
 
 // Return the underlying Data_ as a slice of NullableBool.
 func (s Bools) DataAsNullable() any {
-	Data_ := make([]gandalff.NullableBool, len(s.Data_))
+	Data_ := make([]aargh.NullableBool, len(s.Data_))
 	for i, v := range s.Data_ {
-		Data_[i] = gandalff.NullableBool{Valid: !s.IsNull(i), Value: v}
+		Data_[i] = aargh.NullableBool{Valid: !s.IsNull(i), Value: v}
 	}
 	return Data_
 }
@@ -83,19 +83,19 @@ func (s Bools) DataAsString() []string {
 	if s.IsNullable_ {
 		for i, v := range s.Data_ {
 			if s.IsNull(i) {
-				Data_[i] = gandalff.NA_TEXT
+				Data_[i] = aargh.NA_TEXT
 			} else if v {
-				Data_[i] = gandalff.BOOL_TRUE_TEXT
+				Data_[i] = aargh.BOOL_TRUE_TEXT
 			} else {
-				Data_[i] = gandalff.BOOL_FALSE_TEXT
+				Data_[i] = aargh.BOOL_FALSE_TEXT
 			}
 		}
 	} else {
 		for i, v := range s.Data_ {
 			if v {
-				Data_[i] = gandalff.BOOL_TRUE_TEXT
+				Data_[i] = aargh.BOOL_TRUE_TEXT
 			} else {
-				Data_[i] = gandalff.BOOL_FALSE_TEXT
+				Data_[i] = aargh.BOOL_FALSE_TEXT
 			}
 		}
 	}
@@ -162,9 +162,9 @@ func (s Bools) Cast(t meta.BaseType) Series {
 	case meta.StringType:
 		Data_ := make([]*string, len(s.Data_))
 
-		naTextPtr := s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
-		trueTextPtr := s.Ctx_.StringPool.Put(gandalff.BOOL_TRUE_TEXT)
-		falseTextPtr := s.Ctx_.StringPool.Put(gandalff.BOOL_FALSE_TEXT)
+		naTextPtr := s.Ctx_.StringPool.Put(aargh.NA_TEXT)
+		trueTextPtr := s.Ctx_.StringPool.Put(aargh.BOOL_TRUE_TEXT)
+		falseTextPtr := s.Ctx_.StringPool.Put(aargh.BOOL_FALSE_TEXT)
 
 		if s.IsNullable_ {
 			for i, v := range s.Data_ {
@@ -196,7 +196,7 @@ func (s Bools) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("Bools.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Bools.Cast: invalid type %s", t.String())}
 	}
 }
 
@@ -246,7 +246,7 @@ func (s Bools) Group() Series {
 
 	Partition_ := SeriesBoolPartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, s.Len(), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, s.Len(), s.HasNull(),
 			worker, workerNulls),
 	}
 
@@ -271,9 +271,9 @@ func (s Bools) GroupBy(Partition_ SeriesPartition) Series {
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
 				if s.Data_[index] {
-					newHash = (1 + gandalff.HASH_MAGIC_NUMBER) + (h << 13) + (h >> 4)
+					newHash = (1 + aargh.HASH_MAGIC_NUMBER) + (h << 13) + (h >> 4)
 				} else {
-					newHash = gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+					newHash = aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				}
 				map_[newHash] = append(map_[newHash], index)
 			}
@@ -286,11 +286,11 @@ func (s Bools) GroupBy(Partition_ SeriesPartition) Series {
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
 				if s.IsNull(index) {
-					newHash = gandalff.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
+					newHash = aargh.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
 				} else if s.Data_[index] {
-					newHash = (1 + gandalff.HASH_MAGIC_NUMBER) + (h << 13) + (h >> 4)
+					newHash = (1 + aargh.HASH_MAGIC_NUMBER) + (h << 13) + (h >> 4)
 				} else {
-					newHash = gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+					newHash = aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				}
 				map_[newHash] = append(map_[newHash], index)
 			}
@@ -299,7 +299,7 @@ func (s Bools) GroupBy(Partition_ SeriesPartition) Series {
 
 	newPartition := SeriesBoolPartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
 			worker, workerNulls),
 	}
 
@@ -354,17 +354,17 @@ func (s Bools) Swap(i, j int) {
 }
 
 func (s Bools) Sort() Series {
-	if s.Sorted_ != gandalff.SORTED_ASC {
+	if s.Sorted_ != aargh.SORTED_ASC {
 		sort.Sort(s)
-		s.Sorted_ = gandalff.SORTED_ASC
+		s.Sorted_ = aargh.SORTED_ASC
 	}
 	return s
 }
 
 func (s Bools) SortRev() Series {
-	if s.Sorted_ != gandalff.SORTED_DESC {
+	if s.Sorted_ != aargh.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
-		s.Sorted_ = gandalff.SORTED_DESC
+		s.Sorted_ = aargh.SORTED_DESC
 	}
 	return s
 }
