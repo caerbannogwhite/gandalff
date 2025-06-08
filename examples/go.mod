@@ -2,8 +2,6 @@ module examples
 
 go 1.21.4
 
-replace aargh => ../../aargh
-
 require aargh v0.0.0-00010101000000-000000000000
 
 require (
@@ -19,3 +17,5 @@ require (
 	github.com/tealeg/xlsx v1.0.5 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 )
+
+replace aargh => ../
