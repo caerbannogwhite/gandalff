@@ -225,7 +225,7 @@ func (s Ints) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("Ints.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Ints.Cast: invalid type %s", t.String())}
 	}
 }
 

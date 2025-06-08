@@ -282,7 +282,7 @@ func (s Strings) Cast(t meta.BaseType) Series {
 		return Errors{"Strings.Cast: cannot cast to Time, use Strings.ParseTime(layout) instead"}
 
 	default:
-		return Errors{fmt.Sprintf("Strings.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Strings.Cast: invalid type %s", t.String())}
 	}
 }
 

@@ -196,7 +196,7 @@ func (s Bools) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("Bools.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Bools.Cast: invalid type %s", t.String())}
 	}
 }
 

@@ -98,7 +98,7 @@ func (s Durations) Cast(t meta.BaseType) Series {
 
 	switch t {
 	case meta.BoolType:
-		return Errors{fmt.Sprintf("Durations.Cast: cannot cast to %s", t.ToString())}
+		return Errors{fmt.Sprintf("Durations.Cast: cannot cast to %s", t.String())}
 
 	case meta.IntType:
 		Data_ := make([]int, len(s.Data_))

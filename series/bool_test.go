@@ -24,7 +24,7 @@ func Test_SeriesBool_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.BoolType {
-		t.Errorf("Expected type of BoolType, got %s", s.Type().ToString())
+		t.Errorf("Expected type of BoolType, got %s", s.Type().String())
 	}
 
 	// Check the data.

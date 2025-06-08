@@ -31,7 +31,17 @@ type FileMeta struct {
 }
 
 func (fileMeta *FileMeta) String() string {
-	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}", fileMeta.FileName, fileMeta.FilePath, fileMeta.Label, fileMeta.Created, fileMeta.LastModified, fileMeta.SasLibVersion, fileMeta.SasDataVersion, fileMeta.SasOs, fileMeta.SasDsName)
+	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}",
+		fileMeta.FileName,
+		fileMeta.FilePath,
+		fileMeta.Label,
+		fileMeta.Created,
+		fileMeta.LastModified,
+		fileMeta.SasLibVersion,
+		fileMeta.SasDataVersion,
+		fileMeta.SasOs,
+		fileMeta.SasDsName,
+	)
 }
 
 func (fileMeta *FileMeta) PrettyPrint() {
@@ -58,7 +68,14 @@ type SeriesMeta struct {
 }
 
 func (seriesMeta *SeriesMeta) String() string {
-	return fmt.Sprintf("SeriesMeta{Format: %s, Label: %s, Length: %d, KeySequence: %d, Name: %s, Type: %s}", seriesMeta.Format, seriesMeta.Label, seriesMeta.Length, seriesMeta.KeySequence, seriesMeta.Name, seriesMeta.Type)
+	return fmt.Sprintf("SeriesMeta{Format: %s, Label: %s, Length: %d, KeySequence: %d, Name: %s, Type: %s}",
+		seriesMeta.Format,
+		seriesMeta.Label,
+		seriesMeta.Length,
+		seriesMeta.KeySequence,
+		seriesMeta.Name,
+		seriesMeta.Type.String(),
+	)
 }
 
 func (seriesMeta *SeriesMeta) PrettyPrint() {

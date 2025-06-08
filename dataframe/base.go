@@ -1266,7 +1266,7 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 
 	widths := make([]int, df.NCols())
 	for i, name := range df.names {
-		widths[i] = max(len(df.series[i].Type().ToString()), len(name))
+		widths[i] = max(len(df.series[i].Type().String()), len(name))
 		actualWidthsSum += widths[i] + 3
 		if actualWidthsSum > params.width {
 			break
@@ -1436,11 +1436,11 @@ func (df BaseDataFrame) PPrint(params PPrintParams) DataFrame {
 	buffer += params.indent + "│"
 	if params.useLipGloss {
 		for i, c := range df.series[:nColsOut] {
-			buffer += params.styleTypes.Render(fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString())) + "│"
+			buffer += params.styleTypes.Render(fmt.Sprintf(" %-*s ", widths[i], c.Type().String())) + "│"
 		}
 	} else {
 		for i, c := range df.series[:nColsOut] {
-			buffer += fmt.Sprintf(" %-*s ", widths[i], c.Type().ToString()) + "│"
+			buffer += fmt.Sprintf(" %-*s ", widths[i], c.Type().String()) + "│"
 		}
 	}
 	buffer += "\n"

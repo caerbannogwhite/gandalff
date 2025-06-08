@@ -25,7 +25,7 @@ func Test_SeriesInt_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.IntType {
-		t.Errorf("Expected type of IntType, got %s", s.Type().ToString())
+		t.Errorf("Expected type of IntType, got %s", s.Type().String())
 	}
 
 	// Check the data.

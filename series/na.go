@@ -483,7 +483,7 @@ func (s NAs) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("NAs.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("NAs.Cast: invalid type %s", t.String())}
 	}
 }
 

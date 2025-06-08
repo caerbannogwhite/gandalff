@@ -25,7 +25,7 @@ func Test_SeriesFloat64_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.Float64Type {
-		t.Errorf("Expected type of Float64Type, got %s", s.Type().ToString())
+		t.Errorf("Expected type of Float64Type, got %s", s.Type().String())
 	}
 
 	// Check the data.

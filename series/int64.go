@@ -244,7 +244,7 @@ func (s Int64s) Cast(t meta.BaseType) Series {
 		}
 
 	default:
-		return Errors{fmt.Sprintf("Int64s.Cast: invalid type %s", t.ToString())}
+		return Errors{fmt.Sprintf("Int64s.Cast: invalid type %s", t.String())}
 	}
 }
 

@@ -25,7 +25,7 @@ func Test_SeriesInt64_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.Int64Type {
-		t.Errorf("Expected type of Int64Type, got %s", s.Type().ToString())
+		t.Errorf("Expected type of Int64Type, got %s", s.Type().String())
 	}
 
 	// Check the data.

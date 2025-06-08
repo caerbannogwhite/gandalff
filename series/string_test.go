@@ -26,7 +26,7 @@ func Test_SeriesString_Base(t *testing.T) {
 
 	// Check the type.
 	if s.Type() != meta.StringType {
-		t.Errorf("Expected type of StringType, got %s", s.Type().ToString())
+		t.Errorf("Expected type of StringType, got %s", s.Type().String())
 	}
 
 	// Check the data.
