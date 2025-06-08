@@ -9,19 +9,19 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 // Strings represents a series of strings.
 type Strings struct {
 	IsNullable_ bool
-	Sorted_     gandalff.SeriesSortOrder
+	Sorted_     aargh.SeriesSortOrder
 	Data_       []*string
 	NullMask_   []uint8
 	Partition_  *SeriesStringPartition
-	Ctx_        *gandalff.Context
+	Ctx_        *aargh.Context
 }
 
 // Get the element at index i as a string.
@@ -38,18 +38,18 @@ func (s Strings) Set(i int, v any) Series {
 	switch v := v.(type) {
 	case nil:
 		s = s.MakeNullable().(Strings)
-		s.Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
+		s.Data_[i] = s.Ctx_.StringPool.Put(aargh.NA_TEXT)
 		s.NullMask_[i>>3] |= 1 << uint(i%8)
 
 	case string:
 		s.Data_[i] = s.Ctx_.StringPool.Put(v)
 
-	case gandalff.NullableString:
+	case aargh.NullableString:
 		s = s.MakeNullable().(Strings)
 		if v.Valid {
 			s.Data_[i] = s.Ctx_.StringPool.Put(v.Value)
 		} else {
-			s.Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
+			s.Data_[i] = s.Ctx_.StringPool.Put(aargh.NA_TEXT)
 			s.NullMask_[i>>3] |= 1 << uint(i%8)
 		}
 
@@ -57,7 +57,7 @@ func (s Strings) Set(i int, v any) Series {
 		return Errors{fmt.Sprintf("Strings.Set: invalid type %T", v)}
 	}
 
-	s.Sorted_ = gandalff.SORTED_NONE
+	s.Sorted_ = aargh.SORTED_NONE
 	return s
 }
 
@@ -69,7 +69,7 @@ func (s Strings) Strings() []string {
 	if s.IsNullable_ {
 		for i, v := range s.Data_ {
 			if s.IsNull(i) {
-				Data_[i] = gandalff.NA_TEXT
+				Data_[i] = aargh.NA_TEXT
 			} else {
 				Data_[i] = *v
 			}
@@ -84,9 +84,9 @@ func (s Strings) Strings() []string {
 
 // Return the underlying Data_ as a slice of NullableString.
 func (s Strings) DataAsNullable() any {
-	Data_ := make([]gandalff.NullableString, len(s.Data_))
+	Data_ := make([]aargh.NullableString, len(s.Data_))
 	for i, v := range s.Data_ {
-		Data_[i] = gandalff.NullableString{Valid: !s.IsNull(i), Value: *v}
+		Data_[i] = aargh.NullableString{Valid: !s.IsNull(i), Value: *v}
 	}
 	return Data_
 }
@@ -97,7 +97,7 @@ func (s Strings) DataAsString() []string {
 	if s.IsNullable_ {
 		for i, v := range s.Data_ {
 			if s.IsNull(i) {
-				Data_[i] = gandalff.NA_TEXT
+				Data_[i] = aargh.NA_TEXT
 			} else {
 				Data_[i] = *v
 			}
@@ -154,7 +154,7 @@ func (s Strings) Cast(t meta.BaseType) Series {
 
 		return Bools{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -192,7 +192,7 @@ func (s Strings) Cast(t meta.BaseType) Series {
 
 		return Ints{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -230,7 +230,7 @@ func (s Strings) Cast(t meta.BaseType) Series {
 
 		return Int64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -268,7 +268,7 @@ func (s Strings) Cast(t meta.BaseType) Series {
 
 		return Float64s{
 			IsNullable_: true,
-			Sorted_:     gandalff.SORTED_NONE,
+			Sorted_:     aargh.SORTED_NONE,
 			Data_:       Data_,
 			NullMask_:   NullMask_,
 			Partition_:  nil,
@@ -308,7 +308,7 @@ func (s Strings) ParseTime(layout string) Series {
 
 	return Times{
 		IsNullable_: true,
-		Sorted_:     gandalff.SORTED_NONE,
+		Sorted_:     aargh.SORTED_NONE,
 		Data_:       Data_,
 		NullMask_:   NullMask_,
 		Partition_:  nil,
@@ -323,7 +323,7 @@ func (s Strings) ParseTime(layout string) Series {
 // of the original series that are set to that value.
 type SeriesStringPartition struct {
 	Partition_ map[int64][]int
-	Ctx_       *gandalff.Context
+	Ctx_       *aargh.Context
 }
 
 func (gp *SeriesStringPartition) GetSize() int {
@@ -360,7 +360,7 @@ func (s Strings) Group() Series {
 
 	Partition_ := SeriesStringPartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, len(s.Data_), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, len(s.Data_), s.HasNull(),
 			worker, workerNulls),
 		Ctx_: s.Ctx_,
 	}
@@ -387,7 +387,7 @@ func (s Strings) GroupBy(Partition_ SeriesPartition) Series {
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
 				ptr = unsafe.Pointer(s.Data_[index])
-				newHash = *(*int64)(unsafe.Pointer(&ptr)) + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+				newHash = *(*int64)(unsafe.Pointer(&ptr)) + aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				map_[newHash] = append(map_[newHash], index)
 			}
 		}
@@ -400,10 +400,10 @@ func (s Strings) GroupBy(Partition_ SeriesPartition) Series {
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
 				if s.IsNull(index) {
-					newHash = gandalff.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
+					newHash = aargh.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
 				} else {
 					ptr = unsafe.Pointer(s.Data_[index])
-					newHash = *(*int64)(unsafe.Pointer(&ptr)) + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+					newHash = *(*int64)(unsafe.Pointer(&ptr)) + aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				}
 				map_[newHash] = append(map_[newHash], index)
 			}
@@ -412,7 +412,7 @@ func (s Strings) GroupBy(Partition_ SeriesPartition) Series {
 
 	newPartition := SeriesStringPartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
 			worker, workerNulls),
 		Ctx_: s.Ctx_,
 	}
@@ -469,17 +469,17 @@ func (s Strings) Swap(i, j int) {
 }
 
 func (s Strings) Sort() Series {
-	if s.Sorted_ != gandalff.SORTED_ASC {
+	if s.Sorted_ != aargh.SORTED_ASC {
 		sort.Sort(s)
-		s.Sorted_ = gandalff.SORTED_ASC
+		s.Sorted_ = aargh.SORTED_ASC
 	}
 	return s
 }
 
 func (s Strings) SortRev() Series {
-	if s.Sorted_ != gandalff.SORTED_DESC {
+	if s.Sorted_ != aargh.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
-		s.Sorted_ = gandalff.SORTED_DESC
+		s.Sorted_ = aargh.SORTED_DESC
 	}
 	return s
 }

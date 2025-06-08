@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func (s Float64s) Neg() Series {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 type HtmlWriter struct {
@@ -23,7 +23,7 @@ type HtmlWriter struct {
 func NewHtmlWriter() *HtmlWriter {
 	return &HtmlWriter{
 		path:       "",
-		naText:     gandalff.NA_TEXT,
+		naText:     aargh.NA_TEXT,
 		newLine:    "\n",
 		indent:     "\t",
 		writer:     nil,

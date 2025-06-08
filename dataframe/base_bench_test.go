@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 var G1_1e4_1e2_0_0_df *DataFrame
@@ -164,7 +164,7 @@ func read_G1_1e7_1e2_10_0() {
 }
 
 func init() {
-	ctx = gandalff.NewContext()
+	ctx = aargh.NewContext()
 
 	read_G1_1e4_1e2_0_0()
 	read_G1_1e5_1e2_0_0()

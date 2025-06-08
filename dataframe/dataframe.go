@@ -3,9 +3,9 @@ package dataframe
 import (
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 type DataFrameJoinType int8
@@ -22,7 +22,7 @@ type DataFrame interface {
 	// Basic accessors.
 
 	// GetContext returns the context of the dataframe.
-	GetContext() *gandalff.Context
+	GetContext() *aargh.Context
 
 	// Names returns the names of the series in the dataframe.
 	Names() []string

@@ -6,11 +6,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/formatter"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/formatter"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 type BaseDataFramePartitionEntry struct {
@@ -26,10 +26,10 @@ type BaseDataFrame struct {
 	series     []series.Series
 	partitions []BaseDataFramePartitionEntry
 	sortParams []SortParam
-	ctx        *gandalff.Context
+	ctx        *aargh.Context
 }
 
-func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
+func NewBaseDataFrame(ctx *aargh.Context) DataFrame {
 	if ctx == nil {
 		return BaseDataFrame{err: fmt.Errorf("NewBaseDataFrame: context is nil")}
 	}
@@ -43,7 +43,7 @@ func NewBaseDataFrame(ctx *gandalff.Context) DataFrame {
 ////////////////////////			BASIC ACCESSORS
 
 // GetContext returns the context of the dataframe.
-func (df BaseDataFrame) GetContext() *gandalff.Context {
+func (df BaseDataFrame) GetContext() *aargh.Context {
 	return df.ctx
 }
 

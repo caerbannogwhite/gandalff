@@ -1,8 +1,8 @@
 package main
 
 import (
+	. "aargh"
 	"fmt"
-	. "gandalff"
 	"path/filepath"
 	"strings"
 )

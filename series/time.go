@@ -5,18 +5,18 @@ import (
 	"sort"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 // Times represents a datetime series.
 type Times struct {
 	IsNullable_ bool
-	Sorted_     gandalff.SeriesSortOrder
+	Sorted_     aargh.SeriesSortOrder
 	Data_       []time.Time
 	NullMask_   []uint8
 	Partition_  *SeriesTimePartition
-	Ctx_        *gandalff.Context
+	Ctx_        *aargh.Context
 	timeFormat  string
 }
 
@@ -34,7 +34,7 @@ func (s Times) SetTimeFormat(format string) Series {
 // Get the element at index i as a string.
 func (s Times) GetAsString(i int) string {
 	if s.IsNullable_ && s.NullMask_[i>>3]&(1<<uint(i%8)) != 0 {
-		return gandalff.NA_TEXT
+		return aargh.NA_TEXT
 	}
 	return s.Data_[i].Format(s.timeFormat)
 }
@@ -53,7 +53,7 @@ func (s Times) Set(i int, v any) Series {
 	case time.Time:
 		s.Data_[i] = v
 
-	case gandalff.NullableTime:
+	case aargh.NullableTime:
 		s = s.MakeNullable().(Times)
 		if v.Valid {
 			s.Data_[i] = v.Value
@@ -66,7 +66,7 @@ func (s Times) Set(i int, v any) Series {
 		return Errors{fmt.Sprintf("Times.Set: invalid type %T", v)}
 	}
 
-	s.Sorted_ = gandalff.SORTED_NONE
+	s.Sorted_ = aargh.SORTED_NONE
 	return s
 }
 
@@ -79,9 +79,9 @@ func (s Times) Times() []time.Time {
 
 // Return the underlying Data_ as a slice of NullableTime.
 func (s Times) DataAsNullable() any {
-	Data_ := make([]gandalff.NullableTime, len(s.Data_))
+	Data_ := make([]aargh.NullableTime, len(s.Data_))
 	for i, v := range s.Data_ {
-		Data_[i] = gandalff.NullableTime{Valid: !s.IsNull(i), Value: v}
+		Data_[i] = aargh.NullableTime{Valid: !s.IsNull(i), Value: v}
 	}
 	return Data_
 }
@@ -92,7 +92,7 @@ func (s Times) DataAsString() []string {
 	if s.IsNullable_ {
 		for i, v := range s.Data_ {
 			if s.IsNull(i) {
-				Data_[i] = gandalff.NA_TEXT
+				Data_[i] = aargh.NA_TEXT
 			} else {
 				Data_[i] = v.Format(s.timeFormat)
 			}
@@ -161,7 +161,7 @@ func (s Times) Cast(t meta.BaseType) Series {
 		if s.IsNullable_ {
 			for i, v := range s.Data_ {
 				if s.IsNull(i) {
-					Data_[i] = s.Ctx_.StringPool.Put(gandalff.NA_TEXT)
+					Data_[i] = s.Ctx_.StringPool.Put(aargh.NA_TEXT)
 				} else {
 					Data_[i] = s.Ctx_.StringPool.Put(v.Format(s.timeFormat))
 				}
@@ -243,7 +243,7 @@ func (s Times) Group() Series {
 
 	Partition_ := SeriesTimePartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, s.Len(), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, s.Len(), s.HasNull(),
 			worker, workerNulls),
 	}
 
@@ -267,7 +267,7 @@ func (s Times) GroupBy(Partition_ SeriesPartition) Series {
 		var newHash int64
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
-				newHash = s.Data_[index].UnixNano() + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+				newHash = s.Data_[index].UnixNano() + aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				map_[newHash] = append(map_[newHash], index)
 			}
 		}
@@ -279,9 +279,9 @@ func (s Times) GroupBy(Partition_ SeriesPartition) Series {
 		for _, h := range keys[start:end] { // keys is defined outside the function
 			for _, index := range otherIndeces[h] { // otherIndeces is defined outside the function
 				if s.IsNull(index) {
-					newHash = gandalff.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
+					newHash = aargh.HASH_MAGIC_NUMBER_NULL + (h << 13) + (h >> 4)
 				} else {
-					newHash = s.Data_[index].UnixNano() + gandalff.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
+					newHash = s.Data_[index].UnixNano() + aargh.HASH_MAGIC_NUMBER + (h << 13) + (h >> 4)
 				}
 				map_[newHash] = append(map_[newHash], index)
 			}
@@ -290,7 +290,7 @@ func (s Times) GroupBy(Partition_ SeriesPartition) Series {
 
 	newPartition := SeriesTimePartition{
 		Partition_: __series_groupby(
-			gandalff.THREADS_NUMBER, gandalff.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
+			aargh.THREADS_NUMBER, aargh.MINIMUM_PARALLEL_SIZE_1, len(keys), s.HasNull(),
 			worker, workerNulls),
 	}
 
@@ -345,17 +345,17 @@ func (s Times) Swap(i, j int) {
 }
 
 func (s Times) Sort() Series {
-	if s.Sorted_ != gandalff.SORTED_ASC {
+	if s.Sorted_ != aargh.SORTED_ASC {
 		sort.Sort(s)
-		s.Sorted_ = gandalff.SORTED_ASC
+		s.Sorted_ = aargh.SORTED_ASC
 	}
 	return s
 }
 
 func (s Times) SortRev() Series {
-	if s.Sorted_ != gandalff.SORTED_DESC {
+	if s.Sorted_ != aargh.SORTED_DESC {
 		sort.Sort(sort.Reverse(s))
-		s.Sorted_ = gandalff.SORTED_DESC
+		s.Sorted_ = aargh.SORTED_DESC
 	}
 	return s
 }

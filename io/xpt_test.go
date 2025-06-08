@@ -8,7 +8,7 @@ import (
 
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 const DELTA = 10e-16

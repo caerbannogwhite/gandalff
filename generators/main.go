@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/caerbannogwhite/gandalff/meta"
+	"github.com/caerbannogwhite/aargh/meta"
 )
 
 const (
@@ -736,7 +736,7 @@ func generateOperations() {
 		// fast.Decls = append(fast.Decls, &ast.GenDecl{
 		// 	Tok: token.IMPORT,
 		// 	Specs: []ast.Spec{
-		// 		&ast.ImportSpec{Path: &ast.BasicLit{Value: `"github.com/caerbannogwhite/gandalff/utils"`}},
+		// 		&ast.ImportSpec{Path: &ast.BasicLit{Value: `"github.com/caerbannogwhite/aargh/utils"`}},
 		// 	},
 		// })
 

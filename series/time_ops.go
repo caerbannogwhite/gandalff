@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 func (s Times) And(other any) Series {

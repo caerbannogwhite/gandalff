@@ -7,8 +7,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/utils"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -26,8 +26,8 @@ const (
 	defaultScientificThreshold = 9
 	defaultMaxDigits           = 11
 	defaultMovingDigits        = 3
-	defaultNaText              = gandalff.NA_TEXT
-	defaultInfText             = gandalff.INF_TEXT
+	defaultNaText              = aargh.NA_TEXT
+	defaultInfText             = aargh.INF_TEXT
 )
 
 type NumericFormatter struct {
@@ -347,7 +347,7 @@ func (f *StringFormatter) Format(width int, val any, isNa bool) string {
 			return fmt.Sprintf("%-*s", width, utils.Truncate(s, width))
 		}
 	}
-	return gandalff.NA_TEXT
+	return aargh.NA_TEXT
 }
 
 func toPrintable(s string) string {

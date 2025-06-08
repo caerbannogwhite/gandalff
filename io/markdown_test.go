@@ -5,7 +5,7 @@ import (
 
 	"testing"
 
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 func Test_IoMarkDown_ValidWrite(t *testing.T) {

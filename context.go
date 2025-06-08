@@ -1,4 +1,4 @@
-package gandalff
+package aargh
 
 import (
 	"fmt"

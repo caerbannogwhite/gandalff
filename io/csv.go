@@ -8,9 +8,9 @@ import (
 
 	"io"
 
-	"github.com/caerbannogwhite/gandalff"
-	"github.com/caerbannogwhite/gandalff/meta"
-	"github.com/caerbannogwhite/gandalff/series"
+	"github.com/caerbannogwhite/aargh"
+	"github.com/caerbannogwhite/aargh/meta"
+	"github.com/caerbannogwhite/aargh/series"
 )
 
 type CsvReader struct {
@@ -22,15 +22,15 @@ type CsvReader struct {
 	nullValues       bool
 	reader           io.Reader
 	schema           *meta.Schema
-	ctx              *gandalff.Context
+	ctx              *aargh.Context
 }
 
-func NewCsvReader(ctx *gandalff.Context) *CsvReader {
+func NewCsvReader(ctx *aargh.Context) *CsvReader {
 	return &CsvReader{
-		header:           gandalff.CSV_READER_DEFAULT_HEADER,
+		header:           aargh.CSV_READER_DEFAULT_HEADER,
 		rows:             -1,
-		delimiter:        gandalff.CSV_READER_DEFAULT_DELIMITER,
-		guessDataTypeLen: gandalff.CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
+		delimiter:        aargh.CSV_READER_DEFAULT_DELIMITER,
+		guessDataTypeLen: aargh.CSV_READER_DEFAULT_GUESS_DATA_TYPE_LEN,
 		path:             "",
 		nullValues:       false,
 		reader:           nil,
@@ -79,7 +79,7 @@ func (r *CsvReader) SetSchema(schema *meta.Schema) *CsvReader {
 	return r
 }
 
-func (r *CsvReader) SetContext(ctx *gandalff.Context) *CsvReader {
+func (r *CsvReader) SetContext(ctx *aargh.Context) *CsvReader {
 	r.ctx = ctx
 	return r
 }
@@ -127,7 +127,7 @@ func (r *CsvReader) Read() *IoData {
 // ReadCsv reads a CSV file and returns a GDLDataFrame.
 func readCsv(
 	reader io.Reader, delimiter rune, header bool, rows int, nullValues bool,
-	guessDataTypeLen int, schema *meta.Schema, ctx *gandalff.Context,
+	guessDataTypeLen int, schema *meta.Schema, ctx *aargh.Context,
 ) ([]string, []series.Series, error) {
 
 	// TODO: Add support for Time and Duration types (defined in a schema)
@@ -193,13 +193,13 @@ type CsvWriter struct {
 
 func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
-		delimiter: gandalff.CSV_READER_DEFAULT_DELIMITER,
-		header:    gandalff.CSV_READER_DEFAULT_HEADER,
+		delimiter: aargh.CSV_READER_DEFAULT_DELIMITER,
+		header:    aargh.CSV_READER_DEFAULT_HEADER,
 		format:    true,
 		path:      "",
-		naText:    gandalff.NA_TEXT,
-		eol:       gandalff.EOL,
-		quote:     gandalff.QUOTE,
+		naText:    aargh.NA_TEXT,
+		eol:       aargh.EOL,
+		quote:     aargh.QUOTE,
 		quoting:   CsvQuotingNeeded,
 		writer:    nil,
 		ioData:    nil,

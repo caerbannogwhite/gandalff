@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/caerbannogwhite/gandalff/utils"
+	"github.com/caerbannogwhite/aargh/utils"
 )
 
 // Not performs logical NOT operation on series

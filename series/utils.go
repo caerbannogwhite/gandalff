@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/caerbannogwhite/gandalff"
+	"github.com/caerbannogwhite/aargh"
 )
 
 func boolToString(b bool) string {
 	if b {
-		return gandalff.BOOL_TRUE_TEXT
+		return aargh.BOOL_TRUE_TEXT
 	} else {
-		return gandalff.BOOL_FALSE_TEXT
+		return aargh.BOOL_FALSE_TEXT
 	}
 }
 
