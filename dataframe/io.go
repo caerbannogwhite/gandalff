@@ -107,7 +107,7 @@ type csvWriterWrapper struct {
 
 func (df BaseDataFrame) ToCsv() *csvWriterWrapper {
 	return &csvWriterWrapper{
-		writer: aarghio.NewCsvWriter(),
+		writer: aarghio.NewCsvWriter().SetIoData(df.ToIoData()),
 	}
 }
 
@@ -200,7 +200,7 @@ type jsonWriterWrapper struct {
 
 func (df BaseDataFrame) ToJson() *jsonWriterWrapper {
 	return &jsonWriterWrapper{
-		writer: aarghio.NewJsonWriter(),
+		writer: aarghio.NewJsonWriter().SetIoData(df.ToIoData()),
 	}
 }
 
@@ -283,7 +283,7 @@ type xptWriterWrapper struct {
 
 func (df BaseDataFrame) ToXpt() *xptWriterWrapper {
 	return &xptWriterWrapper{
-		writer: aarghio.NewXptWriter(),
+		writer: aarghio.NewXptWriter().SetIoData(df.ToIoData()),
 	}
 }
 
@@ -371,7 +371,7 @@ type xlsxWriterWrapper struct {
 
 func (df BaseDataFrame) ToXlsx() *xlsxWriterWrapper {
 	return &xlsxWriterWrapper{
-		writer: aarghio.NewXlsxWriter(),
+		writer: aarghio.NewXlsxWriter().SetIoData(df.ToIoData()),
 	}
 }
 
@@ -407,7 +407,7 @@ type htmlWriterWrapper struct {
 
 func (df BaseDataFrame) ToHtml() *htmlWriterWrapper {
 	return &htmlWriterWrapper{
-		writer: aarghio.NewHtmlWriter(),
+		writer: aarghio.NewHtmlWriter().SetIoData(df.ToIoData()),
 	}
 }
 
@@ -453,7 +453,7 @@ type markDownWriterWrapper struct {
 
 func (df BaseDataFrame) ToMarkDown() *markDownWriterWrapper {
 	return &markDownWriterWrapper{
-		writer: aarghio.NewMarkDownWriter(),
+		writer: aarghio.NewMarkDownWriter().SetIoData(df.ToIoData()),
 	}
 }
 
