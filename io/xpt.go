@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -125,8 +126,6 @@ func (r *XptReader) Read() *IoData {
 		return &IoData{Error: fmt.Errorf("XptReader: unknown version")}
 	}
 
-	ioData.ctx = r.ctx
-
 	if err != nil {
 		return &IoData{Error: err}
 	}
@@ -213,10 +212,14 @@ func (w *XptWriter) Write() error {
 }
 
 const (
-	valueHeaderStart = "HEADER RECORD*******"
-	valueSas         = "SAS     "
-	valueSasLib      = "SASLIB  "
-	valueSasData     = "SASDATA "
+	labelHeaderV8Start       = "HEADER RECORD*******LABELV8 HEADER RECORD"
+	labelHeaderV9Start       = "HEADER RECORD*******LABELV9 HEADER RECORD"
+	observationHeaderV8Start = "HEADER RECORD*******OBSV8   HEADER RECORD"
+	observationHeaderV9Start = "HEADER RECORD*******OBSV9   HEADER RECORD"
+	valueHeaderStart         = "HEADER RECORD*******"
+	valueSas                 = "SAS     "
+	valueSasLib              = "SASLIB  "
+	valueSasData             = "SASDATA "
 )
 
 // This functions guesses the version of a SAS XPT file.
@@ -637,6 +640,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		FileMeta:   fileMeta,
 		SeriesMeta: seriesMeta,
 		Series:     _series,
+		ctx:        ctx,
 	}, nil
 }
 
@@ -788,6 +792,113 @@ func (nms *__NAMESTRv89) String() string {
 	)
 }
 
+func parseSize(content []byte) (int, error) {
+	sizeRegex := regexp.MustCompile(`[-+]?[0-9]+`)
+	val := sizeRegex.Find(content)
+	if val != nil {
+		size, err := strconv.Atoi(string(val))
+		if err != nil {
+			return 0, fmt.Errorf("invalid size '%s'", string(val))
+		}
+		return size, nil
+	}
+
+	return 0, fmt.Errorf("invalid size")
+}
+
+type __LABELSTRv8 struct {
+	varNumber int
+	nameLen   int
+	labelLen  int
+	name      string
+	label     string
+}
+
+func (l *__LABELSTRv8) String() string {
+	return fmt.Sprintf(
+		"LABELSTRv8[\n"+
+			"\tvarNumber: %d\n"+
+			"\tnameLen:   %d\n"+
+			"\tlabelLen:  %d\n"+
+			"\tname:      %s\n"+
+			"\tlabel:     %s\n"+
+			"]\n",
+		l.varNumber,
+		l.nameLen,
+		l.labelLen,
+		l.name,
+		l.label,
+	)
+}
+
+func parseLabelV8(content []byte, offset int, byteOrder binary.ByteOrder) (*__LABELSTRv8, int, error) {
+	label := &__LABELSTRv8{}
+
+	label.varNumber = int(byteOrder.Uint16(content[offset+0 : offset+2]))
+	label.nameLen = int(byteOrder.Uint16(content[offset+2 : offset+4]))
+	label.labelLen = int(byteOrder.Uint16(content[offset+4 : offset+6]))
+	label.name = string(content[offset+6 : offset+6+label.nameLen])
+	label.label = string(content[offset+6+label.nameLen : offset+6+label.nameLen+label.labelLen])
+
+	totBytes := 6 + label.nameLen + label.labelLen
+	return label, totBytes, nil
+}
+
+type __LABELSTRv9 struct {
+	varNumber int
+	nameLen   int
+	labelLen  int
+	formatLen int
+	informLen int
+	name      string
+	label     string
+	format    string
+	inform    string
+}
+
+func (l *__LABELSTRv9) String() string {
+	return fmt.Sprintf(
+		"LABELSTRv9[\n"+
+			"\tvarNumber: %d\n"+
+			"\tnameLen:   %d\n"+
+			"\tlabelLen:  %d\n"+
+			"\tname:      %s\n"+
+			"\tlabel:     %s\n"+
+			"\tformat:    %s\n"+
+			"\tinform:    %s\n"+
+			"]\n",
+		l.varNumber,
+		l.nameLen,
+		l.labelLen,
+		l.name,
+		l.label,
+		l.format,
+		l.inform,
+	)
+}
+
+func parseLabelV9(content []byte, offset int, byteOrder binary.ByteOrder) (*__LABELSTRv9, int, error) {
+	label := &__LABELSTRv9{}
+
+	label.varNumber = int(byteOrder.Uint16(content[offset+0 : offset+2]))
+	label.nameLen = int(byteOrder.Uint16(content[offset+2 : offset+4]))
+	label.labelLen = int(byteOrder.Uint16(content[offset+4 : offset+6]))
+	label.formatLen = int(byteOrder.Uint16(content[offset+6 : offset+8]))
+	label.informLen = int(byteOrder.Uint16(content[offset+8 : offset+10]))
+
+	localOffset := offset + 10
+	label.name = string(content[localOffset : localOffset+label.nameLen])
+	localOffset += label.nameLen
+	label.label = string(content[localOffset : localOffset+label.labelLen])
+	localOffset += label.labelLen
+	label.format = string(content[localOffset : localOffset+label.formatLen])
+	localOffset += label.formatLen
+	label.inform = string(content[localOffset : localOffset+label.informLen])
+
+	totBytes := localOffset - offset
+	return label, totBytes, nil
+}
+
 // This functions reads a SAS XPT file (versions 8/9).
 func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *aargh.Context) (*IoData, error) {
 	if ctx == nil {
@@ -935,9 +1046,63 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	}
 
 	///////////////////////////////////////
+	// 7.1	Label header record V8
+	var labelsV8 []__LABELSTRv8
+	var labelsV9 []__LABELSTRv9
+
+	if string(content[offset:offset+41]) == labelHeaderV8Start {
+		labelsNumber, err := parseSize(content[offset+41 : offset+80])
+		if err != nil {
+			return nil, fmt.Errorf("readXptV89: %w", err)
+		}
+		offset += 80
+
+		labelsV8 = make([]__LABELSTRv8, labelsNumber)
+		totBytes := 0
+		for i := 0; i < labelsNumber; i++ {
+			label, totLen, err := parseLabelV8(content, offset, byteOrder)
+			if err != nil {
+				return nil, fmt.Errorf("readXptV89: %w", err)
+			}
+			labelsV8[i] = *label
+
+			offset += totLen
+			totBytes += totLen
+		}
+
+		offset += totBytes % 80
+	} else
+
+	// 7.2	Label header record V9
+	if string(content[offset:offset+41]) == labelHeaderV9Start {
+		labelsNumber, err := parseSize(content[offset+41 : offset+80])
+		if err != nil {
+			return nil, fmt.Errorf("readXptV89: %w", err)
+		}
+
+		offset += 80
+
+		labelsV9 = make([]__LABELSTRv9, labelsNumber)
+		totBytes := 0
+		for i := 0; i < labelsNumber; i++ {
+			label, totLen, err := parseLabelV9(content, offset, byteOrder)
+			if err != nil {
+				return nil, fmt.Errorf("readXptV89: %w", err)
+			}
+			labelsV9[i] = *label
+
+			offset += totLen
+			totBytes += totLen
+		}
+
+		offset += totBytes % 80
+	}
+
+	///////////////////////////////////////
 	// 8	Observation header
 
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(content[offset:offset+41]) != observationHeaderV8Start &&
+		string(content[offset:offset+41]) != observationHeaderV9Start {
 		return nil, fmt.Errorf("readXptV89: invalid observation header")
 	}
 
@@ -1034,6 +1199,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		FileMeta:   fileMeta,
 		SeriesMeta: seriesMeta,
 		Series:     _series,
+		ctx:        ctx,
 	}, nil
 }
 
