@@ -121,7 +121,7 @@ func (r *XptReader) Read() *IoData {
 	case XPT_VERSION_5, XPT_VERSION_6:
 		ioData, err = readXptV56(r.reader, r.maxObservations, r.byteOrder, r.ctx)
 	case XPT_VERSION_8, XPT_VERSION_9:
-		ioData, err = readXptV89(r.reader, r.maxObservations, r.byteOrder, r.ctx)
+		ioData, err = readXptV89(r.reader, r.version, r.maxObservations, r.byteOrder, r.ctx)
 	default:
 		return &IoData{Error: fmt.Errorf("XptReader: unknown version")}
 	}
@@ -498,7 +498,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 6	Namestr headerrecord
-	var varsNum int
+	var variablesNumber int
 	if string(content[offset:offset+20]) != valueHeaderStart {
 		return nil, fmt.Errorf("readXptV56: invalid namestr header")
 	}
@@ -508,17 +508,17 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	if err != nil {
 		return nil, fmt.Errorf("readXptV56: invalid number of variables '%s'", string(content[offset+24:offset+32]))
 	}
-	varsNum = int(n)
+	variablesNumber = int(n)
 	offset += 80
 
 	///////////////////////////////////////
 	// 7	Namestr records
 
-	seriesMeta := make([]SeriesMeta, varsNum)
-	namestrs := make([]__NAMESTRv89, varsNum)
+	seriesMeta := make([]SeriesMeta, variablesNumber)
+	namestrs := make([]__NAMESTRv89, variablesNumber)
 
 	// read namestr
-	for i := 0; i < varsNum; i++ {
+	for i := 0; i < variablesNumber; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
 		type_ := meta.Float64Type
 		if namestrs[i].ntype == 2 {
@@ -536,9 +536,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	}
 
 	// skip the padding
-	if p := ((namestrSize * varsNum) % 80); p != 0 {
-		offset += 80 - p
-	}
+	offset += 80 - ((namestrSize * variablesNumber) % 80)
 
 	///////////////////////////////////////
 	// 8	Observation header
@@ -553,10 +551,10 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	///////////////////////////////////////
 	// 9	Data records
 
-	nulls := make([][]bool, varsNum)
-	values := make([]interface{}, varsNum)
+	nulls := make([][]bool, variablesNumber)
+	values := make([]interface{}, variablesNumber)
 
-	for i := 0; i < varsNum; i++ {
+	for i := 0; i < variablesNumber; i++ {
 		nulls[i] = make([]bool, 0)
 
 		switch namestrs[i].ntype {
@@ -591,7 +589,7 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		}
 
 		rowLen := 0
-		for i := 0; i < varsNum; i++ {
+		for i := 0; i < variablesNumber; i++ {
 			tmp = make([]byte, namestrs[i].nlng)
 			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
@@ -626,8 +624,8 @@ func readXptV56(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
-	_series := make([]series.Series, varsNum)
-	for i := 0; i < varsNum; i++ {
+	_series := make([]series.Series, variablesNumber)
+	for i := 0; i < variablesNumber; i++ {
 		switch t := values[i].(type) {
 		case []float64:
 			_series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)
@@ -900,7 +898,7 @@ func parseLabelV9(content []byte, offset int, byteOrder binary.ByteOrder) (*__LA
 }
 
 // This functions reads a SAS XPT file (versions 8/9).
-func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrder, ctx *aargh.Context) (*IoData, error) {
+func readXptV89(reader io.Reader, version XptVersionType, maxObservations int, byteOrder binary.ByteOrder, ctx *aargh.Context) (*IoData, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("readXptV89: no context specified")
 	}
@@ -972,7 +970,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		return nil, fmt.Errorf("readXptV89: invalid member header")
 	}
 
-	namestrSize, err := strconv.Atoi(string(content[offset+74 : offset+78]))
+	namestrSize, err := parseSize(content[offset+74 : offset+78])
 	if err != nil {
 		return nil, fmt.Errorf("readXptV89: invalid NAMESTR size '%s'", string(content[offset+74:offset+78]))
 	}
@@ -990,10 +988,10 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 5	Member header data
-	dsName := string(content[offset+8 : offset+16])
+	dsName := string(content[offset+8 : offset+40])
 	fileMeta.SasDsName = strings.Trim(dsName, " ")
 
-	sasDataVersion := string(content[offset+24 : offset+32])
+	sasDataVersion := string(content[offset+48 : offset+56])
 	fileMeta.SasDataVersion = strings.Trim(sasDataVersion, " ")
 
 	// skip the member header data
@@ -1003,27 +1001,27 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 6	Namestr headerrecord
-	var varsNum int
+	var variablesNumber int
 	if string(content[offset:offset+20]) != valueHeaderStart {
 		return nil, fmt.Errorf("readXptV89: invalid namestr header")
 	}
 
 	// get number of variables
-	n, err := strconv.ParseInt(string(content[offset+48:offset+58]), 10, 32)
+	n, err := parseSize(content[offset+48 : offset+58])
 	if err != nil {
-		return nil, fmt.Errorf("readXptV89: invalid number of variables '%s'", string(content[offset+24:offset+32]))
+		return nil, fmt.Errorf("readXptV89: invalid number of variables '%s'", string(content[offset+48:offset+58]))
 	}
-	varsNum = int(n)
+	variablesNumber = int(n)
 	offset += 80
 
 	///////////////////////////////////////
 	// 7	Namestr records
 
-	seriesMeta := make([]SeriesMeta, varsNum)
-	namestrs := make([]__NAMESTRv89, varsNum)
+	seriesMeta := make([]SeriesMeta, variablesNumber)
+	namestrs := make([]__NAMESTRv89, variablesNumber)
 
 	// read namestr
-	for i := 0; i < varsNum; i++ {
+	for i := 0; i < variablesNumber; i++ {
 		namestrs[i].FromBinary(content[offset:offset+140], byteOrder)
 		type_ := meta.Float64Type
 		if namestrs[i].ntype == 2 {
@@ -1041,9 +1039,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	}
 
 	// skip the padding
-	if p := ((namestrSize * varsNum) % 80); p != 0 {
-		offset += 80 - p
-	}
+	offset += 80 - ((namestrSize * variablesNumber) % 80)
 
 	///////////////////////////////////////
 	// 7.1	Label header record V8
@@ -1070,7 +1066,7 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 			totBytes += totLen
 		}
 
-		offset += totBytes % 80
+		offset += 80 - (offset % 80)
 	} else
 
 	// 7.2	Label header record V9
@@ -1095,15 +1091,19 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 			totBytes += totLen
 		}
 
-		offset += totBytes % 80
+		offset += 80 - (offset % 80)
 	}
 
 	///////////////////////////////////////
 	// 8	Observation header
-
 	if string(content[offset:offset+41]) != observationHeaderV8Start &&
 		string(content[offset:offset+41]) != observationHeaderV9Start {
 		return nil, fmt.Errorf("readXptV89: invalid observation header")
+	}
+
+	observationsNumber, err := parseSize(content[offset+41 : offset+80])
+	if err != nil {
+		return nil, fmt.Errorf("readXptV89: %w", err)
 	}
 
 	// skip the observation header
@@ -1111,11 +1111,10 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 
 	///////////////////////////////////////
 	// 9	Data records
+	nulls := make([][]bool, variablesNumber)
+	values := make([]interface{}, variablesNumber)
 
-	nulls := make([][]bool, varsNum)
-	values := make([]interface{}, varsNum)
-
-	for i := 0; i < varsNum; i++ {
+	for i := 0; i < variablesNumber; i++ {
 		nulls[i] = make([]bool, 0)
 
 		switch namestrs[i].ntype {
@@ -1131,6 +1130,10 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 	// read observations by rows
 	if maxObservations < 0 {
 		maxObservations = math.MaxInt32
+	}
+
+	if maxObservations > observationsNumber {
+		maxObservations = observationsNumber
 	}
 
 	var tmp []byte
@@ -1150,7 +1153,8 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		}
 
 		rowLen := 0
-		for i := 0; i < varsNum; i++ {
+		offset -= int(namestrs[0].npos)
+		for i := 0; i < variablesNumber; i++ {
 			tmp = make([]byte, namestrs[i].nlng)
 			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
@@ -1185,8 +1189,8 @@ func readXptV89(reader io.Reader, maxObservations int, byteOrder binary.ByteOrde
 		rowCounter++
 	}
 
-	_series := make([]series.Series, varsNum)
-	for i := 0; i < varsNum; i++ {
+	_series := make([]series.Series, variablesNumber)
+	for i := 0; i < variablesNumber; i++ {
 		switch t := values[i].(type) {
 		case []float64:
 			_series[i] = series.NewSeriesFloat64(t, nulls[i], false, ctx)

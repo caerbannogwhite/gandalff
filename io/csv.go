@@ -179,30 +179,32 @@ const (
 )
 
 type CsvWriter struct {
-	delimiter rune
-	header    bool
-	format    bool // TODO: Implement this
-	path      string
-	naText    string
-	eol       string
-	quote     string
-	quoting   CsvQuotingType
-	writer    io.Writer
-	ioData    *IoData
+	delimiter      rune
+	header         bool
+	format         bool // TODO: Implement this
+	useParamNaText bool
+	path           string
+	naText         string
+	eol            string
+	quote          string
+	quoting        CsvQuotingType
+	writer         io.Writer
+	ioData         *IoData
 }
 
 func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
-		delimiter: aargh.CSV_READER_DEFAULT_DELIMITER,
-		header:    aargh.CSV_READER_DEFAULT_HEADER,
-		format:    true,
-		path:      "",
-		naText:    aargh.NA_TEXT,
-		eol:       aargh.EOL,
-		quote:     aargh.QUOTE,
-		quoting:   CsvQuotingNeeded,
-		writer:    nil,
-		ioData:    nil,
+		delimiter:      aargh.CSV_READER_DEFAULT_DELIMITER,
+		header:         aargh.CSV_READER_DEFAULT_HEADER,
+		format:         true,
+		useParamNaText: false,
+		path:           "",
+		naText:         aargh.NA_TEXT,
+		eol:            aargh.EOL,
+		quote:          aargh.QUOTE,
+		quoting:        CsvQuotingNeeded,
+		writer:         nil,
+		ioData:         nil,
 	}
 }
 
@@ -227,6 +229,7 @@ func (w *CsvWriter) SetPath(path string) *CsvWriter {
 }
 
 func (w *CsvWriter) SetNaText(naText string) *CsvWriter {
+	w.useParamNaText = true
 	w.naText = naText
 	return w
 }
@@ -263,6 +266,10 @@ func (w *CsvWriter) Write() error {
 
 	if w.ioData.Error != nil {
 		return w.ioData.Error
+	}
+
+	if !w.useParamNaText {
+		w.naText = w.ioData.ctx.GetNaText()
 	}
 
 	if w.path != "" {
