@@ -236,3 +236,17 @@ func parseSasDate(dateStr string) (time.Time, error) {
 
 	return adjusted, nil
 }
+
+func sasNumericToDate(sasDays int) time.Time {
+	// SAS epoch: January 1, 1960
+	sasEpoch := time.Date(1960, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Add the SAS numeric value as days
+	return sasEpoch.AddDate(0, 0, sasDays)
+}
+
+func sasDateToNumeric(t time.Time) int {
+	// SAS epoch: January 1, 1960
+	sasEpoch := time.Date(1960, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Subtract the SAS epoch from the time
+	return int(t.Sub(sasEpoch).Hours() / 24)
+}
