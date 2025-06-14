@@ -120,17 +120,24 @@ func (r *CsvReader) readCsv() *IoData {
 	var err error
 	var fileMeta FileMeta
 
-	// get the file size
-	fileInfo, err := os.Stat(r.path)
-	if err != nil {
-		return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
-	}
+	if r.path != "" {
+		fileInfo, err := os.Stat(r.path)
+		if err != nil {
+			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
+		}
 
-	fileMeta.FileSize = fileInfo.Size()
-	fileMeta.FileName = filepath.Base(r.path)
-	fileMeta.FilePath = filepath.Dir(r.path)
-	fileMeta.FileExt = filepath.Ext(r.path)
-	fileMeta.FileFormat = FILE_FORMAT_CSV
+		fileMeta.FileSize = fileInfo.Size()
+		fileMeta.FileName = filepath.Base(r.path)
+		fileMeta.FilePath = filepath.Dir(r.path)
+		fileMeta.FileExt = filepath.Ext(r.path)
+		fileMeta.FileFormat = FILE_FORMAT_CSV
+	} else {
+		fileMeta.FileSize = 0
+		fileMeta.FileName = "Unknown"
+		fileMeta.FilePath = "Unknown"
+		fileMeta.FileExt = ".csv"
+		fileMeta.FileFormat = FILE_FORMAT_CSV
+	}
 
 	// Initialize CSV reader
 	csvReader := csv.NewReader(r.reader)
