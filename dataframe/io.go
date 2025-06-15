@@ -250,11 +250,6 @@ func (r *xptReaderWrapper) SetVersion(version aarghio.XptVersionType) *xptReader
 	return r
 }
 
-func (r *xptReaderWrapper) GuessVersion() *xptReaderWrapper {
-	r.reader = r.reader.GuessVersion()
-	return r
-}
-
 func (r *xptReaderWrapper) SetByteOrder(byteOrder binary.ByteOrder) *xptReaderWrapper {
 	r.reader = r.reader.SetByteOrder(byteOrder)
 	return r

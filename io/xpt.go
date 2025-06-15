@@ -33,24 +33,26 @@ const (
 )
 
 type XptReader struct {
-	guessVersion    bool
-	maxObservations int
-	version         XptVersionType
-	byteOrder       binary.ByteOrder
-	path            string
-	reader          io.Reader
-	ctx             *aargh.Context
+	useSelectedVersion bool
+	maxObservations    int
+	version            XptVersionType
+	byteOrder          binary.ByteOrder
+	path               string
+	reader             io.Reader
+	content            []byte
+	ctx                *aargh.Context
 }
 
 func NewXptReader(ctx *aargh.Context) *XptReader {
 	return &XptReader{
-		guessVersion:    false,
-		maxObservations: -1,
-		version:         XPT_VERSION_8,
-		byteOrder:       binary.BigEndian,
-		path:            "",
-		reader:          nil,
-		ctx:             ctx,
+		useSelectedVersion: false,
+		maxObservations:    -1,
+		version:            XPT_VERSION_5,
+		byteOrder:          binary.BigEndian,
+		path:               "",
+		reader:             nil,
+		content:            nil,
+		ctx:                ctx,
 	}
 }
 
@@ -60,12 +62,8 @@ func (r *XptReader) SetMaxObservations(maxObservations int) *XptReader {
 }
 
 func (r *XptReader) SetVersion(version XptVersionType) *XptReader {
+	r.useSelectedVersion = true
 	r.version = version
-	return r
-}
-
-func (r *XptReader) GuessVersion() *XptReader {
-	r.guessVersion = true
 	return r
 }
 
@@ -106,14 +104,15 @@ func (r *XptReader) Read() *IoData {
 	var version XptVersionType
 	var content []byte
 
-	if r.guessVersion {
+	// If the version is not selected, guess the version of the file
+	if !r.useSelectedVersion {
 		version, content, err = guessXptVersion(r.reader, r.ctx)
 		if err != nil {
 			return &IoData{Error: err}
 		}
 
 		r.version = version
-		r.reader = bytes.NewReader(content)
+		r.content = content
 	}
 
 	switch r.version {
@@ -198,6 +197,9 @@ func (w *XptWriter) Write() error {
 }
 
 const (
+	firstHeaderRecordV56     = "HEADER RECORD*******LIBRARY HEADER RECORD"
+	firstHeaderRecordV8      = "HEADER RECORD*******LIBV8 HEADER RECORD"
+	firstHeaderRecordV9      = "HEADER RECORD*******LIBV9 HEADER RECORD"
 	labelHeaderV8Start       = "HEADER RECORD*******LABELV8 HEADER RECORD"
 	labelHeaderV9Start       = "HEADER RECORD*******LABELV9 HEADER RECORD"
 	observationHeaderV8Start = "HEADER RECORD*******OBSV8   HEADER RECORD"
@@ -214,11 +216,13 @@ func guessXptVersion(reader io.Reader, ctx *aargh.Context) (XptVersionType, []by
 		return 0, nil, fmt.Errorf("guessXptVersion: no context specified")
 	}
 
+	var n int
 	var err error
 
-	content := make([]byte, 0)
 	buffer := make([]byte, 1024)
-	for n, err := reader.Read(buffer); err == nil; n, err = reader.Read(buffer) {
+	content := make([]byte, 0)
+
+	for n, err = reader.Read(buffer); err == nil; n, err = reader.Read(buffer) {
 		content = append(content, buffer[:n]...)
 	}
 
@@ -226,37 +230,25 @@ func guessXptVersion(reader io.Reader, ctx *aargh.Context) (XptVersionType, []by
 		return 0, nil, fmt.Errorf("guessXptVersion: %w", err)
 	}
 
-	offset := 0
-
-	///////////////////////////////////////
-	// 1	The first header record consists ofthe following characterstring, in ASCII:
-	// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
-	if string(content[0:20]) != valueHeaderStart {
-		return XPT_VERSION_8, content, nil
-	}
-	offset += 80
-
-	///////////////////////////////////////
-	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSas ||
-		string(content[offset+8:offset+16]) != valueSas ||
-		string(content[offset+16:offset+24]) != valueSasLib {
-		return XPT_VERSION_8, content, nil
+	compCharLen := 32
+	if len(content) < compCharLen {
+		return 0, nil, fmt.Errorf("guessXptVersion: invalid XPT file")
 	}
 
-	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch strings.Split(sasLibVersion, ".")[0] {
-	case "5":
+	strContent := string(content[0:compCharLen])
+	if strContent == firstHeaderRecordV56[0:compCharLen] {
 		return XPT_VERSION_5, content, nil
-	case "6":
-		return XPT_VERSION_6, content, nil
-	case "8":
-		return XPT_VERSION_8, content, nil
-	case "9":
-		return XPT_VERSION_9, content, nil
-	default:
-		return 0, nil, fmt.Errorf("guessXptVersion: invalid version '%s'", sasLibVersion)
 	}
+
+	if strContent == firstHeaderRecordV8[0:compCharLen] {
+		return XPT_VERSION_8, content, nil
+	}
+
+	if strContent == firstHeaderRecordV9[0:compCharLen] {
+		return XPT_VERSION_9, content, nil
+	}
+
+	return 0, nil, fmt.Errorf("guessXptVersion: invalid XPT file")
 }
 
 ///////////////////////////////////////     SAS XPT v5/6
@@ -417,49 +409,48 @@ func (r *XptReader) readXptV56() *IoData {
 	fileMeta.FileExt = filepath.Ext(r.path)
 	fileMeta.FileFormat = FILE_FORMAT_XPT
 
-	content := make([]byte, 0)
-	buffer := make([]byte, 1024)
-	for n, err := r.reader.Read(buffer); err == nil; n, err = r.reader.Read(buffer) {
-		content = append(content, buffer[:n]...)
-	}
-
-	if err != nil && err != io.EOF {
-		return &IoData{Error: fmt.Errorf("readXptV56: %w", err)}
-	}
-
+	var n int
 	offset := 0
 
-	///////////////////////////////////////
-	// 1	The first header record consists ofthe following characterstring, in ASCII:
-	// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
-	if string(content[0:20]) != valueHeaderStart {
-		return &IoData{Error: fmt.Errorf("readXptV56: invalid header")}
+	// read the content if not already done
+	if r.content == nil {
+		r.content = make([]byte, 0)
+		buffer := make([]byte, 1024)
+
+		for n, err = r.reader.Read(buffer); err == nil; n, err = r.reader.Read(buffer) {
+			r.content = append(r.content, buffer[:n]...)
+		}
+
+		if err != nil && err != io.EOF {
+			return &IoData{Error: fmt.Errorf("readXptV56: %w", err)}
+		}
+
+		///////////////////////////////////////
+		// 1	The first header record consists ofthe following characterstring, in ASCII:
+		// 		HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!000000000000000000000000000000
+		if string(r.content[0:20]) != valueHeaderStart {
+			return &IoData{Error: fmt.Errorf("readXptV56: invalid header")}
+		}
 	}
 	offset += 80
 
 	///////////////////////////////////////
 	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSas ||
-		string(content[offset+8:offset+16]) != valueSas ||
-		string(content[offset+16:offset+24]) != valueSasLib {
+	if string(r.content[offset:offset+8]) != valueSas ||
+		string(r.content[offset+8:offset+16]) != valueSas ||
+		string(r.content[offset+16:offset+24]) != valueSasLib {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid first real header")}
 	}
 
-	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch v := strings.Split(sasLibVersion, ".")[0]; v {
-	case "5", "6":
-		fileMeta.SasLibVersion = sasLibVersion
-
-	default:
-		return &IoData{Error: fmt.Errorf("readXptV56: invalid version '%s'", sasLibVersion)}
-	}
+	sasLibVersion := strings.Trim(string(r.content[offset+24:offset+32]), " ")
+	fileMeta.SasLibVersion = sasLibVersion
 
 	// Read SAS OS
-	fileMeta.SasOs = string(content[offset+32 : offset+40])
+	fileMeta.SasOs = string(r.content[offset+32 : offset+40])
 
 	// Read Creation Date
 	// ie: 04APR12:22:16:21
-	creationDate := strings.Trim(string(content[offset+64:offset+80]), " ")
+	creationDate := strings.Trim(string(r.content[offset+64:offset+80]), " ")
 	fileMeta.Created, err = parseSasDate(creationDate)
 	if err != nil {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid creation date '%s'", creationDate)}
@@ -468,7 +459,7 @@ func (r *XptReader) readXptV56() *IoData {
 
 	///////////////////////////////////////
 	// 3	Second real header record: ddMMMyy:hh:mm:ss
-	lastModifiedDate := strings.Trim(string(content[offset:offset+80]), " ")
+	lastModifiedDate := strings.Trim(string(r.content[offset:offset+80]), " ")
 	fileMeta.LastModified, err = parseSasDate(lastModifiedDate)
 	if err != nil {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid last modified date '%s'", lastModifiedDate)}
@@ -477,7 +468,7 @@ func (r *XptReader) readXptV56() *IoData {
 
 	///////////////////////////////////////
 	// 4	Member header records
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(r.content[offset:offset+20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid member header")}
 	}
 
@@ -489,10 +480,10 @@ func (r *XptReader) readXptV56() *IoData {
 
 	///////////////////////////////////////
 	// 5	Member header data
-	dsName := string(content[offset+8 : offset+16])
+	dsName := string(r.content[offset+8 : offset+16])
 	fileMeta.SasDsName = strings.Trim(dsName, " ")
 
-	sasDataVersion := string(content[offset+24 : offset+32])
+	sasDataVersion := string(r.content[offset+24 : offset+32])
 	fileMeta.SasDataVersion = strings.Trim(sasDataVersion, " ")
 
 	// skip the member header data
@@ -503,14 +494,14 @@ func (r *XptReader) readXptV56() *IoData {
 	///////////////////////////////////////
 	// 6	Namestr headerrecord
 	var variablesNumber int
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(r.content[offset:offset+20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid namestr header")}
 	}
 
 	// get number of variables
-	n, err := strconv.ParseInt(string(content[offset+48:offset+58]), 10, 32)
+	n, err = parseSize(r.content[offset+48 : offset+58])
 	if err != nil {
-		return &IoData{Error: fmt.Errorf("readXptV56: invalid number of variables '%s'", string(content[offset+24:offset+32]))}
+		return &IoData{Error: fmt.Errorf("readXptV56: invalid number of variables '%s'", string(r.content[offset+24:offset+32]))}
 	}
 	variablesNumber = int(n)
 	offset += 80
@@ -523,7 +514,7 @@ func (r *XptReader) readXptV56() *IoData {
 
 	// read namestr
 	for i := 0; i < variablesNumber; i++ {
-		namestrs[i].FromBinary(content[offset:offset+140], r.byteOrder)
+		namestrs[i].FromBinary(r.content[offset:offset+140], r.byteOrder)
 		type_ := meta.Float64Type
 		if namestrs[i].ntype == 2 {
 			type_ = meta.StringType
@@ -547,7 +538,7 @@ func (r *XptReader) readXptV56() *IoData {
 	///////////////////////////////////////
 	// 8	Observation header
 
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(r.content[offset:offset+20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV56: invalid observation header")}
 	}
 
@@ -584,11 +575,11 @@ func (r *XptReader) readXptV56() *IoData {
 
 	var tmp []byte
 	rowCounter := 0
-	for offset < len(content) && rowCounter < r.maxObservations {
+	for offset < len(r.content) && rowCounter < r.maxObservations {
 
 		allNulls := true
-		for i := offset; i < len(content); i++ {
-			if content[i] != '\x20' {
+		for i := offset; i < len(r.content); i++ {
+			if r.content[i] != '\x20' {
 				allNulls = false
 				break
 			}
@@ -601,7 +592,7 @@ func (r *XptReader) readXptV56() *IoData {
 		rowLen := 0
 		for i := 0; i < variablesNumber; i++ {
 			tmp = make([]byte, namestrs[i].nlng)
-			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
+			copy(tmp, r.content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
 			switch namestrs[i].ntype {
 
@@ -941,49 +932,48 @@ func (r *XptReader) readXptV89() *IoData {
 	fileMeta.FileExt = filepath.Ext(r.path)
 	fileMeta.FileFormat = FILE_FORMAT_XPT
 
-	content := make([]byte, 0)
-	buffer := make([]byte, 1024)
-	for n, err := r.reader.Read(buffer); err == nil; n, err = r.reader.Read(buffer) {
-		content = append(content, buffer[:n]...)
-	}
-
-	if err != nil && err != io.EOF {
-		return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
-	}
-
+	var n int
 	offset := 0
+
+	// read the content if not already done
+	if r.content == nil {
+		r.content = make([]byte, 0)
+		buffer := make([]byte, 1024)
+
+		for n, err = r.reader.Read(buffer); err == nil; n, err = r.reader.Read(buffer) {
+			r.content = append(r.content, buffer[:n]...)
+		}
+
+		if err != nil && err != io.EOF {
+			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
+		}
+	}
 
 	///////////////////////////////////////
 	// 1	The first header record consists ofthe following characterstring, in ASCII:
 	// 		HEADER RECORD*******LIBV8 HEADER RECORD!!!!!!!000000000000000000000000000000
-	if string(content[0:20]) != valueHeaderStart {
+	if string(r.content[0:20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid header")}
 	}
 	offset += 80
 
 	///////////////////////////////////////
 	// 2	The first real header record
-	if string(content[offset:offset+8]) != valueSas ||
-		string(content[offset+8:offset+16]) != valueSas ||
-		string(content[offset+16:offset+24]) != valueSasLib {
+	if string(r.content[offset:offset+8]) != valueSas ||
+		string(r.content[offset+8:offset+16]) != valueSas ||
+		string(r.content[offset+16:offset+24]) != valueSasLib {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid first real header")}
 	}
 
-	sasLibVersion := strings.Trim(string(content[offset+24:offset+32]), " ")
-	switch v := strings.Split(sasLibVersion, ".")[0]; v {
-	case "8", "9":
-		fileMeta.SasLibVersion = sasLibVersion
-
-	default:
-		return &IoData{Error: fmt.Errorf("readXptV89: invalid version '%s'", sasLibVersion)}
-	}
+	sasLibVersion := strings.Trim(string(r.content[offset+24:offset+32]), " ")
+	fileMeta.SasLibVersion = sasLibVersion
 
 	// Read SAS OS
-	fileMeta.SasOs = string(content[offset+32 : offset+40])
+	fileMeta.SasOs = string(r.content[offset+32 : offset+40])
 
 	// Read Creation Date
 	// ie: 04APR12:22:16:21
-	creationDate := strings.Trim(string(content[offset+64:offset+80]), " ")
+	creationDate := strings.Trim(string(r.content[offset+64:offset+80]), " ")
 	fileMeta.Created, err = parseSasDate(creationDate)
 	if err != nil {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid creation date '%s'", creationDate)}
@@ -992,7 +982,7 @@ func (r *XptReader) readXptV89() *IoData {
 
 	///////////////////////////////////////
 	// 3	Second real header record: ddMMMyy:hh:mm:ss
-	lastModifiedDate := strings.Trim(string(content[offset:offset+80]), " ")
+	lastModifiedDate := strings.Trim(string(r.content[offset:offset+80]), " ")
 	fileMeta.LastModified, err = parseSasDate(lastModifiedDate)
 	if err != nil {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid last modified date '%s'", lastModifiedDate)}
@@ -1001,13 +991,13 @@ func (r *XptReader) readXptV89() *IoData {
 
 	///////////////////////////////////////
 	// 4	Member header records
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(r.content[offset:offset+20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid member header")}
 	}
 
-	namestrSize, err := parseSize(content[offset+74 : offset+78])
+	namestrSize, err := parseSize(r.content[offset+74 : offset+78])
 	if err != nil {
-		return &IoData{Error: fmt.Errorf("readXptV89: invalid NAMESTR size '%s'", string(content[offset+74:offset+78]))}
+		return &IoData{Error: fmt.Errorf("readXptV89: invalid NAMESTR size '%s'", string(r.content[offset+74:offset+78]))}
 	}
 	offset += 80
 
@@ -1023,10 +1013,10 @@ func (r *XptReader) readXptV89() *IoData {
 
 	///////////////////////////////////////
 	// 5	Member header data
-	dsName := string(content[offset+8 : offset+40])
+	dsName := string(r.content[offset+8 : offset+40])
 	fileMeta.SasDsName = strings.Trim(dsName, " ")
 
-	sasDataVersion := string(content[offset+48 : offset+56])
+	sasDataVersion := string(r.content[offset+48 : offset+56])
 	fileMeta.SasDataVersion = strings.Trim(sasDataVersion, " ")
 
 	// skip the member header data
@@ -1037,14 +1027,14 @@ func (r *XptReader) readXptV89() *IoData {
 	///////////////////////////////////////
 	// 6	Namestr headerrecord
 	var variablesNumber int
-	if string(content[offset:offset+20]) != valueHeaderStart {
+	if string(r.content[offset:offset+20]) != valueHeaderStart {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid namestr header")}
 	}
 
 	// get number of variables
-	n, err := parseSize(content[offset+48 : offset+58])
+	n, err = parseSize(r.content[offset+48 : offset+58])
 	if err != nil {
-		return &IoData{Error: fmt.Errorf("readXptV89: invalid number of variables '%s'", string(content[offset+48:offset+58]))}
+		return &IoData{Error: fmt.Errorf("readXptV89: invalid number of variables '%s'", string(r.content[offset+48:offset+58]))}
 	}
 	variablesNumber = int(n)
 	offset += 80
@@ -1057,7 +1047,7 @@ func (r *XptReader) readXptV89() *IoData {
 
 	// read namestr
 	for i := 0; i < variablesNumber; i++ {
-		namestrs[i].FromBinary(content[offset:offset+140], r.byteOrder)
+		namestrs[i].FromBinary(r.content[offset:offset+140], r.byteOrder)
 		type_ := meta.Float64Type
 		if namestrs[i].ntype == 2 {
 			type_ = meta.StringType
@@ -1083,8 +1073,8 @@ func (r *XptReader) readXptV89() *IoData {
 	var labelsV8 []__LABELSTRv8
 	var labelsV9 []__LABELSTRv9
 
-	if string(content[offset:offset+41]) == labelHeaderV8Start {
-		labelsNumber, err := parseSize(content[offset+41 : offset+80])
+	if string(r.content[offset:offset+41]) == labelHeaderV8Start {
+		labelsNumber, err := parseSize(r.content[offset+41 : offset+80])
 		if err != nil {
 			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
 		}
@@ -1093,7 +1083,7 @@ func (r *XptReader) readXptV89() *IoData {
 		labelsV8 = make([]__LABELSTRv8, labelsNumber)
 		totBytes := 0
 		for i := 0; i < labelsNumber; i++ {
-			label, totLen, err := parseLabelV8(content, offset, r.byteOrder)
+			label, totLen, err := parseLabelV8(r.content, offset, r.byteOrder)
 			if err != nil {
 				return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
 			}
@@ -1107,8 +1097,8 @@ func (r *XptReader) readXptV89() *IoData {
 	} else
 
 	// 7.2	Label header record V9
-	if string(content[offset:offset+41]) == labelHeaderV9Start {
-		labelsNumber, err := parseSize(content[offset+41 : offset+80])
+	if string(r.content[offset:offset+41]) == labelHeaderV9Start {
+		labelsNumber, err := parseSize(r.content[offset+41 : offset+80])
 		if err != nil {
 			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
 		}
@@ -1118,7 +1108,7 @@ func (r *XptReader) readXptV89() *IoData {
 		labelsV9 = make([]__LABELSTRv9, labelsNumber)
 		totBytes := 0
 		for i := 0; i < labelsNumber; i++ {
-			label, totLen, err := parseLabelV9(content, offset, r.byteOrder)
+			label, totLen, err := parseLabelV9(r.content, offset, r.byteOrder)
 			if err != nil {
 				return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
 			}
@@ -1133,12 +1123,12 @@ func (r *XptReader) readXptV89() *IoData {
 
 	///////////////////////////////////////
 	// 8	Observation header
-	if string(content[offset:offset+41]) != observationHeaderV8Start &&
-		string(content[offset:offset+41]) != observationHeaderV9Start {
+	if string(r.content[offset:offset+41]) != observationHeaderV8Start &&
+		string(r.content[offset:offset+41]) != observationHeaderV9Start {
 		return &IoData{Error: fmt.Errorf("readXptV89: invalid observation header")}
 	}
 
-	observationsNumber, err := parseSize(content[offset+41 : offset+80])
+	observationsNumber, err := parseSize(r.content[offset+41 : offset+80])
 	if err != nil {
 		return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
 	}
@@ -1175,11 +1165,11 @@ func (r *XptReader) readXptV89() *IoData {
 
 	var tmp []byte
 	rowCounter := 0
-	for offset < len(content) && rowCounter < r.maxObservations {
+	for offset < len(r.content) && rowCounter < r.maxObservations {
 
 		allNulls := true
-		for i := offset; i < len(content); i++ {
-			if content[i] != '\x20' {
+		for i := offset; i < len(r.content); i++ {
+			if r.content[i] != '\x20' {
 				allNulls = false
 				break
 			}
@@ -1193,7 +1183,7 @@ func (r *XptReader) readXptV89() *IoData {
 		offset -= int(namestrs[0].npos)
 		for i := 0; i < variablesNumber; i++ {
 			tmp = make([]byte, namestrs[i].nlng)
-			copy(tmp, content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
+			copy(tmp, r.content[offset+int(namestrs[i].npos):offset+int(namestrs[i].npos)+int(namestrs[i].nlng)])
 
 			switch namestrs[i].ntype {
 
