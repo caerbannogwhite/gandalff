@@ -9,6 +9,17 @@ import (
 	"github.com/caerbannogwhite/aargh/series"
 )
 
+type FileFormat string
+
+const (
+	FILE_FORMAT_XPT      FileFormat = "XPT"
+	FILE_FORMAT_CSV      FileFormat = "CSV"
+	FILE_FORMAT_XLSX     FileFormat = "XLSX"
+	FILE_FORMAT_JSON     FileFormat = "JSON"
+	FILE_FORMAT_HTML     FileFormat = "HTML"
+	FILE_FORMAT_SAS7BDAT FileFormat = "SAS7BDAT"
+)
+
 type IoData struct {
 	ctx *aargh.Context
 
@@ -19,8 +30,12 @@ type IoData struct {
 }
 
 type FileMeta struct {
-	FileName       string
-	FilePath       string
+	FileSize   int64
+	FileName   string
+	FilePath   string
+	FileExt    string
+	FileFormat FileFormat
+
 	Label          string
 	Created        time.Time
 	LastModified   time.Time
@@ -31,9 +46,12 @@ type FileMeta struct {
 }
 
 func (fileMeta *FileMeta) String() string {
-	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}",
+	return fmt.Sprintf("FileMeta{FileName: %s, FilePath: %s, FileSize: %d, FileExt: %s, FileFormat: %s, Label: %s, Created: %s, LastModified: %s, SasLibVersion: %s, SasDataVersion: %s, SasOs: %s, SasDsName: %s}",
 		fileMeta.FileName,
 		fileMeta.FilePath,
+		fileMeta.FileSize,
+		fileMeta.FileExt,
+		fileMeta.FileFormat,
 		fileMeta.Label,
 		fileMeta.Created,
 		fileMeta.LastModified,
@@ -49,6 +67,9 @@ func (fileMeta *FileMeta) PrettyPrint() {
 	fmt.Println("--------------------------------")
 	fmt.Println("File Name: ", fileMeta.FileName)
 	fmt.Println("File Path: ", fileMeta.FilePath)
+	fmt.Println("File Size: ", fileMeta.FileSize)
+	fmt.Println("File Ext: ", fileMeta.FileExt)
+	fmt.Println("File Format: ", fileMeta.FileFormat)
 	fmt.Println("Label: ", fileMeta.Label)
 	fmt.Println("Created: ", fileMeta.Created)
 	fmt.Println("Last Modified: ", fileMeta.LastModified)

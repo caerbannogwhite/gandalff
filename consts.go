@@ -25,12 +25,14 @@ const (
 	HASH_MAGIC_NUMBER_NULL = int64(0x7fff4979b77e3f93)
 	HASH_NULL_KEY          = int64(0x7ff8000000000001)
 
-	INF_TEXT        = "Inf"
-	NA_TEXT         = "Na"
-	EOL             = "\n"
-	QUOTE           = "\""
-	BOOL_TRUE_TEXT  = "true"
-	BOOL_FALSE_TEXT = "false"
+	INF_TEXT         = "Inf"
+	NA_TEXT          = "Na"
+	EOL              = "\n"
+	QUOTE            = "\""
+	BOOL_TRUE_TEXT   = "true"
+	BOOL_FALSE_TEXT  = "false"
+	DATE_FORMAT      = "2006-01-02"
+	DATE_TIME_FORMAT = "2006-01-02 15:04:05"
 
 	CSV_READER_DEFAULT_DELIMITER           = ','
 	CSV_READER_DEFAULT_HEADER              = true

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/caerbannogwhite/aargh"
-	aadf "github.com/caerbannogwhite/aargh/dataframe"
+	"github.com/caerbannogwhite/aargh/dataframe"
 	"github.com/caerbannogwhite/aargh/io"
 )
 
@@ -38,7 +38,7 @@ Operations,5,250000
 var ctx = aargh.NewContext()
 
 func Example01() {
-	aadf.NewBaseDataFrame(ctx).
+	dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
@@ -46,10 +46,10 @@ func Example01() {
 		Read().
 		Select("department", "age", "junior", "salary band").
 		GroupBy("department").
-		Agg(aadf.Max("age"), aadf.Min("salary band"), aadf.Mean("junior"), aadf.Count()).
+		Agg(dataframe.Max("age"), dataframe.Min("salary band"), dataframe.Mean("junior"), dataframe.Count()).
 		Run().
 		PPrint(
-			aadf.NewPPrintParams().
+			dataframe.NewPPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(130).
 				SetNRows(50))
@@ -68,28 +68,28 @@ func Example01() {
 }
 
 func Example02() {
-	employees := aadf.NewBaseDataFrame(ctx).
+	employees := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	departments := aadf.NewBaseDataFrame(ctx).
+	departments := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data2)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	departments.PPrint(aadf.NewPPrintParams())
+	departments.PPrint(dataframe.NewPPrintParams())
 
-	employees.Join(aadf.LEFT_JOIN, departments, "department").
-		PPrint(aadf.NewPPrintParams())
+	employees.Join(dataframe.LEFT_JOIN, departments, "department").
+		PPrint(dataframe.NewPPrintParams())
 }
 
 func Example03() {
-	df := aadf.NewBaseDataFrame(ctx).
+	df := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(data1)).
 		SetDelimiter(',').
@@ -100,7 +100,7 @@ func Example03() {
 		df.C("age").Ge(30).
 			And(df.C("junior").
 				Or(df.C("department").Eq("Business")))).
-		PPrint(aadf.NewPPrintParams())
+		PPrint(dataframe.NewPPrintParams())
 }
 
 func Example04() {
@@ -122,37 +122,37 @@ a,b
 4,4
 `
 
-	ppp := aadf.NewPPrintParams()
+	ppp := dataframe.NewPPrintParams()
 
-	dfX := aadf.NewBaseDataFrame(ctx).
+	dfX := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(x)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	dfY := aadf.NewBaseDataFrame(ctx).
+	dfY := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetReader(strings.NewReader(y)).
 		SetDelimiter(',').
 		SetHeader(true).
 		Read()
 
-	dfX.Join(aadf.INNER_JOIN, dfY, "a", "b").
+	dfX.Join(dataframe.INNER_JOIN, dfY, "a", "b").
 		PPrint(ppp)
 
-	dfX.Join(aadf.LEFT_JOIN, dfY, "a", "b").
+	dfX.Join(dataframe.LEFT_JOIN, dfY, "a", "b").
 		PPrint(ppp)
 
-	dfX.Join(aadf.RIGHT_JOIN, dfY, "a", "b").
+	dfX.Join(dataframe.RIGHT_JOIN, dfY, "a", "b").
 		PPrint(ppp)
 
-	dfX.Join(aadf.OUTER_JOIN, dfY, "a", "b").
+	dfX.Join(dataframe.OUTER_JOIN, dfY, "a", "b").
 		PPrint(ppp)
 }
 
 func Example05() {
-	aadf.NewBaseDataFrame(aargh.NewContext()).
+	dataframe.NewBaseDataFrame(ctx).
 		FromXpt().
 		SetPath("../testdata/CDBRFS90.XPT").
 		// SetPath("../testdata/xpt_test_mixed.xpt").
@@ -190,29 +190,29 @@ func Example05() {
 
 		// Pretty print
 		PPrint(
-			aadf.NewPPrintParams().
+			dataframe.NewPPrintParams().
 				SetUseLipGloss(true).
 				SetWidth(200).
 				SetNRows(10))
 }
 
 func Example06() {
-	df := aadf.NewBaseDataFrame(ctx).
+	df := dataframe.NewBaseDataFrame(ctx).
 		FromCsv().
 		SetNullValues(true).
 		// SetRows(20).
 		SetPath(filepath.Join("..", "testdata", "G1_1e4_1e2_10_0.csv")).
 		Read()
 
-	df.PPrint(aadf.NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
+	df.PPrint(dataframe.NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
 
 	df = df.GroupBy("id6").
-		Agg(aadf.Sum("v1"), aadf.Sum("v2"), aadf.Sum("v3")).
+		Agg(dataframe.Sum("v1"), dataframe.Sum("v2"), dataframe.Sum("v3")).
 		RemoveNAs(true).
 		Run().
-		PPrint(aadf.NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
+		PPrint(dataframe.NewPPrintParams().SetNRows(10).SetUseLipGloss(true))
 
-	fmt.Println(df.Agg(aadf.Sum("sum(v1)")).Run().C("sum(sum(v1))"))
+	fmt.Println(df.Agg(dataframe.Sum("sum(v1)")).Run().C("sum(sum(v1))"))
 }
 
 func main() {

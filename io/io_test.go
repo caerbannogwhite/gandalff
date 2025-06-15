@@ -13,7 +13,6 @@ func Test_IoAll(t *testing.T) {
 
 	iod = FromXpt(ctx).
 		SetPath(filepath.Join(testDataFolder, "xpt_test_mixed.xpt")).
-		SetVersion(XPT_VERSION_9).
 		Read()
 
 	if iod.Error != nil {

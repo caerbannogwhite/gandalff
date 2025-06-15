@@ -1,3 +1,5 @@
+.vscode/
+
 /testdata/*.sas
 /testdata/*.XPT
 /testdata/*.csv
