@@ -1,0 +1,8 @@
+v0.1.1: morning
+ - [BugFix] Corrected issue where IoData was not set in DataFrame IOs
+ - [BugFix] Fixed reading of XPT V8 and V9 labels
+ - [BugFix] Improved parsing of XPT dates in V5 and V6
+ - [BugFix] Fixed XPT version guessing logic
+
+v0.1.0: first-fish
+ - Initial release

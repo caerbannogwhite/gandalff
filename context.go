@@ -2,6 +2,7 @@ package aargh
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 )
 
@@ -10,17 +11,26 @@ type Context struct {
 	// This is used to reduce the number of allocations and to allow for fast comparisons.
 	StringPool *StringPool
 
-	threadsNumber int
-	naText        string
-	timeFormat    string
+	threadsNumber  int
+	naText         string
+	eol            string
+	quote          string
+	dateTimeFormat string
 }
 
 func NewContext() *Context {
+	eol := EOL
+	if runtime.GOOS == "windows" {
+		eol = "\r\n"
+	}
+
 	return &Context{
-		StringPool:    NewStringPool().SetNaText(NA_TEXT),
-		threadsNumber: THREADS_NUMBER,
-		naText:        NA_TEXT,
-		timeFormat:    "2006-01-02 15:04:05",
+		StringPool:     NewStringPool().SetNaText(NA_TEXT),
+		threadsNumber:  THREADS_NUMBER,
+		naText:         NA_TEXT,
+		eol:            eol,
+		quote:          QUOTE,
+		dateTimeFormat: DATE_TIME_FORMAT,
 	}
 }
 
@@ -43,15 +53,35 @@ func (ctx *Context) SetNaText(s string) *Context {
 	return ctx
 }
 
-func (ctx *Context) GetTimeFormat() string {
-	return ctx.timeFormat
+func (ctx *Context) GetDateTimeFormat() string {
+	return ctx.dateTimeFormat
 }
 
-func (ctx *Context) SetTimeFormat(s string) *Context {
-	ctx.timeFormat = s
+func (ctx *Context) SetDateTimeFormat(s string) *Context {
+	ctx.dateTimeFormat = s
 	return ctx
 }
 
+func (ctx *Context) GetEol() string {
+	return ctx.eol
+}
+
+func (ctx *Context) SetEol(s string) *Context {
+	ctx.eol = s
+	return ctx
+}
+
+func (ctx *Context) GetQuote() string {
+	return ctx.quote
+}
+
+func (ctx *Context) SetQuote(s string) *Context {
+	ctx.quote = s
+	return ctx
+}
+
+// StringPool is a pool of strings that are used by the series.
+// This is used to reduce the number of allocations and to allow for fast comparisons.
 type StringPool struct {
 	sync.RWMutex
 	pool      map[string]*string

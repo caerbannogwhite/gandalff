@@ -4,13 +4,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"io"
 
 	"github.com/caerbannogwhite/aargh"
 	"github.com/caerbannogwhite/aargh/meta"
-	"github.com/caerbannogwhite/aargh/series"
 )
 
 type CsvReader struct {
@@ -102,71 +102,84 @@ func (r *CsvReader) Read() *IoData {
 		return &IoData{Error: fmt.Errorf("CsvReader: no context specified")}
 	}
 
-	names, series, err := readCsv(r.reader, r.delimiter, r.header, r.rows, r.nullValues, r.guessDataTypeLen, r.schema, r.ctx)
-	if err != nil {
-		return &IoData{Error: err}
-	}
-
-	iod := IoData{
-		FileMeta: FileMeta{
-			FileName: r.path,
-			FilePath: r.path,
-		},
-		ctx: r.ctx,
-	}
-
-	for i, name := range names {
-		iod.AddSeries(series[i], SeriesMeta{
-			Name: name,
-		})
-	}
-
-	return &iod
+	return r.readCsv()
 }
 
-// ReadCsv reads a CSV file and returns a GDLDataFrame.
-func readCsv(
-	reader io.Reader, delimiter rune, header bool, rows int, nullValues bool,
-	guessDataTypeLen int, schema *meta.Schema, ctx *aargh.Context,
-) ([]string, []series.Series, error) {
+// readCsv reads a CSV file and returns a IoData.
+func (r *CsvReader) readCsv() *IoData {
 
 	// TODO: Add support for Time and Duration types (defined in a schema)
 	// TODO: Optimize null masks (use bit vectors)?
 	// TODO: Try to optimize this function by using goroutines: read the rows (like 1000)
 	//		and guess the data types in parallel
 
-	if ctx == nil {
-		return nil, nil, fmt.Errorf("readCsv: no context specified")
+	if r.ctx == nil {
+		return &IoData{Error: fmt.Errorf("readCsv: no context specified")}
+	}
+
+	var err error
+	var fileMeta FileMeta
+
+	if r.path != "" {
+		fileInfo, err := os.Stat(r.path)
+		if err != nil {
+			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
+		}
+
+		fileMeta.FileSize = fileInfo.Size()
+		fileMeta.FileName = filepath.Base(r.path)
+		fileMeta.FilePath = filepath.Dir(r.path)
+		fileMeta.FileExt = filepath.Ext(r.path)
+		fileMeta.FileFormat = FILE_FORMAT_CSV
+	} else {
+		fileMeta.FileSize = 0
+		fileMeta.FileName = "Unknown"
+		fileMeta.FilePath = "Unknown"
+		fileMeta.FileExt = ".csv"
+		fileMeta.FileFormat = FILE_FORMAT_CSV
 	}
 
 	// Initialize CSV reader
-	csvReader := csv.NewReader(reader)
-	csvReader.Comma = delimiter
+	csvReader := csv.NewReader(r.reader)
+	csvReader.Comma = r.delimiter
 	csvReader.FieldsPerRecord = -1
 
 	// Read header if present
-	var names []string
-	var err error
-	if header {
-		names, err = csvReader.Read()
+	var seriesMeta []SeriesMeta
+	if r.header {
+		names, err := csvReader.Read()
 		if err != nil {
-			return nil, nil, err
+			return &IoData{Error: err}
+		}
+		for _, name := range names {
+			seriesMeta = append(seriesMeta, SeriesMeta{
+				Name: name,
+				Type: meta.StringType,
+			})
 		}
 	}
 
-	series, err := readRowData(csvReader, nullValues, guessDataTypeLen, rows, schema, ctx)
+	series, err := readRowData(csvReader, r.nullValues, r.guessDataTypeLen, r.rows, r.schema, r.ctx)
 	if err != nil {
-		return nil, nil, err
+		return &IoData{Error: err}
 	}
 
 	// Generate names if not present
-	if !header {
+	if !r.header {
 		for i := 0; i < len(series); i++ {
-			names = append(names, fmt.Sprintf("Column %d", i+1))
+			seriesMeta = append(seriesMeta, SeriesMeta{
+				Name: fmt.Sprintf("Column %d", i+1),
+				Type: meta.StringType,
+			})
 		}
 	}
 
-	return names, series, nil
+	return &IoData{
+		FileMeta:   fileMeta,
+		SeriesMeta: seriesMeta,
+		Series:     series,
+		ctx:        r.ctx,
+	}
 }
 
 type CsvQuotingType int
@@ -179,30 +192,40 @@ const (
 )
 
 type CsvWriter struct {
-	delimiter rune
-	header    bool
-	format    bool // TODO: Implement this
-	path      string
-	naText    string
-	eol       string
-	quote     string
-	quoting   CsvQuotingType
-	writer    io.Writer
-	ioData    *IoData
+	delimiter              rune
+	header                 bool
+	format                 bool // TODO: Implement this
+	useParamNaText         bool
+	useParamDateTimeFormat bool
+	useParamEol            bool
+	useParamQuote          bool
+	path                   string
+	naText                 string
+	dateTimeFormat         string
+	eol                    string
+	quote                  string
+	quoting                CsvQuotingType
+	writer                 io.Writer
+	ioData                 *IoData
 }
 
 func NewCsvWriter() *CsvWriter {
 	return &CsvWriter{
-		delimiter: aargh.CSV_READER_DEFAULT_DELIMITER,
-		header:    aargh.CSV_READER_DEFAULT_HEADER,
-		format:    true,
-		path:      "",
-		naText:    aargh.NA_TEXT,
-		eol:       aargh.EOL,
-		quote:     aargh.QUOTE,
-		quoting:   CsvQuotingNeeded,
-		writer:    nil,
-		ioData:    nil,
+		delimiter:              aargh.CSV_READER_DEFAULT_DELIMITER,
+		header:                 aargh.CSV_READER_DEFAULT_HEADER,
+		format:                 true,
+		useParamNaText:         false,
+		useParamDateTimeFormat: false,
+		useParamEol:            false,
+		useParamQuote:          false,
+		path:                   "",
+		naText:                 aargh.NA_TEXT,
+		dateTimeFormat:         aargh.DATE_TIME_FORMAT,
+		eol:                    aargh.EOL,
+		quote:                  aargh.QUOTE,
+		quoting:                CsvQuotingNeeded,
+		writer:                 nil,
+		ioData:                 nil,
 	}
 }
 
@@ -227,16 +250,25 @@ func (w *CsvWriter) SetPath(path string) *CsvWriter {
 }
 
 func (w *CsvWriter) SetNaText(naText string) *CsvWriter {
+	w.useParamNaText = true
 	w.naText = naText
 	return w
 }
 
+func (w *CsvWriter) SetDateTimeFormat(dateTimeFormat string) *CsvWriter {
+	w.useParamDateTimeFormat = true
+	w.dateTimeFormat = dateTimeFormat
+	return w
+}
+
 func (w *CsvWriter) SetEol(eol string) *CsvWriter {
+	w.useParamEol = true
 	w.eol = eol
 	return w
 }
 
 func (w *CsvWriter) SetQuote(quote string) *CsvWriter {
+	w.useParamQuote = true
 	w.quote = quote
 	return w
 }
@@ -265,6 +297,22 @@ func (w *CsvWriter) Write() error {
 		return w.ioData.Error
 	}
 
+	if !w.useParamEol {
+		w.eol = w.ioData.ctx.GetEol()
+	}
+
+	if !w.useParamNaText {
+		w.naText = w.ioData.ctx.GetNaText()
+	}
+
+	if !w.useParamDateTimeFormat {
+		w.dateTimeFormat = w.ioData.ctx.GetDateTimeFormat()
+	}
+
+	if !w.useParamQuote {
+		w.quote = w.ioData.ctx.GetQuote()
+	}
+
 	if w.path != "" {
 		file, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
@@ -278,7 +326,7 @@ func (w *CsvWriter) Write() error {
 		return fmt.Errorf("CsvWriter: no writer specified")
 	}
 
-	err := writeCsv(w.ioData, w.writer, w.delimiter, w.header, w.format, w.naText, w.eol, w.quote, w.quoting)
+	err := w.writeCsv()
 	if err != nil {
 		return err
 	}
@@ -286,47 +334,50 @@ func (w *CsvWriter) Write() error {
 	return nil
 }
 
-func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, format bool, naText string, eol string, quote string, quoting CsvQuotingType) error {
-	if header {
-		for i, meta := range ioData.SeriesMeta {
+func (w *CsvWriter) writeCsv() error {
+	if w.header {
+		for i, meta := range w.ioData.SeriesMeta {
 			if i > 0 {
-				fmt.Fprintf(writer, "%c", delimiter)
+				fmt.Fprintf(w.writer, "%c", w.delimiter)
 			}
-			fmt.Fprintf(writer, "%s", meta.Name)
+			fmt.Fprintf(w.writer, "%s", meta.Name)
 		}
 
-		fmt.Fprintf(writer, "%s", eol)
+		fmt.Fprintf(w.writer, "%s", w.eol)
 	}
 
-	for i := 0; i < ioData.NRows(); i++ {
-		for j, s := range ioData.Series {
+	for i := 0; i < w.ioData.NRows(); i++ {
+		for j, s := range w.ioData.Series {
 			if j > 0 {
-				fmt.Fprintf(writer, "%c", delimiter)
+				fmt.Fprintf(w.writer, "%c", w.delimiter)
 			}
 
 			if s.IsNull(i) {
-				fmt.Fprintf(writer, "%s", naText)
+				fmt.Fprintf(w.writer, "%s", w.naText)
 			} else {
-				switch quoting {
+				switch w.quoting {
 				case CsvQuotingNone:
-					fmt.Fprintf(writer, "%s", s.GetAsString(i))
+					fmt.Fprintf(w.writer, "%s", s.GetAsString(i))
 
 				case CsvQuotingAll:
-					fmt.Fprintf(writer, "%s", quote+s.GetAsString(i)+quote)
+					fmt.Fprintf(w.writer, "%s", w.quote+s.GetAsString(i)+w.quote)
 
 				case CsvQuotingNeeded:
 					str := s.GetAsString(i)
-					if strings.Contains(str, quote) || strings.Contains(str, string(delimiter)) || strings.Contains(str, eol) {
-						fmt.Fprintf(writer, "%s", quote+str+quote)
+					if strings.Contains(str, w.quote) {
+						str = strings.ReplaceAll(str, w.quote, w.quote+w.quote)
+						fmt.Fprintf(w.writer, "%s", w.quote+str+w.quote)
+					} else if strings.Contains(str, string(w.delimiter)) || strings.Contains(str, w.eol) {
+						fmt.Fprintf(w.writer, "%s", w.quote+str+w.quote)
 					} else {
-						fmt.Fprintf(writer, "%s", str)
+						fmt.Fprintf(w.writer, "%s", str)
 					}
 
 				case CsvQuotingNonNumeric:
 					if s.Type() == meta.Float64Type || s.Type() == meta.Int64Type || s.Type() == meta.IntType {
-						fmt.Fprintf(writer, "%s", s.GetAsString(i))
+						fmt.Fprintf(w.writer, "%s", s.GetAsString(i))
 					} else {
-						fmt.Fprintf(writer, "%s", quote+s.GetAsString(i)+quote)
+						fmt.Fprintf(w.writer, "%s", w.quote+s.GetAsString(i)+w.quote)
 					}
 
 				default:
@@ -335,7 +386,7 @@ func writeCsv(ioData *IoData, writer io.Writer, delimiter rune, header bool, for
 			}
 		}
 
-		fmt.Fprintf(writer, "%s", eol)
+		fmt.Fprintf(w.writer, "%s", w.eol)
 	}
 
 	return nil
