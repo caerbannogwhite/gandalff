@@ -123,7 +123,7 @@ func (r *CsvReader) readCsv() *IoData {
 	if r.path != "" {
 		fileInfo, err := os.Stat(r.path)
 		if err != nil {
-			return &IoData{Error: fmt.Errorf("readXptV89: %w", err)}
+			return &IoData{Error: fmt.Errorf("readCsv: %w", err)}
 		}
 
 		fileMeta.FileSize = fileInfo.Size()

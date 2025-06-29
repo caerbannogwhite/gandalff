@@ -58,6 +58,10 @@ func Test_TypeGuesser(t *testing.T) {
 		t.Error("Expected Bool, got", tg.guessType("TrUe").String())
 	}
 
+	if tg.guessType("TLS") != meta.StringType {
+		t.Error("Expected String, got", tg.guessType("TLS").String())
+	}
+
 	// Test the int type.
 	if tg.guessType("0") != meta.Int64Type {
 		t.Error("Expected Int64, got", tg.guessType("0").String())

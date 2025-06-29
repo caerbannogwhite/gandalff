@@ -50,7 +50,7 @@ func newTypeGuesser(nullValues bool) typeGuesser {
 	return typeGuesser{
 		nullValues,
 		regexp.MustCompile(`^([Nn][Uu][Ll][Ll])$|^([Nn][Aa][Nn]?)$|^([Nn]/[Aa])$|^$`),
-		regexp.MustCompile(`^([Tt]([Rr][Uu][Ee])?)|([Ff]([Aa][Ll][Ss][Ee])?)$`),
+		regexp.MustCompile(`^[Tt]([Rr][Uu][Ee])?$|^[Ff]([Aa][Ll][Ss][Ee])?$`),
 		regexp.MustCompile(`^[Tt]([Rr][Uu][Ee])?$`),
 		regexp.MustCompile(`^[Ff]([Aa][Ll][Ss][Ee])?$`),
 		regexp.MustCompile(`^[-+]?[0-9]+$`),
