@@ -108,7 +108,6 @@ func (r *CsvReader) Read() *IoData {
 // readCsv reads a CSV file and returns a IoData.
 func (r *CsvReader) readCsv() *IoData {
 
-	// TODO: Add support for Time and Duration types (defined in a schema)
 	// TODO: Optimize null masks (use bit vectors)?
 	// TODO: Try to optimize this function by using goroutines: read the rows (like 1000)
 	//		and guess the data types in parallel
