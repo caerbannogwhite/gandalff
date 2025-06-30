@@ -154,7 +154,6 @@ func (r *CsvReader) readCsv() *IoData {
 		for _, name := range names {
 			seriesMeta = append(seriesMeta, SeriesMeta{
 				Name: name,
-				Type: meta.StringType,
 			})
 		}
 	}
@@ -169,9 +168,12 @@ func (r *CsvReader) readCsv() *IoData {
 		for i := 0; i < len(series); i++ {
 			seriesMeta = append(seriesMeta, SeriesMeta{
 				Name: fmt.Sprintf("Column %d", i+1),
-				Type: meta.StringType,
 			})
 		}
+	}
+
+	for i, s := range series {
+		seriesMeta[i].Type = s.Type()
 	}
 
 	return &IoData{
